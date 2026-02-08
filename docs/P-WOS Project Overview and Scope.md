@@ -1,0 +1,98 @@
+Based on the provided document for the **Predictive Water Optimization System (P-WOS)**, here is the extracted text, organized by the presentation sections:
+
+## ---
+
+**Project Overview**
+
+* **Project Name:** Predictive Water Optimization System (P-WOS)
+
+* **Domain:** AgriTech / Internet of Things (IoT) / Machine Learning (ML)
+
+* **Concept:** A low-cost, smart irrigation system that uses real-time farm sensor data and an ML model to predict future soil moisture and automatically schedule the optimal next watering time, minimizing water waste.
+
+* **Software Focus:** Developing a robust, full-stack application (embedded C++, cloud-based ML API and web/mobile interface).
+
+## ---
+
+**Background & Problem Statement**
+
+* **Global Context:** Agriculture consumes roughly 70% of the world's fresh water supply, with up to 50% often wasted due to inefficient, timer-based, or manual irrigation.
+
+* **Traditional Method:** Current basic solutions rely on simple moisture thresholds (e.g., "if moisture \< 30%, turn on pump”). This method is reactive and fails to account for factors like upcoming rainfall or high-humidity days.
+
+* **Modern Approach:** Leveraging time-series data and Machine Learning to create a proactive, predictive control loop, moving beyond simple reactivity to true optimization.
+
+* **Problem Statement:** Current low-cost automated irrigation systems are reactive and inefficient, leading to excessive water consumption, fluctuating crop stress, and wasted energy. They lack the intelligence to incorporate environmental factors like local weather forecasts or historical soil-drying trends.
+
+## ---
+
+**Research Parameters**
+
+### **Research Aim**
+
+To design, develop, and evaluate a predictive software architecture for a low-cost, IoT-enabled micro-irrigation system that uses Machine Learning to forecast water needs, reducing water usage compared to traditional systems.
+
+### **Research Objectives**
+
+* Develop firmware for an ESP32 microcontroller to reliably sample and transmit soil moisture, temperature, and humidity data using the MQTT protocol.
+
+* Establish a Cloud-based ML API to process time-series sensor data and local weather forecast APIs to train and host a water need prediction model.
+
+* Implement Control Logic Software that automatically schedules the water pump based on model predictions, prioritizing them over fixed thresholds.
+
+* Build a full-stack Web Dashboard for users to monitor system performance, water consumption logs, and ML model confidence scores.
+
+* Quantitatively compare the water efficiency of the predictive model against a standard reactive threshold model.
+
+### **Research Questions**
+
+* How can an inexpensive time-series classification model accurately predict the Optimal Time to Water (OTW) based on collected sensor data and external weather?
+
+* What is the ideal software architecture (firmware → MQTT → Cloud API → Control Logic) that minimizes data latency and ensures reliable control?
+
+* By what percentage can the P-WOS reduce water consumption compared to a fixed-threshold system over a two-week growing cycle?
+
+### **Hypothesis**
+
+The integration of a time-series ML prediction model into an IoT micro-irrigation system will lead to a minimum 15% reduction in water consumption compared to a traditional reactive threshold-based system.
+
+## ---
+
+**Significance & Scope**
+
+### **Significance of Study**
+
+* **Environmental:** Directly contributes to water conservation through intelligent, targeted irrigation.
+
+* **Technological:** Demonstrates practical application of Edge Computing and ML in the Cloud for real-time control.
+
+* **Economic:** Provides a low-cost framework for farmers with rapid ROI through resource savings.
+
+* **Academic:** Provides a complete full-stack capstone project spanning firmware, networking, cloud API design, and front-end development.
+
+### **Scope & Limitations**
+
+* **System Boundary:** Monitoring and control for a single, small test bed (e.g., a potted plant).
+
+* **Data Sources:** Onboard moisture/temp/humidity sensors and OpenWeatherMap API data.
+
+* **Exclusions:** Does not cover advanced mechanical systems (filtration, plumbing) or pest detection. The focus is strictly on software-based water optimization.
+
+* **Assumptions:** Sensor data is accurate , Wi-Fi remains stable , and soil/plant material is homogeneous.
+
+* **Limitations:** Limited scalability to large farms , use of a simplified ML model (Random Forest instead of Deep Learning) , and external power dependence for the ESP32.
+
+## ---
+
+**Definition of Terms**
+
+| Term | Definition |
+| :---- | :---- |
+| **IoT** | Internet of Things: Interconnected network of physical devices that exchange data.  |
+| **MQTT** | A lightweight messaging protocol for low-bandwidth, high-latency networks.  |
+| **ML** | Machine Learning: Statistical methods to enable computers to learn from data without explicit programming.  |
+| **Reactive System** | A system that acts only when a fixed limit (threshold) is crossed.  |
+| **Predictive System** | A system that forecasts future states and acts proactively (e.g., delaying watering because rain is predicted).  |
+| **Time-Series Data** | A sequence of data points indexed in time order.  |
+
+Would you like me to help you draft a specific section of this project, such as the firmware logic or the cloud API structure?

@@ -1,0 +1,99 @@
+{
+  "timestamp": "20260208_055536",
+  "days": 7,
+  "scenarios": [
+    {
+      "scenario": "Dry Season",
+      "days": 7,
+      "rain_events": 0,
+      "reactive": {
+        "water_used": 300.0,
+        "pump_events": 20,
+        "stress_hours": 0.0
+      },
+      "predictive": {
+        "water_used": 300.0,
+        "pump_events": 20,
+        "stress_hours": 0.0
+      },
+      "water_saved": 0.0,
+      "savings_percent": 0.0,
+      "hypothesis_passed": false
+    },
+    {
+      "scenario": "Rainy Season",
+      "days": 7,
+      "rain_events": 1,
+      "reactive": {
+        "water_used": 75.0,
+        "pump_events": 5,
+        "stress_hours": 0.0
+      },
+      "predictive": {
+        "water_used": 75.0,
+        "pump_events": 5,
+        "stress_hours": 0.0
+      },
+      "water_saved": 0.0,
+      "savings_percent": 0.0,
+      "hypothesis_passed": false
+    },
+    {
+      "scenario": "Mixed Weather",
+      "days": 7,
+      "rain_events": 1,
+      "reactive": {
+        "water_used": 165.0,
+        "pump_events": 11,
+        "stress_hours": 0.0
+      },
+      "predictive": {
+        "water_used": 165.0,
+        "pump_events": 11,
+        "stress_hours": 0.0
+      },
+      "water_saved": 0.0,
+      "savings_percent": 0.0,
+      "hypothesis_passed": false
+    },
+    {
+      "scenario": "Heat Wave",
+      "days": 7,
+      "rain_events": 0,
+      "reactive": {
+        "water_used": 405.0,
+        "pump_events": 27,
+        "stress_hours": 0.0
+      },
+      "predictive": {
+        "water_used": 405.0,
+        "pump_events": 27,
+        "stress_hours": 0.0
+      },
+      "water_saved": 0.0,
+      "savings_percent": 0.0,
+      "hypothesis_passed": false
+    },
+    {
+      "scenario": "Cool Period",
+      "days": 7,
+      "rain_events": 1,
+      "reactive": {
+        "water_used": 60.0,
+        "pump_events": 4,
+        "stress_hours": 0.0
+      },
+      "predictive": {
+        "water_used": 60.0,
+        "pump_events": 4,
+        "stress_hours": 0.0
+      },
+      "water_saved": 0.0,
+      "savings_percent": 0.0,
+      "hypothesis_passed": false
+    }
+  ],
+  "average_savings": 0.0,
+  "passed_count": 0,
+  "total_count": 5
+}
