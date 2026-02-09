@@ -2,34 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  font-family: 'Inter', sans-serif;
-}
-
-body {
-  @apply bg-slate-50 text-slate-900;
-}
-
-.dark body {
-  @apply bg-[#0b0f19] text-slate-100;
+@layer base {
+  :root {
+    font-family: 'Inter', sans-serif;
+  }
 }
 
 /* Glassmorphism utility */
 .glass-card {
-  @apply bg-white/95 backdrop-blur-md border border-white/20;
+  @apply bg-white/95 backdrop-blur-md border border-slate-200 dark:bg-slate-900/80 dark:border-slate-800;
 }
 
-.dark .glass-card {
-  @apply bg-[#161b2a]/80 backdrop-blur-md border border-white/5;
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 224 71.4% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+    --primary: 158 94% 30%;
+    /* Emerald-600 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 220.9 39.3% 11%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 158 94% 30%;
+    --chart-1: 158 94% 30%;
+    --chart-2: 243 75% 59%;
+    /* Indigo-500 */
+    --chart-3: 199 89% 48%;
+    --chart-4: 47 95% 42%;
+    --chart-5: 350 89% 60%;
+    --radius: 1rem;
+  }
+
+  .dark {
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 158 94% 45%;
+    /* Emerald-500 */
+    --primary-foreground: 224 71.4% 4.1%;
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 158 94% 45%;
+    --chart-1: 158 94% 45%;
+    --chart-2: 243 75% 59%;
+    --chart-3: 199 89% 48%;
+    --chart-4: 47 95% 42%;
+    --chart-5: 350 89% 60%;
+  }
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 4px;
-}
-::-webkit-scrollbar-track {
-  @apply bg-transparent;
-}
-::-webkit-scrollbar-thumb {
-  @apply bg-blue-500/30 rounded-full;
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
 }

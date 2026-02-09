@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Cpu, CheckCircle, RefreshCcw } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export const Hardware: React.FC = () => {
     const [pumping, setPumping] = useState(false);
@@ -22,99 +25,117 @@ export const Hardware: React.FC = () => {
     };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="lg:col-span-2 glass-card p-10 rounded-[2.5rem] relative overflow-hidden dark:text-white">
-                <div className="flex items-center justify-between mb-12">
-                    <div className="flex items-center gap-4">
-                        <div className="bg-blue-600/20 p-3 rounded-2xl border border-blue-500/30">
-                            <Cpu className="size-8 text-blue-400" />
-                        </div>
-                        <div>
-                            <h3 className="text-2xl font-black">Node Blueprint</h3>
-                            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">ESP32-S3 Core Hub</p>
-                        </div>
-                    </div>
-                    <span className="flex items-center gap-2 text-[10px] font-black text-green-400 bg-green-400/10 px-4 py-2 rounded-full border border-green-400/20">
-                        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                        SIMULATOR CONNECTED
-                    </span>
+        <div className="space-y-6 animate-in fade-in duration-500">
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
+                        Hardware Node
+                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1 font-bold">
+                            <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            Simulator Connected
+                        </Badge>
+                    </h1>
+                    <p className="text-slate-500 text-sm font-medium">
+                        Blueprint and real-time pinout status for the ESP32-S3 Core Hub.
+                    </p>
                 </div>
-
-                <div className="grid grid-cols-2 gap-16 relative z-10">
-                    <div className="space-y-12">
-                        <div className="flex items-center gap-8 group">
-                            <div className="size-14 rounded-2xl border-2 border-primary bg-primary/10 shadow-[0_0_20px_rgba(59,130,246,0.3)] flex items-center justify-center font-black text-xs text-primary">
-                                P34
-                            </div>
-                            <div>
-                                <p className="text-lg font-bold">Soil Moisture</p>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase">Analog • ADC1_0</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-8 group">
-                            <div className="size-14 rounded-2xl border-2 border-primary bg-primary/10 shadow-[0_0_20px_rgba(59,130,246,0.3)] flex items-center justify-center font-black text-xs text-primary">
-                                P32
-                            </div>
-                            <div>
-                                <p className="text-lg font-bold">DHT22 Sense</p>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase">Digital • Single Bus</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-12">
-                        <div className="flex items-center gap-8 group">
-                            <div className={`size-14 rounded-2xl border-2 transition-all flex items-center justify-center font-black text-xs ${pumping ? 'border-green-400 bg-green-400/20 text-green-400 shadow-[0_0_25px_rgba(74,222,128,0.5)]' : 'border-slate-700 text-slate-500'}`}>
-                                P27
-                            </div>
-                            <div>
-                                <p className="text-lg font-bold">Pump Relay</p>
-                                <p className={`text-[10px] font-bold uppercase ${pumping ? 'text-green-400' : 'text-slate-500'}`}>{pumping ? 'ACTIVE' : 'IDLE'}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-8 group">
-                            <div className="size-14 rounded-2xl border-2 border-primary bg-primary/10 shadow-[0_0_20px_rgba(59,130,246,0.3)] flex items-center justify-center font-black text-xs text-primary">
-                                P33
-                            </div>
-                            <div>
-                                <p className="text-lg font-bold">Rain Node</p>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase">Analog/Digital</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="absolute -right-20 -bottom-20 size-80 bg-blue-600/5 rounded-full blur-3xl"></div>
             </div>
 
-            <div className="space-y-6">
-                <div className="glass-card p-8 rounded-[2.5rem] dark:text-white">
-                    <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-8">Quick Diagnostics</h3>
-                    <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2 border-none shadow-sm dark:bg-slate-900/50 relative overflow-hidden">
+                    <CardHeader className="pb-8">
                         <div className="flex items-center gap-4">
-                            <CheckCircle className="size-5 text-green-400" />
-                            <span className="text-sm font-medium">Flash: 16MB QSPI</span>
+                            <div className="bg-primary/10 p-3 rounded-2xl border border-primary/20">
+                                <Cpu className="size-8 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-xl font-black italic">Node Blueprint</CardTitle>
+                                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">ESP32-S3 Core Hub • Rev 2.0</p>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <CheckCircle className="size-5 text-green-400" />
-                            <span className="text-sm font-medium">SRAM: 512KB Internal</span>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-12 relative z-10 pb-12">
+                        <div className="space-y-10">
+                            <div className="flex items-center gap-6 group">
+                                <div className="size-14 rounded-2xl border-2 border-primary bg-primary/10 shadow-[0_0_20px_rgba(16,185,129,0.2)] flex items-center justify-center font-black text-xs text-primary">
+                                    P34
+                                </div>
+                                <div>
+                                    <p className="text-lg font-bold text-slate-900 dark:text-white">Soil Moisture</p>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Analog • ADC1_0</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-6 group">
+                                <div className="size-14 rounded-2xl border-2 border-indigo-500 bg-indigo-500/10 shadow-[0_0_20px_rgba(99,102,241,0.2)] flex items-center justify-center font-black text-xs text-indigo-500">
+                                    P32
+                                </div>
+                                <div>
+                                    <p className="text-lg font-bold text-slate-900 dark:text-white">DHT22 Sense</p>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Digital • Single Bus</p>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <CheckCircle className="size-5 text-green-400" />
-                            <span className="text-sm font-medium">Volt: 3.3V Stable</span>
-                        </div>
-                    </div>
-                </div>
 
-                <div className="bg-gradient-to-br from-indigo-600 to-blue-700 p-8 rounded-[2.5rem] shadow-xl shadow-blue-900/40 text-white">
-                    <h3 className="text-xl font-black mb-2">Controller Reset</h3>
-                    <p className="text-xs opacity-70 mb-8 leading-relaxed">Perform a hard reset on the simulation kernel and re-initialize peripheral hooks.</p>
-                    <button
-                        onClick={resetHardware}
-                        className="w-full py-4 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-2xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2"
-                    >
-                        <RefreshCcw className="size-4" /> Execute Reset
-                    </button>
+                        <div className="space-y-10">
+                            <div className="flex items-center gap-6 group">
+                                <div className={`size-14 rounded-2xl border-2 transition-all flex items-center justify-center font-black text-xs ${pumping ? 'border-primary bg-primary/20 text-primary shadow-[0_0_25px_rgba(16,185,129,0.3)]' : 'border-slate-200 dark:border-slate-800 text-slate-400'}`}>
+                                    P27
+                                </div>
+                                <div>
+                                    <p className="text-lg font-bold text-slate-900 dark:text-white">Pump Relay</p>
+                                    <p className={`text-[10px] font-bold uppercase tracking-tighter ${pumping ? 'text-primary' : 'text-slate-400'}`}>{pumping ? 'ACTIVE' : 'IDLE'}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-6 group">
+                                <div className="size-14 rounded-2xl border-2 border-indigo-500 bg-indigo-500/10 shadow-[0_0_20px_rgba(99,102,241,0.2)] flex items-center justify-center font-black text-xs text-indigo-500">
+                                    P33
+                                </div>
+                                <div>
+                                    <p className="text-lg font-bold text-slate-900 dark:text-white">Rain Node</p>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Analog/Digital</p>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+
+                    <div className="absolute -right-20 -bottom-20 size-80 bg-primary/5 rounded-full blur-3xl"></div>
+                </Card>
+
+                <div className="space-y-6">
+                    <Card className="border-none shadow-sm dark:bg-slate-900/50">
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Quick Diagnostics</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {[
+                                { label: 'Flash: 16MB QSPI', icon: CheckCircle },
+                                { label: 'SRAM: 512KB Internal', icon: CheckCircle },
+                                { label: 'Volt: 3.3V Stable', icon: CheckCircle }
+                            ].map((item, idx) => (
+                                <div key={idx} className="flex items-center gap-3">
+                                    <item.icon className="size-4 text-primary" />
+                                    <span className="text-sm font-bold text-slate-600 dark:text-slate-400">{item.label}</span>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                    <Card className="border-none shadow-sm bg-gradient-to-br from-primary to-emerald-800 text-white overflow-hidden">
+                        <CardContent className="p-8 space-y-4">
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-black tracking-tight">Controller Reset</h3>
+                                <p className="text-xs text-white/70 leading-relaxed">
+                                    Perform a hard reset on the simulation kernel and re-initialize peripheral hooks.
+                                </p>
+                            </div>
+                            <Button
+                                onClick={resetHardware}
+                                className="w-full bg-white text-primary hover:bg-slate-50 font-black text-xs uppercase tracking-widest h-12 gap-2 shadow-xl shadow-black/20"
+                            >
+                                <RefreshCcw className="size-4" /> Execute Reset
+                            </Button>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </div>

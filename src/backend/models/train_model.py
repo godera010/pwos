@@ -1,3 +1,15 @@
+# ============================================================
+# Intel GPU Acceleration (Safe Import)
+# ============================================================
+try:
+    from sklearnex import patch_sklearn
+    patch_sklearn()
+    print("[INFO] Intel Extension for Scikit-learn enabled!")
+except ImportError:
+    print("[WARNING] Intel Extension (sklearnex) not found. Using standard CPU mode.")
+except Exception as e:
+    print(f"[WARNING] Failed to enable Intel Acceleration: {e}")
+
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -100,7 +112,8 @@ def train_model():
         n_estimators=100,
         max_depth=10,
         random_state=42,
-        class_weight='balanced'
+        class_weight='balanced',
+        n_jobs=-1
     )
     clf.fit(X_train, y_train)
     print("   [OK] Model trained")

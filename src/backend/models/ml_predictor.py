@@ -1,3 +1,12 @@
+# ============================================================
+# Intel GPU Acceleration (Safe Import)
+# ============================================================
+try:
+    from sklearnex import patch_sklearn
+    patch_sklearn()
+except (ImportError, Exception):
+    pass # Silent fallback for inference
+
 import joblib
 import pandas as pd
 import numpy as np
@@ -112,7 +121,7 @@ class MLPredictor:
         probs = self.model.predict_proba(X)[0]
         confidence = float(np.max(probs))
         
-        # 3. Intelligent Control Logic (Centralized)
+        # 3. Intelligent Control Logic (Centralized with VPD-Aware Timing)
         
         # Configurable Thresholds
         CRITICAL_THRESHOLD = 10.0    # Emergency - must water regardless
@@ -120,6 +129,10 @@ class MLPredictor:
         PROACTIVE_THRESHOLD = 45.0   # Consider stalling if rain coming
         HIGH_THRESHOLD = 75.0        # No watering needed
         RAIN_WINDOW_MINUTES = 6 * 60 # 6 hours - proactive rain window
+        
+        # VPD Thresholds
+        HIGH_VPD_THRESHOLD = 2.0     # High evaporation - avoid watering
+        EXTREME_VPD_THRESHOLD = 3.0  # Extreme - only water at optimal times
         
         # Default State
         decision = "WAIT"
@@ -131,53 +144,117 @@ class MLPredictor:
         rain_incoming = 0 < forecast_mins < (12 * 60)  # Rain within 12h
         rain_imminent = 0 < forecast_mins < RAIN_WINDOW_MINUTES  # Rain within 6h
         
+        # =====================================================
+        # VPD-AWARE OPTIMAL WATERING TIME DETECTION
+        # =====================================================
+        
+        # Check if current hour is in optimal watering window
+        current_hour = now.hour
+        is_optimal_morning = 4 <= current_hour <= 6    # 04:00-06:00
+        is_optimal_evening = 18 <= current_hour <= 20  # 18:00-20:00
+        is_optimal_time = is_optimal_morning or is_optimal_evening
+        
+        # Check if in high evaporation period (midday heat)
+        is_high_evap_period = 10 <= current_hour <= 16  # 10:00-16:00
+        
+        # VPD-based decisions
+        is_high_vpd = vpd > HIGH_VPD_THRESHOLD
+        is_extreme_vpd = vpd > EXTREME_VPD_THRESHOLD
+        
+        # =====================================================
+        # DECISION MATRIX (Priority Order)
+        # =====================================================
+        
         # 3.1 HIGH MOISTURE - No action needed
         if current_moisture > HIGH_THRESHOLD:
             decision = "WAIT"
             status = "OPTIMAL"
             reason = f"Moisture high ({current_moisture:.1f}%). No action needed."
         
-        # 3.2 CRITICAL LOW - Emergency override (ignores rain)
+        # 3.2 CRITICAL LOW - Emergency override (ignores VPD and rain)
         elif current_moisture < CRITICAL_THRESHOLD:
             decision = "WATER_NOW"
             status = "EMERGENCY_OVERRIDE"
             reason = f"CRITICAL: Moisture at {current_moisture:.1f}%. Emergency watering."
         
-        # 3.3 LOW MOISTURE (<30%) - Standard trigger with rain check
+        # 3.3 LOW MOISTURE (<30%) - Smart timing based on VPD
         elif current_moisture < LOW_THRESHOLD:
-            if rain_incoming:
+            
+            # 3.3.1 Rain coming soon? STALL and wait for free water
+            if rain_imminent:
                 decision = "STALL"
                 status = "RAIN_DELAY"
                 reason = f"Moisture low ({current_moisture:.1f}%) but rain in {forecast_mins}m. Stalling."
+            
+            # 3.3.2 High VPD during midday? Delay until cooler
+            elif is_extreme_vpd and is_high_evap_period:
+                decision = "STALL"
+                status = "VPD_DELAY"
+                reason = f"VPD extreme ({vpd:.2f}kPa). Waiting for evening (18:00) to reduce evaporation loss."
+            
+            # 3.3.3 High VPD but optimal time? Water now (best compromise)
+            elif is_high_vpd and is_optimal_time:
+                decision = "WATER_NOW"
+                status = "OPTIMAL_TIMING"
+                reason = f"Low moisture ({current_moisture:.1f}%) at optimal time. VPD={vpd:.2f}kPa."
+            
+            # 3.3.4 High VPD, not optimal time? If morning coming soon, wait; else water
+            elif is_high_vpd and not is_optimal_time:
+                # If it's late evening (21:00-03:00), wait for optimal morning
+                if 21 <= current_hour or current_hour < 4:
+                    decision = "STALL"
+                    status = "WAIT_OPTIMAL"
+                    reason = f"Low moisture. Waiting for 04:00 optimal window (current VPD={vpd:.2f}kPa)."
+                else:
+                    # It's morning/early afternoon - can't wait, water now
+                    decision = "WATER_NOW"
+                    status = "DRY_TRIGGER"
+                    reason = f"Moisture below {LOW_THRESHOLD}%. VPD={vpd:.2f}kPa. Watering required."
+            
+            # 3.3.5 Normal VPD, no rain - water now
             else:
                 decision = "WATER_NOW"
                 status = "DRY_TRIGGER"
-                reason = f"Moisture below {LOW_THRESHOLD}%. Watering required."
+                reason = f"Moisture below {LOW_THRESHOLD}%. VPD OK ({vpd:.2f}kPa). Watering."
         
-        # 3.4 PROACTIVE ZONE (30-45%) - Only stall if rain is imminent, otherwise wait
+        # 3.4 PROACTIVE ZONE (30-45%) - Stall if rain coming, watch decay rate
         elif current_moisture < PROACTIVE_THRESHOLD:
             if rain_imminent:
-                # Rain coming soon, let it do the work
                 decision = "STALL"
                 status = "PROACTIVE_DELAY"
                 reason = f"Moisture at {current_moisture:.1f}%, rain in {forecast_mins}m. Delaying to save water."
+            elif is_extreme_vpd:
+                decision = "MONITOR"
+                status = "VPD_WATCH"
+                reason = f"High VPD ({vpd:.2f}kPa). Moisture will drop fast. Monitoring."
             else:
-                # No rain coming, just monitor (don't proactively water - wait for <30%)
                 decision = "WAIT"
                 status = "MONITORING"
-                reason = f"Moisture at {current_moisture:.1f}%. Waiting for standard threshold."
+                reason = f"Moisture at {current_moisture:.1f}%. VPD={vpd:.2f}kPa. Watching."
         
-        # 3.5 COMFORTABLE ZONE (45-75%) - Only act on ML + rain forecast
+        # 3.5 COMFORTABLE ZONE (45-75%) - Proactive pre-heat watering
         else:
             if rain_imminent:
                 decision = "WAIT"
                 status = "RAIN_EXPECTED"
                 reason = f"Rain expected in {forecast_mins}m. No action needed."
+            
+            # NEW: Proactive watering before hot day
+            # If it's early morning and VPD will be extreme later, top up now
+            elif is_optimal_morning and features.get('is_extreme_vpd', 0) == 1:
+                if current_moisture < 55:
+                    decision = "WATER_NOW"
+                    status = "PROACTIVE_PREHEAT"
+                    reason = f"Pre-heat watering at {current_moisture:.1f}%. Hot day predicted."
+                else:
+                    decision = "WAIT"
+                    status = "OPTIMAL"
+                    reason = f"Moisture OK for hot day. VPD={vpd:.2f}kPa."
+            
             elif prediction == 1 and current_moisture < 55.0:
-                # ML thinks we're drying, consider early action
-                decision = "WAIT"  # Be conservative, just monitor
+                decision = "WAIT"
                 status = "ML_WATCH"
-                reason = f"ML detects drying trend. Watching closely."
+                reason = f"ML detects drying trend. VPD={vpd:.2f}kPa. Watching closely."
             else:
                 decision = "WAIT"
                 status = "OPTIMAL"

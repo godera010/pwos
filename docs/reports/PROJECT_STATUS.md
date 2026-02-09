@@ -108,7 +108,8 @@ pwos/
 │   └── simulation/          # ESP32 & Weather Simulators
 ├── tests/                   # Integration & Unit Tests
 ├── data/                    # SQLite DB + Training Data
-└── start_simulation.bat     # One-Click Launcher
+├── start_simulation.bat     # One-Click Launcher
+└── setup.bat                # Environment Setup Script
 ```
 
 ---

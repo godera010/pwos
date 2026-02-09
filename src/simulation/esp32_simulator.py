@@ -169,40 +169,126 @@ class SimulatedESP32:
                 self.pump_active = False
                 self.logger.info("PUMP DEACTIVATED (Duration Complete)")
 
-        # --- 3. Drying Logic (Physics Based) ---
+        # --- 3. Drying Logic (Realistic VPD-Based Physics) ---
         else:
             # Only dry if pump is NOT running
             
-            # Calculate VPD (Driving force of evaporation)
-            # Tetens formula
+            # Calculate VPD (Vapor Pressure Deficit) - Driving force of evaporation
+            # Tetens formula: es = saturation vapor pressure at temp T
             es = 0.6108 * math.exp((17.27 * self.temperature) / (self.temperature + 237.3))
-            ea = es * (self.humidity / 100.0)
-            vpd = max(0, es - ea)
+            ea = es * (self.humidity / 100.0)  # Actual vapor pressure
+            vpd = max(0, es - ea)  # VPD in kPa
             
-            # Rain logic (Instant wetting if raining)
+            # Store VPD for logging
+            self.current_vpd = vpd
+            
+            # =====================================================
+            # RAIN EFFECT ON SOIL MOISTURE
+            # =====================================================
+            # Rain directly adds water to soil. The effect depends on:
+            # 1. Rain intensity (mm/hour)
+            # 2. Soil absorption capacity  
+            # 3. Current moisture level (near saturation = runoff)
+            #
+            # Typical rain intensities:
+            # - Light rain: 0.5-2.5 mm/hr
+            # - Moderate rain: 2.5-7.5 mm/hr
+            # - Heavy rain: 7.5-50 mm/hr
+            # - Storm: 50+ mm/hr
+            #
+            # Soil moisture gain approximation:
+            # 1mm of rain ≈ 1-2% moisture increase (depends on soil)
+            # =====================================================
+            
             is_raining = (self.current_weather.get('condition') == 'Raining')
+            rain_intensity = self.current_weather.get('rain_intensity', 0)  # 0-100 scale
             
-            if is_raining:
-                 rain_intensity = self.current_weather.get('rain_intensity', 0)
-                 # Rain adds moisture slowly too, but faster than drying
-                 self.soil_moisture += (rain_intensity / 20.0) # e.g. 50% rain -> +2.5% per tick
+            if is_raining and rain_intensity > 0:
+                # Convert 0-100 intensity scale to mm/hour
+                # 0 = no rain, 25 = light, 50 = moderate, 75 = heavy, 100 = storm
+                mm_per_hour = (rain_intensity / 100.0) * 60.0  # Max 60 mm/hr (heavy storm)
+                
+                # Soil absorption rate: ~1.5% moisture per mm of rain
+                MOISTURE_PER_MM = 1.5
+                
+                # Time scaling: 5 second ticks, 720 ticks per hour
+                TICKS_PER_HOUR = 720
+                
+                # Calculate moisture gain per tick
+                moisture_gain_per_hour = mm_per_hour * MOISTURE_PER_MM
+                moisture_gain_per_tick = moisture_gain_per_hour / TICKS_PER_HOUR
+                
+                # Reduce evaporation during rain (VPD effect minimized)
+                # Rain cools air, increases humidity → VPD drops
+                rain_vpd_reduction = 0.9  # 90% reduction in evaporation during rain
+                
+                # Soil saturation limit (field capacity ~85%, saturation ~100%)
+                FIELD_CAPACITY = 85.0
+                SATURATION_LIMIT = 98.0
+                
+                # Apply rain absorption with diminishing returns near saturation
+                if self.soil_moisture < FIELD_CAPACITY:
+                    # Below field capacity: soil absorbs water efficiently
+                    self.soil_moisture += moisture_gain_per_tick
+                elif self.soil_moisture < SATURATION_LIMIT:
+                    # Above field capacity: slower absorption (some runoff)
+                    absorption_efficiency = 1.0 - ((self.soil_moisture - FIELD_CAPACITY) / 
+                                                    (SATURATION_LIMIT - FIELD_CAPACITY))
+                    self.soil_moisture += moisture_gain_per_tick * absorption_efficiency * 0.5
+                # else: At saturation, excess rain runs off (no gain)
+                
+                # Minimal drying during rain (reduced VPD effect)
+                vpd_during_rain = vpd * (1 - rain_vpd_reduction)
+                minimal_decay = 0.01 * vpd_during_rain  # Negligible decay
+                self.soil_moisture -= minimal_decay
+                
+                # Debug logging
+                if random.random() < 0.02:
+                    self.logger.debug(
+                        f"RAIN: intensity={rain_intensity}%, mm/hr={mm_per_hour:.1f}, "
+                        f"gain={moisture_gain_per_tick:.4f}%/tick, moisture={self.soil_moisture:.1f}%"
+                    )
             else:
-                # DRYING
-                # We want noticeable drying.
-                # Let's say we want to lose 5% per "Hour".
-                # If interval is 5s, and 5s = 5min (Demo speed), then 12 steps = 1 hour.
-                # So per step we need 5% / 12 = ~0.4%
+                # =====================================================
+                # REALISTIC VPD-BASED DRYING
+                # =====================================================
+                # 
+                # Real-world soil drying rates (research-based):
+                # - At VPD 1.0 kPa: ~3-5% moisture loss per hour
+                # - At VPD 2.0 kPa: ~6-10% moisture loss per hour  
+                # - At VPD 0.5 kPa: ~1-2% moisture loss per hour
+                #
+                # Formula: decay_per_hour = BASE_RATE * VPD^POWER
+                # 
+                # With 5s interval, 720 ticks per hour.
+                # To get 4% loss per hour at VPD=1.0:
+                #   decay_per_tick = 4% / 720 = 0.0056%
+                #
+                # =====================================================
                 
-                # Base decay at 1.0 kPa VPD
-                BASE_DECAY = 0.4 
+                # Config: Decay rate at VPD=1.0 kPa (% per hour)
+                DECAY_PERCENT_PER_HOUR_AT_VPD_1 = 4.0
                 
-                # Actual decay = Base * VPD
-                # High heat (VPD 2.0) -> 0.8% per step
-                # Cool night (VPD 0.2) -> 0.08% per step
+                # Power factor: >1 = steeper response to VPD
+                VPD_POWER = 1.3  # High VPD dries faster-than-linear
                 
-                step_decay = BASE_DECAY * vpd
+                # Time scaling (5 second intervals -> 720 ticks/hour)
+                TICKS_PER_HOUR = 720
                 
+                # Calculate decay
+                vpd_factor = pow(vpd, VPD_POWER)  # Amplify high VPD effect
+                decay_per_hour = DECAY_PERCENT_PER_HOUR_AT_VPD_1 * vpd_factor
+                step_decay = decay_per_hour / TICKS_PER_HOUR
+                
+                # Apply decay
                 self.soil_moisture -= step_decay
+                
+                # Debug logging (occasionally)
+                if random.random() < 0.01:  # 1% of ticks
+                    self.logger.debug(
+                        f"VPD Decay: VPD={vpd:.2f}kPa, factor={vpd_factor:.2f}, "
+                        f"decay/hr={decay_per_hour:.2f}%, step={step_decay:.4f}%"
+                    )
 
         # Clamp limits
         self.soil_moisture = max(0, min(100, self.soil_moisture))

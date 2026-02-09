@@ -21,6 +21,10 @@
 
 ### Option A: One-Click Launcher (Windows)
 ```batch
+rem 1. First-time setup (creates .venv & installs dependencies)
+setup.bat
+
+rem 2. Launch System
 start_simulation.bat
 ```
 

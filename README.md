@@ -143,6 +143,14 @@ ESP32 Simulator → MQTT Broker → Flask API → ML Predictor
 
 ---
 
+## ⚡ Performance & Acceleration
+
+- **Intel iGPU Acceleration**: The system automatically detects and uses Intel Iris Xe/Arc GPUs via `sklearnex`.
+- **Safe Fallback**: If Intel drivers are missing or incompatible, it gracefully degrades to standard CPU processing without crashing.
+- **Multi-Core**: Training is optimized with `n_jobs=-1` to utilize all available CPU cores.
+
+---
+
 ## 📚 Documentation
 
 | Document | Description |
@@ -151,6 +159,7 @@ ESP32 Simulator → MQTT Broker → Flask API → ML Predictor
 | [DATABASE_GUIDE.md](docs/guides/DATABASE_GUIDE.md) | Database setup for contributors |
 | [API_REFERENCE.md](docs/reference/API_REFERENCE.md) | REST API documentation |
 | [validation_report.md](docs/reports/validation_report.md) | Hypothesis validation |
+| [ML_TRAINING_GUIDE.md](docs/guides/ML_TRAINING_GUIDE.md) | How to retrain the model |
 
 ---
 

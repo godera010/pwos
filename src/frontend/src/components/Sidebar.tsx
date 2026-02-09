@@ -1,73 +1,74 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutGrid, Sliders, Cpu, Terminal, Sun, Moon } from 'lucide-react';
+import {
+    Home,
+    BarChart3,
+    Brain,
+    Settings,
+    Activity,
+    Sliders,
+    Droplets
+} from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-interface SidebarProps {
-    isDark: boolean;
-    toggleTheme: () => void;
-}
+const navItems = [
+    { icon: Home, label: "Dashboard", path: "/" },
+    { icon: BarChart3, label: "Analytics", path: "/analytics" },
+    { icon: Brain, label: "ML Insights", path: "/ml-insights" },
+    { icon: Sliders, label: "Control", path: "/control" },
+    { icon: Activity, label: "System Health", path: "/system" },
+    { icon: Settings, label: "Settings", path: "/settings" }
+];
 
-export const Sidebar: React.FC<SidebarProps> = ({ isDark, toggleTheme }) => {
-    const navItems = [
-        { icon: LayoutGrid, label: 'Dashboard', path: '/' },
-        { icon: Sliders, label: 'Settings', path: '/settings' },
-        { icon: Cpu, label: 'Hardware', path: '/hardware' },
-        { icon: Terminal, label: 'Terminal', path: '/terminal' },
-    ];
-
+export const Sidebar: React.FC = () => {
     return (
-        <aside className="w-64 h-screen bg-white/10 dark:bg-black/20 backdrop-blur-xl border-r border-white/10 flex flex-col transition-all duration-300">
+        <aside className="w-64 h-screen bg-slate-50 dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-all duration-300">
             {/* Logo Area */}
-            <div className="p-6 flex items-center gap-3">
-                <div className="bg-gradient-to-tr from-green-400 to-emerald-600 p-2 rounded-xl shadow-lg shadow-green-500/20">
-                    <span className="material-icons-round text-white text-xl">eco</span>
-                </div>
-                <div>
-                    <h1 className="font-bold text-lg tracking-tight text-white">P-WOS</h1>
-                    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">Admin V2.0</p>
+            <div className="p-6">
+                <div className="flex items-center gap-3">
+                    <div className="bg-primary p-2 rounded-lg shadow-lg shadow-emerald-500/20">
+                        <Droplets className="text-white size-5" />
+                    </div>
+                    <div>
+                        <h1 className="font-black text-xl tracking-tighter text-slate-900 dark:text-white">P-WOS</h1>
+                        <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Admin Panel</p>
+                    </div>
                 </div>
             </div>
 
+            <div className="px-6 mb-4">
+                <Separator className="bg-slate-200 dark:bg-slate-800" />
+            </div>
+
             {/* Navigation */}
-            <nav className="flex-1 px-4 space-y-2 mt-4">
+            <ScrollArea className="flex-1 px-4 space-y-1">
                 {navItems.map((item) => (
                     <NavLink
                         key={item.path}
                         to={item.path}
                         className={({ isActive }) => `
-                            flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
-                            ${isActive
-                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                                : 'text-slate-400 hover:bg-white/5 hover:text-white'}
-                        `}
+              flex items-center gap-3 px-4 py-2.5 rounded-md transition-all duration-200 group
+              ${isActive
+                                ? 'bg-primary text-white shadow-sm font-semibold'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'}
+            `}
                     >
-                        <item.icon className="size-5 transition-transform group-hover:scale-110" />
-                        <span className="font-medium text-sm">{item.label}</span>
+                        <item.icon className="size-4 transition-transform group-hover:scale-110" />
+                        <span className="text-sm">{item.label}</span>
                     </NavLink>
                 ))}
-            </nav>
+            </ScrollArea>
 
-            {/* Bottom Actions */}
-            <div className="p-4 mt-auto border-t border-white/5 space-y-4">
-                {/* Theme Toggle */}
-                <button
-                    onClick={toggleTheme}
-                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-slate-300"
-                >
-                    <span className="text-xs font-medium uppercase tracking-wider">Dark Mode</span>
-                    {isDark ? <Moon className="size-4 text-indigo-400" /> : <Sun className="size-4 text-amber-400" />}
-                </button>
-
-                {/* User Profile */}
-                <div className="flex items-center gap-3 px-2">
-                    <div className="size-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-[1px]">
-                        <div className="size-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden">
-                            <img src="https://ui-avatars.com/api/?name=Admin&background=random" alt="Admin" />
-                        </div>
+            {/* Bottom Profile */}
+            <div className="p-4 mt-auto border-t border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors cursor-pointer">
+                    <div className="size-8 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden flex items-center justify-center border border-slate-300 dark:border-slate-700">
+                        <img src="https://ui-avatars.com/api/?name=Admin&background=6366f1&color=fff" alt="Admin" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">Administrator</p>
-                        <p className="text-xs text-slate-500 truncate">admin@pwos.local</p>
+                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">Administrator</p>
+                        <p className="text-[10px] text-slate-500 truncate uppercase tracking-wide">System Owner</p>
                     </div>
                 </div>
             </div>

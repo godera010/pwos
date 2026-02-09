@@ -1,6 +1,18 @@
 @echo off
 REM P-WOS Simulation Startup Script for Windows
 
+REM Check if .venv exists
+if not exist ".venv" (
+    echo [ERROR] Virtual Environment not found!
+    echo Please run 'setup.bat' first to configure the system.
+    pause
+    exit /b 1
+)
+
+REM Activate Virtual Environment
+echo [INFO] Activating P-WOS Environment...
+call .venv\Scripts\activate.bat
+
 echo =========================================
 echo P-WOS Simulation Environment
 echo =========================================
@@ -12,15 +24,6 @@ set "PROJECT_ROOT=%SCRIPT_DIR%"
 cd /d "%PROJECT_ROOT%"
 
 echo Project Root: %CD%
-
-REM Check if Python is installed
-python --version >nul 2>&1
-if errorlevel 1 (
-    echo ERROR: Python is not installed!
-    echo Please install Python 3.8 or higher
-    pause
-    exit /b 1
-)
 
 REM Check if Mosquitto is installed
 where mosquitto >nul 2>&1
@@ -35,9 +38,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Install dependencies
-echo Installing dependencies...
-pip install -r requirements.txt
+echo Starting P-WOS Simulation...
 echo.
 
 echo Starting P-WOS Simulation...
