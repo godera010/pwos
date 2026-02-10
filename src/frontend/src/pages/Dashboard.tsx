@@ -234,7 +234,6 @@ export const Dashboard: React.FC = () => {
 
             {/* Weather Forecast Card */}
             <Card className="border-none shadow-sm dark:bg-slate-900/50 overflow-hidden">
-                <div className="h-1 w-full bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-600" />
                 <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                         <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
@@ -310,7 +309,7 @@ export const Dashboard: React.FC = () => {
 
             {/* AI Prediction & Quick Actions */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2 border-none shadow-sm bg-gradient-to-br from-indigo-600 to-indigo-800 text-white">
+                <Card className="lg:col-span-2 border-none shadow-sm bg-gradient-to-br from-emerald-600 to-indigo-700 text-white">
                     <CardContent className="p-8">
                         <div className="flex flex-col md:flex-row justify-between gap-6">
                             <div className="flex-1 space-y-4">
@@ -320,7 +319,7 @@ export const Dashboard: React.FC = () => {
                                         "🚨 Watering recommended within 24 hours" :
                                         "✓ No watering needed for 24+ hours"}
                                 </h2>
-                                <p className="text-indigo-100 text-sm leading-relaxed max-w-xl">
+                                <p className="text-emerald-50/90 text-sm leading-relaxed max-w-xl">
                                     {prediction?.recommended_action === 'STALL' ?
                                         "Strategy: STALL. Rain forecast indicates incoming natural precipitation. Saving resources." :
                                         (prediction?.recommended_action === 'WATER_NOW' ?
@@ -342,10 +341,10 @@ export const Dashboard: React.FC = () => {
                         <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Quick Actions</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                        <Button className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 text-sm font-bold gap-2">
+                        <Button className="w-full bg-emerald-600 hover:bg-emerald-700 h-12 text-sm font-bold gap-2">
                             <Droplets className="size-4" /> Water Now
                         </Button>
-                        <Button variant="outline" className="w-full h-12 text-sm font-bold">
+                        <Button variant="outline" className="w-full h-12 text-sm font-bold border-indigo-500/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50">
                             Run Auto-Control
                         </Button>
                         <Button variant="destructive" size="sm" className="w-full text-[10px] font-black uppercase tracking-widest h-8 opacity-70 hover:opacity-100">
