@@ -1,6 +1,5 @@
 import React from 'react';
 import { Moon, Sun } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export const ThemeToggle = () => {
     const [theme, setTheme] = React.useState<"light" | "dark">("dark");
@@ -21,12 +20,16 @@ export const ThemeToggle = () => {
     };
 
     return (
-        <Button variant="ghost" size="icon" onClick={toggleTheme} title="Toggle theme">
+        <button
+            onClick={toggleTheme}
+            title="Toggle theme"
+            className="flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
+        >
             {theme === "light" ? (
-                <Sun className="h-5 w-5 text-amber-500" />
+                <Moon className="h-[18px] w-[18px] text-slate-600" strokeWidth={2.5} />
             ) : (
-                <Moon className="h-5 w-5 text-indigo-400" />
+                <Sun className="h-[18px] w-[18px] text-slate-300" strokeWidth={2.5} />
             )}
-        </Button>
+        </button>
     );
 };

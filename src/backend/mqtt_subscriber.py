@@ -1,11 +1,13 @@
 """
 MQTT Subscriber - Bridges sensor data to database
-Listens to MQTT topics and stores data
+Listens to MQTT topics and stores data with real weather context
 """
 
 import paho.mqtt.client as mqtt
 import json
 from database import PWOSDatabase
+from weather_api import weather_api
+from config import WEATHER_API_MODE
 
 # Initialize database
 db = PWOSDatabase()
@@ -17,13 +19,8 @@ import os
 # Get project root (2 levels up from src/backend/mqtt_subscriber.py)
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
-log_dir = os.path.join(project_root, "logs")
-
-if not os.path.exists(log_dir):
-    try:
-        os.makedirs(log_dir)
-    except:
-        pass
+log_dir = os.path.join(project_root, "logs", "app")
+os.makedirs(log_dir, exist_ok=True)
     
 logging.basicConfig(
     level=logging.INFO,
@@ -41,16 +38,35 @@ def on_connect(client, userdata, flags, rc, properties):
         logger.info(f"Connected to MQTT Broker (rc={rc})")
         client.subscribe("pwos/sensor/data")
         logger.info("Subscribed to pwos/sensor/data")
+        logger.info(f"Weather Mode: {WEATHER_API_MODE}")
     else:
         logger.error(f"Connection failed with code {rc}")
 
 def on_message(client, userdata, msg):
-    """Receive sensor data and store in database"""
+    """Receive sensor data, fetch weather, and store in database"""
     try:
         data = json.loads(msg.payload.decode())
         logger.info(f"Received: Moisture={data['soil_moisture']}%, "
               f"Temp={data['temperature']}C, "
               f"Humidity={data['humidity']}%")
+        
+        # Fetch weather from weather_api (respects WEATHER_API_MODE)
+        try:
+            forecast = weather_api.get_forecast()
+            data.update({
+                'forecast_minutes': forecast.get('forecast_minutes', 0),
+                'wind_speed': forecast.get('wind_speed', 0.0),
+                'precipitation_chance': forecast.get('precipitation_chance', 0),
+                'rain_intensity': forecast.get('rain_intensity', 0.0),
+                'cloud_cover': forecast.get('cloud_cover', 0.0),
+                'forecast_temp': forecast.get('forecast_temp', 25.0),
+                'forecast_humidity': forecast.get('forecast_humidity', 60.0),
+                'weather_condition': forecast.get('condition', 'unknown'),
+                'weather_source': forecast.get('source', 'unknown')
+            })
+            logger.info(f"Weather: {forecast.get('source')} | Wind={forecast.get('wind_speed', 0)} km/h")
+        except Exception as e:
+            logger.warning(f"Weather fetch failed: {e}. Using defaults.")
         
         # Store in database
         db.insert_sensor_reading(data)

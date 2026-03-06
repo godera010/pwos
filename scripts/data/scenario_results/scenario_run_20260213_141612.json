@@ -1,0 +1,117 @@
+{
+  "timestamp": "20260213_141612",
+  "days": 3,
+  "scenarios": [
+    {
+      "scenario": "Dry Season",
+      "days": 3,
+      "rain_events": 1,
+      "reactive": {
+        "water_used": 105.0,
+        "pump_events": 7,
+        "stress_hours": 0.0
+      },
+      "predictive": {
+        "water_used": 105.0,
+        "pump_events": 7,
+        "stress_hours": 0.0
+      },
+      "water_saved": 0.0,
+      "savings_percent": 0.0,
+      "hypothesis_passed": false
+    },
+    {
+      "scenario": "Rainy Season",
+      "days": 3,
+      "rain_events": 4,
+      "reactive": {
+        "water_used": 0.0,
+        "pump_events": 0,
+        "stress_hours": 0.0
+      },
+      "predictive": {
+        "water_used": 0.0,
+        "pump_events": 0,
+        "stress_hours": 0.0
+      },
+      "water_saved": 0.0,
+      "savings_percent": 0,
+      "hypothesis_passed": false
+    },
+    {
+      "scenario": "Mixed Weather",
+      "days": 3,
+      "rain_events": 3,
+      "reactive": {
+        "water_used": 45.0,
+        "pump_events": 3,
+        "stress_hours": 0.0
+      },
+      "predictive": {
+        "water_used": 45.0,
+        "pump_events": 3,
+        "stress_hours": 0.0
+      },
+      "water_saved": 0.0,
+      "savings_percent": 0.0,
+      "hypothesis_passed": false
+    },
+    {
+      "scenario": "Heat Wave",
+      "days": 3,
+      "rain_events": 0,
+      "reactive": {
+        "water_used": 165.0,
+        "pump_events": 11,
+        "stress_hours": 0.0
+      },
+      "predictive": {
+        "water_used": 165.0,
+        "pump_events": 11,
+        "stress_hours": 0.0
+      },
+      "water_saved": 0.0,
+      "savings_percent": 0.0,
+      "hypothesis_passed": false
+    },
+    {
+      "scenario": "Cool Period",
+      "days": 3,
+      "rain_events": 5,
+      "reactive": {
+        "water_used": 15.0,
+        "pump_events": 1,
+        "stress_hours": 0.0
+      },
+      "predictive": {
+        "water_used": 0.0,
+        "pump_events": 0,
+        "stress_hours": 0.0
+      },
+      "water_saved": 15.0,
+      "savings_percent": 100.0,
+      "hypothesis_passed": true
+    },
+    {
+      "scenario": "Thesis Validation",
+      "days": 3,
+      "rain_events": 11,
+      "reactive": {
+        "water_used": 15.0,
+        "pump_events": 1,
+        "stress_hours": 0.0
+      },
+      "predictive": {
+        "water_used": 15.0,
+        "pump_events": 1,
+        "stress_hours": 0.0
+      },
+      "water_saved": 0.0,
+      "savings_percent": 0.0,
+      "hypothesis_passed": false
+    }
+  ],
+  "average_savings": 16.666666666666668,
+  "passed_count": 1,
+  "total_count": 6
+}

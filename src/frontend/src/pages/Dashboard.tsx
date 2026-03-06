@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import type { SensorData, PredictionData, SystemLog, SimulationState, WeatherForecast } from '../services/api';
+import type { SensorData, PredictionData, SystemLog, WeatherForecast, SystemState } from '../services/api';
 import { CircularGauge } from '../components/CircularGauge';
 import {
     Activity,
     AlertTriangle,
     Terminal,
     Droplets,
-    TrendingDown,
     Thermometer,
     CheckCircle2,
-    Clock,
     Zap,
     Brain,
     Cloud,
@@ -18,20 +16,14 @@ import {
     Wind,
     Umbrella
 } from 'lucide-react';
-import {
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip as RechartsTooltip,
-    ResponsiveContainer,
-    AreaChart,
-    Area
-} from 'recharts';
+import { LoadChart } from '../components/LoadChart';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Link } from 'react-router-dom';
 
 export const Dashboard: React.FC = () => {
     const [sensors, setSensors] = useState<SensorData | null>(null);
@@ -39,21 +31,20 @@ export const Dashboard: React.FC = () => {
     const [prediction, setPrediction] = useState<PredictionData | null>(null);
     const [logs, setLogs] = useState<SystemLog[]>([]);
     const [history, setHistory] = useState<SensorData[]>([]);
-    const [simState, setSimState] = useState<SimulationState | null>(null);
+    const [systemState, setSystemState] = useState<SystemState | null>(null);
     const [isAuto, setIsAuto] = useState(true);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const fetchData = async () => {
         try {
-            const [s, w, p, l, h, state, sim] = await Promise.all([
+            const [s, w, p, l, h, state] = await Promise.all([
                 api.getLatestSensors(),
                 api.getWeatherForecast(),
                 api.getPrediction(),
                 api.getLogs(),
-                api.getHistory(30),
-                api.getSystemState(),
-                api.simulationState().catch(() => null)
+                api.getHistory(1), // Fetch 1 hour, filter down to 30 min in UI
+                api.getSystemState()
             ]);
             setSensors(s);
             setWeather(w);
@@ -61,7 +52,8 @@ export const Dashboard: React.FC = () => {
             setLogs(l);
             setHistory(h.reverse());
             setIsAuto(state.mode === 'AUTO');
-            if (sim) setSimState(sim);
+            setSystemState(state);
+
             setError(null);
         } catch (e) {
             console.error("Dashboard Fetch Error:", e);
@@ -87,7 +79,7 @@ export const Dashboard: React.FC = () => {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh]">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-                <p className="text-slate-500 font-medium font-display uppercase tracking-widest text-[10px]">Initializing P-WOS Dashboard...</p>
+                <p className="text-slate-900 dark:text-white font-medium font-display uppercase tracking-widest text-[10px]">Initializing P-WOS Dashboard...</p>
             </div>
         );
     }
@@ -97,7 +89,7 @@ export const Dashboard: React.FC = () => {
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
                 <AlertTriangle className="size-12 text-amber-500 mb-4" />
                 <h2 className="text-2xl font-bold mb-2">Connection Lost</h2>
-                <p className="text-slate-500 max-w-md mb-6">{error}</p>
+                <p className="text-slate-900 dark:text-white max-w-md mb-6">{error}</p>
                 <Button onClick={() => { setLoading(true); fetchData(); }}>
                     Retry Connection
                 </Button>
@@ -112,40 +104,20 @@ export const Dashboard: React.FC = () => {
                 <div>
                     <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
                         Dashboard
-                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1 font-bold">
-                            <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            System Online
-                        </Badge>
                     </h1>
-                    <p className="text-slate-500 text-sm font-medium">
+                    <p className="text-slate-900 dark:text-white text-sm font-medium">
                         Real-time plant monitoring and predictive watering optimization.
                     </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <div className="text-right hidden sm:block">
-                        <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Last Updated</p>
-                        <p className="text-xs font-mono font-bold text-slate-600 dark:text-slate-400">{new Date().toLocaleTimeString()}</p>
-                    </div>
-                    <Separator orientation="vertical" className="h-8" />
-                    <Button
-                        variant={isAuto ? "default" : "outline"}
-                        size="sm"
-                        onClick={toggleMode}
-                        className={isAuto ? "bg-primary hover:bg-primary/90" : ""}
-                    >
-                        {isAuto ? "Auto Mode Active" : "Manual Mode active"}
-                    </Button>
                 </div>
             </div>
 
             {/* Key Metrics Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Soil Moisture */}
-                <Card className="overflow-hidden border-none shadow-sm dark:bg-slate-900/50">
+                <Card className="overflow-hidden  shadow-none border border-slate-200 dark:border-slate-800">
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
-                            <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Soil Moisture</CardTitle>
+                            <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">Soil Moisture</CardTitle>
                             <Droplets className="size-4 text-emerald-500" />
                         </div>
                     </CardHeader>
@@ -171,31 +143,27 @@ export const Dashboard: React.FC = () => {
                 </Card>
 
                 {/* Ambient Conditions */}
-                <Card className="border-none shadow-sm dark:bg-slate-900/50">
+                <Card className=" shadow-none border border-slate-200 dark:border-slate-800">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Ambient Conditions</CardTitle>
+                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">Ambient Conditions</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6 pt-4">
-                        <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-orange-500/10 rounded-lg">
-                                    <Thermometer className="size-5 text-orange-500" />
-                                </div>
+                                <Thermometer className="size-5 text-orange-500" />
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase">Temperature</p>
+                                    <p className="text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase">Temperature</p>
                                     <p className="text-2xl font-black">{sensors?.temperature.toFixed(1)}°C</p>
                                 </div>
                             </div>
                             <Progress value={(sensors?.temperature || 0) * 2} className="w-24 h-1.5" />
                         </div>
 
-                        <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-blue-500/10 rounded-lg">
-                                    <Activity className="size-5 text-blue-500" />
-                                </div>
+                                <Activity className="size-5 text-blue-500" />
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase">Humidity</p>
+                                    <p className="text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase">Humidity</p>
                                     <p className="text-2xl font-black">{sensors?.humidity.toFixed(1)}%</p>
                                 </div>
                             </div>
@@ -205,24 +173,50 @@ export const Dashboard: React.FC = () => {
                 </Card>
 
                 {/* System Health */}
-                <Card className="border-none shadow-sm dark:bg-slate-900/50">
+                <Card className=" shadow-none border border-slate-200 dark:border-slate-800">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">System Health</CardTitle>
+                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">System Health</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-2">
                         <div className="space-y-3">
                             {[
-                                { label: 'Database', status: 'Connected', icon: CheckCircle2, color: 'text-emerald-500' },
-                                { label: 'MQTT Broker', status: 'Active', icon: Zap, color: 'text-primary' },
-                                { label: 'ML Engine', status: 'Loaded (94%)', icon: Brain, color: 'text-indigo-500' },
-                                { label: 'Figma Assets', status: 'Optimized', icon: Clock, color: 'text-slate-400' }
+                                {
+                                    label: 'Database',
+                                    status: error ? 'Error' : 'Connected',
+                                    icon: CheckCircle2,
+                                    color: error ? 'text-red-500' : 'text-emerald-500'
+                                },
+                                {
+                                    label: 'ESP Device (Sim)',
+                                    status: (sensors?.device_id) ? 'Online' : 'Offline',
+                                    icon: Activity,
+                                    color: (sensors?.device_id) ? 'text-emerald-500' : 'text-red-500'
+                                },
+                                {
+                                    label: 'Sensor Hub',
+                                    status: (sensors && (new Date().getTime() - new Date(sensors.timestamp).getTime() < 120000)) ? 'Online' : 'Offline',
+                                    icon: Zap,
+                                    color: (sensors && (new Date().getTime() - new Date(sensors.timestamp).getTime() < 120000)) ? 'text-emerald-500' : 'text-red-500'
+                                },
+                                {
+                                    label: 'ML Engine',
+                                    status: prediction ? 'Predicting' : 'Idle',
+                                    icon: Brain,
+                                    color: prediction ? 'text-indigo-500' : 'text-slate-400'
+                                },
+                                {
+                                    label: 'Pump System',
+                                    status: systemState?.pump_active ? 'Watering' : 'Standby',
+                                    icon: Droplets,
+                                    color: systemState?.pump_active ? 'text-blue-500' : 'text-slate-400'
+                                }
                             ].map((item, idx) => (
-                                <div key={idx} className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                                <div key={idx} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                                     <div className="flex items-center gap-2">
                                         <item.icon className={`size-4 ${item.color}`} />
-                                        <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{item.label}</span>
+                                        <span className="text-xs font-bold text-slate-900 dark:text-neutral-300">{item.label}</span>
                                     </div>
-                                    <span className="text-[10px] font-black uppercase tracking-tight bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-500">
+                                    <span className={`text-[10px] font-black uppercase tracking-tight ${item.color}`}>
                                         {item.status}
                                     </span>
                                 </div>
@@ -232,184 +226,202 @@ export const Dashboard: React.FC = () => {
                 </Card>
             </div>
 
-            {/* Weather Forecast Card */}
-            <Card className="border-none shadow-sm dark:bg-slate-900/50 overflow-hidden">
-                <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                            <Cloud className="size-4 text-sky-500" /> Weather Forecast
-                        </CardTitle>
-                        <Badge variant="outline" className="text-[10px] font-black uppercase text-sky-500 border-sky-500/20">
-                            {weather?.source || 'OpenWeather'}
-                        </Badge>
-                    </div>
-                    <CardDescription>Live conditions from Bulawayo weather station</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {weather ? (
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                            <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800">
-                                <div className="p-2 bg-orange-500/10 rounded-lg">
-                                    <Thermometer className="size-5 text-orange-500" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase">Temp</p>
-                                    <p className="text-xl font-black">{weather.temperature.toFixed(1)}°C</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800">
-                                <div className="p-2 bg-blue-500/10 rounded-lg">
-                                    <Droplets className="size-5 text-blue-500" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase">Humidity</p>
-                                    <p className="text-xl font-black">{weather.humidity.toFixed(0)}%</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800">
-                                <div className="p-2 bg-sky-500/10 rounded-lg">
-                                    <CloudRain className="size-5 text-sky-500" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase">Precip</p>
-                                    <p className="text-xl font-black">{weather.precipitation_chance}%</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800">
-                                <div className="p-2 bg-emerald-500/10 rounded-lg">
-                                    <Wind className="size-5 text-emerald-500" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase">Wind</p>
-                                    <p className="text-xl font-black">{weather.wind_speed_kmh} km/h</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800">
-                                <div className="p-2 bg-indigo-500/10 rounded-lg">
-                                    <Umbrella className="size-5 text-indigo-500" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase">Rain In</p>
-                                    <p className="text-xl font-black">{weather.rain_forecast_minutes > 0 ? `${weather.rain_forecast_minutes}m` : 'N/A'}</p>
-                                </div>
-                            </div>
+            {/* Weather Forecast + Quick Actions Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Weather Forecast Card */}
+                <Card className="shadow-none border border-slate-200 dark:border-slate-800 overflow-hidden">
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                                <Cloud className="size-4 text-sky-500" /> Weather Forecast
+                            </CardTitle>
+                            <Badge variant="outline" className="text-[10px] font-black uppercase text-sky-500 border-sky-500/20">
+                                {weather?.source || 'OpenWeather'}
+                            </Badge>
                         </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center py-12 text-center opacity-40">
-                            <Cloud className="size-12 mb-2" />
-                            <p className="text-xs font-bold uppercase tracking-widest">Loading Weather Data...</p>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        {weather ? (
+                            <div className="bg-gradient-to-br from-sky-400 to-indigo-500 rounded-b-xl p-6 text-white flex items-center justify-between">
+                                <div className="flex items-center gap-6">
+                                    <div className="size-20 bg-yellow-400 rounded-full shadow-[0_0_40px_rgba(250,204,21,0.6)] flex items-center justify-center">
+                                        {weather.condition?.toLowerCase().includes('cloud') || weather.cloud_cover > 50 ? (
+                                            <Cloud className="size-10 text-white" />
+                                        ) : weather.rain_forecast_minutes > 0 || weather.condition?.toLowerCase().includes('rain') ? (
+                                            <CloudRain className="size-10 text-white" />
+                                        ) : (
+                                            <div className="size-10 rounded-full bg-yellow-300"></div>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h2 className="text-5xl font-black tracking-tighter shadow-black/10 drop-shadow-md">
+                                            {weather.temperature.toFixed(1)}°
+                                        </h2>
+                                        <p className="text-xl font-medium tracking-wide opacity-90 capitalize mt-1">
+                                            {weather.condition || 'Clear'}
+                                        </p>
+                                    </div>
+                                </div>
 
-            {/* AI Prediction & Quick Actions */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2 border-none shadow-sm bg-gradient-to-br from-emerald-600 to-indigo-700 text-white">
-                    <CardContent className="p-8">
-                        <div className="flex flex-col md:flex-row justify-between gap-6">
-                            <div className="flex-1 space-y-4">
-                                <Badge className="bg-white/20 hover:bg-white/30 text-white border-none uppercase tracking-widest text-[10px]">AI Prediction Engine</Badge>
-                                <h2 className="text-3xl font-black leading-tight">
-                                    {prediction?.recommended_action === 'WATER_NOW' ?
-                                        "🚨 Watering recommended within 24 hours" :
-                                        "✓ No watering needed for 24+ hours"}
-                                </h2>
-                                <p className="text-emerald-50/90 text-sm leading-relaxed max-w-xl">
-                                    {prediction?.recommended_action === 'STALL' ?
-                                        "Strategy: STALL. Rain forecast indicates incoming natural precipitation. Saving resources." :
-                                        (prediction?.recommended_action === 'WATER_NOW' ?
-                                            "Strategy: DISPATCH. Soil moisture levels are trending below threshold. ML model suggests immediate hydration." :
-                                            "Strategy: MONITOR. System is currently optimal based on environmental factors and moisture levels.")}
-                                </p>
+                                <div className="space-y-4 text-right">
+                                    <div className="flex items-center justify-end gap-3">
+                                        <span className="text-xl font-bold">{weather.wind_speed_kmh.toFixed(1)} <span className="text-sm opacity-70">km/h</span></span>
+                                        <Wind className="size-5 opacity-80" />
+                                    </div>
+                                    <div className="flex items-center justify-end gap-3">
+                                        <span className="text-xl font-bold">{weather.humidity.toFixed(0)} <span className="text-sm opacity-70">%</span></span>
+                                        <Droplets className="size-5 opacity-80" />
+                                    </div>
+                                    <div className="flex items-center justify-end gap-3">
+                                        <span className="text-xl font-bold">
+                                            {weather.rain_forecast_minutes > 0 ? (
+                                                <span className="text-yellow-300">{(weather.rain_forecast_minutes / 60).toFixed(1)}h</span>
+                                            ) : (
+                                                <span className="opacity-90">{weather.precipitation_chance}%</span>
+                                            )}
+                                        </span>
+                                        {weather.rain_forecast_minutes > 0 ? <Umbrella className="size-5 text-yellow-300" /> : <CloudRain className="size-5 opacity-80" />}
+                                    </div>
+                                </div>
                             </div>
-                            <div className="flex flex-col items-center justify-center p-6 bg-white/10 rounded-3xl backdrop-blur-md border border-white/10">
-                                <p className="text-[10px] font-black uppercase tracking-widest mb-2 opacity-70">Confidence</p>
-                                <p className="text-4xl font-black mb-1">{prediction?.ml_analysis.confidence || 94}%</p>
-                                <Progress value={prediction?.ml_analysis.confidence || 94} className="w-24 h-2 bg-white/20" />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-12 text-center opacity-40">
+                                <Cloud className="size-12 mb-2" />
+                                <p className="text-xs font-bold uppercase tracking-widest">Loading Weather Data...</p>
                             </div>
-                        </div>
+                        )}
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-sm dark:bg-slate-900/50">
-                    <CardHeader>
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Quick Actions</CardTitle>
+                {/* Quick Actions Card */}
+                <Card className="shadow-none border border-slate-200 dark:border-slate-800">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">Quick Actions</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                        <Button className="w-full bg-emerald-600 hover:bg-emerald-700 h-12 text-sm font-bold gap-2">
-                            <Droplets className="size-4" /> Water Now
-                        </Button>
-                        <Button variant="outline" className="w-full h-12 text-sm font-bold border-indigo-500/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50">
-                            Run Auto-Control
-                        </Button>
-                        <Button variant="destructive" size="sm" className="w-full text-[10px] font-black uppercase tracking-widest h-8 opacity-70 hover:opacity-100">
-                            Emergency Stop
-                        </Button>
-                        <div className="pt-2 text-center">
-                            <p className="text-[10px] text-slate-400 font-bold uppercase">Manual Overrides are logged</p>
+                    <CardContent className="space-y-6 pt-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h4 className="text-sm font-bold text-slate-900 dark:text-white">AI Autopilot</h4>
+                                <p className="text-xs text-slate-500 dark:text-neutral-400">Automated moisture tracking</p>
+                            </div>
+                            <Switch checked={isAuto} onCheckedChange={toggleMode} />
+                        </div>
+
+                        <Separator />
+
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h4 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
+                                    Pump Override
+                                    {isAuto && <Badge variant="outline" className="text-[8px] uppercase font-black bg-slate-100 text-slate-400 border-none px-1 py-0 h-4">Blocked</Badge>}
+                                </h4>
+                                <p className="text-xs text-slate-500 dark:text-neutral-400">Force water ON/OFF</p>
+                            </div>
+                            <Switch
+                                checked={systemState?.pump_active || false}
+                                onCheckedChange={(checked) => {
+                                    if (checked) {
+                                        if (isAuto) toggleMode(); // Disable AI if they manually trigger
+                                        api.controlPump('ON', 30); // Default to 30s override
+
+                                        // Optioanlly update local state optimistically
+                                        if (systemState) setSystemState({ ...systemState, pump_active: true });
+                                    } else {
+                                        api.controlPump('OFF');
+                                        if (systemState) setSystemState({ ...systemState, pump_active: false });
+                                    }
+                                }}
+                                disabled={isAuto}
+                            />
+                        </div>
+
+                        <Separator />
+
+                        <div className="pt-2">
+                            <Link to="/control" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center justify-center gap-1 transition-colors">
+                                Advanced Controls Menu →
+                            </Link>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Live Sensor Feed Chart */}
-            <Card className="border-none shadow-sm dark:bg-slate-900/50">
-                <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="shadow-none border border-slate-200 dark:border-slate-800">
+                <CardHeader className="flex flex-row items-baseline justify-between">
                     <div>
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Live Sensor Telemetry</CardTitle>
-                        <CardDescription>Real-time data stream from ESP32 node</CardDescription>
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="size-2 bg-emerald-500 rounded-full animate-pulse" />
+                            <CardTitle className="text-sm font-black uppercase tracking-[0.2em] text-slate-800 dark:text-white">Live Telemetry</CardTitle>
+                        </div>
+                        <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Soil Moisture Data Stream (Last 30m)</CardDescription>
                     </div>
                 </CardHeader>
-                <CardContent className="p-0 sm:p-6">
-                    <div className="w-full" style={{ height: 300 }}>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <AreaChart data={history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorMoisture" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                                <XAxis
-                                    dataKey="timestamp"
-                                    hide
-                                />
-                                <YAxis
-                                    domain={[0, 100]}
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 10, fontWeight: 'bold' }}
-                                />
-                                <RechartsTooltip
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                                    labelStyle={{ display: 'none' }}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="soil_moisture"
-                                    name="Moisture"
-                                    stroke="#6366f1"
-                                    strokeWidth={3}
-                                    fillOpacity={1}
-                                    fill="url(#colorMoisture)"
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                <CardContent className="p-0 sm:p-6 overflow-hidden">
+                    <div className="w-full h-[300px] min-h-[300px]">
+                        <LoadChart
+                            data={history
+                                .filter(h => {
+                                    const cleanTimestamp = h.timestamp.replace(/ GMT$/, '').replace(/Z$/, '');
+                                    const ts = new Date(cleanTimestamp).getTime();
+                                    const thirtyMinutesAgo = Date.now() - 30 * 60 * 1000;
+                                    return ts >= thirtyMinutesAgo;
+                                })
+                                .map((h) => {
+                                    const cleanTimestamp = h.timestamp.replace(/ GMT$/, '').replace(/Z$/, '');
+                                    const dateObj = new Date(cleanTimestamp);
+
+                                    return {
+                                        time: dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                                        value: h.soil_moisture,
+                                        timestamp: dateObj.getTime()
+                                    };
+                                }).sort((a, b) => a.timestamp - b.timestamp)}
+                            color="#6366f1"
+                            yDomain={[0, 100]}
+                        />
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Recent Events & Timeline */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="border-none shadow-sm dark:bg-slate-900/50">
+            {/* AI Prediction + Recent System Events Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* AI Prediction Engine Card */}
+                <Card className="shadow-none border border-slate-200 dark:border-slate-800 bg-card text-card-foreground">
+                    <CardContent className="p-8">
+                        <div className="flex flex-col gap-6">
+                            <div className="flex-1 space-y-4">
+                                <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 uppercase tracking-widest text-[10px]">AI Prediction Engine</Badge>
+                                <h2 className="text-3xl font-black leading-tight text-slate-900 dark:text-white">
+                                    {prediction?.recommended_action === 'NOW' ?
+                                        "🚨 Watering recommended within 24 hours" :
+                                        prediction?.recommended_action === 'STOP' ?
+                                            "⛔ System Halted (Safety Interlock)" :
+                                            "✓ No watering needed for 24+ hours"}
+                                </h2>
+                                <p className="text-slate-500 dark:text-neutral-400 text-sm leading-relaxed">
+                                    {prediction?.recommended_action === 'STALL' ?
+                                        "Strategy: STALL. Environmental conditions (Rain/Wind/VPD) require a delay to save resources." :
+                                        (prediction?.recommended_action === 'NOW' ?
+                                            "Strategy: DISPATCH. Soil moisture levels are trending below threshold. ML model suggests immediate hydration." :
+                                            (prediction?.recommended_action === 'STOP' ?
+                                                "Strategy: STOP. Hazardous condition detected (Rain/Saturation). Prevention mode active." :
+                                                "Strategy: MONITOR. System is currently optimal based on environmental factors and moisture levels."))}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-4 p-4 bg-white/10 rounded-2xl backdrop-blur-md border border-slate-100 dark:border-slate-800">
+                                <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Confidence</p>
+                                <Progress value={prediction?.ml_analysis.confidence || 94} className="flex-1 h-2 bg-white/20" />
+                                <p className="text-2xl font-black">{prediction?.ml_analysis.confidence || 94}%</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Recent System Events Card */}
+                <Card className="shadow-none border border-slate-200 dark:border-slate-800">
                     <CardHeader>
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
                             <Terminal className="size-4" /> Recent System Events
                         </CardTitle>
                     </CardHeader>
@@ -424,59 +436,14 @@ export const Dashboard: React.FC = () => {
                                         {i < (logs.slice(0, 8).length - 1) && <div className="w-px flex-1 bg-slate-200 dark:bg-slate-800 my-1" />}
                                     </div>
                                     <div className="pb-4">
-                                        <p className="text-xs font-bold text-slate-700 dark:text-slate-300">{log.message}</p>
-                                        <p className="text-[10px] font-mono text-slate-400 mt-0.5">{new Date(log.timestamp).toLocaleTimeString()}</p>
+                                        <p className="text-xs font-bold text-slate-700 dark:text-neutral-300">{log.message}</p>
+                                        <p className="text-[10px] font-mono text-slate-500 dark:text-neutral-400 mt-0.5">
+                                            {isNaN(new Date(log.timestamp).getTime()) ? log.timestamp : new Date(log.timestamp).toLocaleTimeString()}
+                                        </p>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="border-none shadow-sm dark:bg-slate-900/50">
-                    <CardHeader>
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                            <TrendingDown className="size-4" /> AI Efficiency Metrics
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {simState ? (
-                            <div className="space-y-6">
-                                <div className="flex items-end justify-between">
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Water Savings</p>
-                                        <p className="text-5xl font-black text-indigo-600 dark:text-indigo-400 tracking-tighter">{simState.savings_percent.toFixed(1)}%</p>
-                                    </div>
-                                    <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 mb-2">TARGET ATTAINED</Badge>
-                                </div>
-
-                                <Separator />
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase">Predictive Used</p>
-                                        <p className="text-xl font-black">{simState.fields.predictive.water_used.toFixed(1)}L</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase">Reactive Used</p>
-                                        <p className="text-xl font-black">{simState.fields.reactive.water_used.toFixed(1)}L</p>
-                                    </div>
-                                </div>
-
-                                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Resource Preservation</p>
-                                    <div className="flex items-center gap-3">
-                                        <Progress value={simState.savings_percent} className="h-2" />
-                                        <span className="text-xs font-black text-emerald-500">+{simState.water_saved.toFixed(1)}L</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center py-12 text-center opacity-40">
-                                <Droplets className="size-12 mb-2" />
-                                <p className="text-xs font-bold uppercase tracking-widest">Awaiting Simulation Data</p>
-                            </div>
-                        )}
                     </CardContent>
                 </Card>
             </div>

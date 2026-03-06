@@ -20,17 +20,11 @@ class SimulatedESP32:
         import logging
         import os
         
-        # Get project root (3 levels up from src/simulation/esp32_simulator.py)
-        # file is at src/simulation/esp32_simulator.py
+        # Get project root (2 levels up from src/simulation/esp32_simulator.py)
         current_dir = os.path.dirname(os.path.abspath(__file__))
         project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
-        log_dir = os.path.join(project_root, "logs")
-        
-        if not os.path.exists(log_dir):
-            try:
-                os.makedirs(log_dir)
-            except:
-                pass
+        log_dir = os.path.join(project_root, "logs", "sim")
+        os.makedirs(log_dir, exist_ok=True)
             
         logging.basicConfig(
             level=logging.INFO,
@@ -49,7 +43,10 @@ class SimulatedESP32:
         self.temperature = 25.0    # 25°C
         self.humidity = 65.0       # 65%
         self.pump_active = False
-        self.last_watering = None
+        self.pump_start_time = datetime.now()
+        self.pump_duration = 0
+        self.last_watering = datetime.now()
+        self.current_vpd = 0.0
         
         # Realistic behavior parameters
         self.moisture_decay_rate = 30.0  # % per hour (Accelerated for Demo)
@@ -57,7 +54,7 @@ class SimulatedESP32:
         self.humidity_variation = 10.0  # Daily humidity swing
         
     
-        self.current_weather = {"condition": "Sunny", "rain_intensity": 0}
+        self.current_weather = {"condition": "Clear", "rain_intensity": 0}
         
         # Setup MQTT callbacks
         self.client.on_connect = self.on_connect
@@ -69,7 +66,7 @@ class SimulatedESP32:
         es = 0.6108 * math.exp((17.27 * T) / (T + 237.3))
         # Actual Vapor Pressure (ea)
         ea = es * (RH / 100.0)
-        return max(0, es - ea)
+        return max(0.0, es - ea)
     
     def on_connect(self, client, userdata, flags, rc, properties):
         self.logger.info(f"Connected to MQTT Broker: {self.broker}")
@@ -92,7 +89,7 @@ class SimulatedESP32:
             elif topic == "pwos/weather/current":
                 self.current_weather = payload
                 # Log only significant weather changes or rain
-                if payload.get('condition') == 'Raining':
+                if payload.get('condition') == 'Rain':
                      self.logger.info(f"RAIN EVENT: Intensity {payload['rain_intensity']}%")
                 
         except Exception as e:
@@ -126,8 +123,8 @@ class SimulatedESP32:
         # --- 1. Time & Weather Setup ---
         # Use actual weather if available
         if self.current_weather.get('source') != 'unknown':
-            self.temperature = self.current_weather.get('forecast_temp', 25.0)
-            self.humidity = self.current_weather.get('forecast_humidity', 60.0)
+            self.temperature = float(self.current_weather.get('forecast_temp', 25.0))
+            self.humidity = float(self.current_weather.get('forecast_humidity', 60.0))
             # Add slight sensor jitter
             self.temperature += random.uniform(-0.1, 0.1)
             self.humidity += random.uniform(-0.5, 0.5)
@@ -154,9 +151,16 @@ class SimulatedESP32:
             
             if elapsed < self.pump_duration:
                 # Pump is RUNNING
-                # Add moisture gradually: ~1.5% per second (simulated rapid absorption)
-                # Total for 30s = 45% increase (from dry to wet)
-                absorption_rate = 1.5 
+                # Add moisture gradually: ~0.4% per second with diminishing returns
+                # Total for 30s = ~10-12% increase (realistic percolation)
+                base_absorption = 0.4 
+                
+                # Diminishing returns near saturation (>85%)
+                if self.soil_moisture > 85.0:
+                    efficiency = max(0.1, 1.0 - ((self.soil_moisture - 85.0) / 15.0))
+                    absorption_rate = base_absorption * efficiency
+                else:
+                    absorption_rate = base_absorption
                 
                 self.soil_moisture += absorption_rate
                 if self.soil_moisture > 100: self.soil_moisture = 100
@@ -177,7 +181,7 @@ class SimulatedESP32:
             # Tetens formula: es = saturation vapor pressure at temp T
             es = 0.6108 * math.exp((17.27 * self.temperature) / (self.temperature + 237.3))
             ea = es * (self.humidity / 100.0)  # Actual vapor pressure
-            vpd = max(0, es - ea)  # VPD in kPa
+            vpd = max(0.0, es - ea)  # VPD in kPa
             
             # Store VPD for logging
             self.current_vpd = vpd
@@ -200,10 +204,10 @@ class SimulatedESP32:
             # 1mm of rain ≈ 1-2% moisture increase (depends on soil)
             # =====================================================
             
-            is_raining = (self.current_weather.get('condition') == 'Raining')
-            rain_intensity = self.current_weather.get('rain_intensity', 0)  # 0-100 scale
+            is_raining = (self.current_weather.get('condition') == 'Rain')
+            rain_intensity = float(self.current_weather.get('rain_intensity', 0.0))  # 0-100 scale
             
-            if is_raining and rain_intensity > 0:
+            if is_raining and rain_intensity > 0.0:
                 # Convert 0-100 intensity scale to mm/hour
                 # 0 = no rain, 25 = light, 50 = moderate, 75 = heavy, 100 = storm
                 mm_per_hour = (rain_intensity / 100.0) * 60.0  # Max 60 mm/hr (heavy storm)
@@ -291,7 +295,7 @@ class SimulatedESP32:
                     )
 
         # Clamp limits
-        self.soil_moisture = max(0, min(100, self.soil_moisture))
+        self.soil_moisture = max(0.0, min(100.0, self.soil_moisture))
         
         return sim_time_str
     

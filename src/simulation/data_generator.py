@@ -3,11 +3,27 @@ import sys
 import os
 import sqlite3
 import random
+import logging
 from datetime import datetime, timedelta
 import paho.mqtt.client as mqtt # Mocking this
 
 # Add project root to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(project_root)
+
+# Setup Logging
+log_dir = os.path.join(project_root, "logs", "sim")
+os.makedirs(log_dir, exist_ok=True)
+logger = logging.getLogger("DataGen")
+if not logger.handlers:
+    logger.setLevel(logging.INFO)
+    fmt = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh = logging.FileHandler(os.path.join(log_dir, "data_generator.log"), encoding='utf-8')
+    fh.setFormatter(fmt)
+    ch = logging.StreamHandler()
+    ch.setFormatter(fmt)
+    logger.addHandler(fh)
+    logger.addHandler(ch)
 
 from src.simulation.esp32_simulator import SimulatedESP32
 
@@ -62,9 +78,9 @@ class GeneratorESP32(SimulatedESP32):
         temp_cycle = math.cos(time_factor) * 5.0 
         
         weather_cooling = 0
-        if self.current_weather.get('condition') == 'Raining':
+        if self.current_weather.get('condition') == 'Rain':
             weather_cooling = 4.0
-        elif self.current_weather.get('condition') == 'Cloudy':
+        elif self.current_weather.get('condition') == 'Clouds':
             weather_cooling = 1.5
             
         self.temperature = base_temp + temp_cycle - weather_cooling
@@ -75,9 +91,9 @@ class GeneratorESP32(SimulatedESP32):
         humid_cycle = -(self.temperature - 20) * 2.5
         
         weather_humid_boost = 0
-        if self.current_weather.get('condition') == 'Raining':
+        if self.current_weather.get('condition') == 'Rain':
             weather_humid_boost = 30.0
-        elif self.current_weather.get('condition') == 'Cloudy':
+        elif self.current_weather.get('condition') == 'Clouds':
             weather_humid_boost = 10.0
             
         self.humidity = base_humidity + humid_cycle + weather_humid_boost
@@ -88,7 +104,7 @@ class GeneratorESP32(SimulatedESP32):
         
         decay_factor = 2.0 
         
-        if self.current_weather.get('condition') == 'Raining':
+        if self.current_weather.get('condition') == 'Rain':
             intensity = self.current_weather.get('rain_intensity', 0)
             gain = (intensity / 100.0) * 10.0 
             # Scale gain for 1 minute?
@@ -112,8 +128,8 @@ class GeneratorESP32(SimulatedESP32):
 class DataGenerator:
     def __init__(self):
         # 3 levels up: src/simulation -> src -> pwos
-        self.db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data', 'pwos_simulation.db')
-        print(f"[INFO] DB Path: {self.db_path}")
+        self.db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data', 'database', 'pwos_simulation.db')
+        logger.info(f"DB Path: {self.db_path}")
         
         # Initialize Simulator
         self.esp32 = GeneratorESP32("mock_broker")
@@ -165,7 +181,7 @@ class DataGenerator:
         
         conn.commit()
         conn.close()
-        print(f"[INFO] Database reset: {self.db_path}")
+        logger.info(f"Database reset: {self.db_path}")
 
     def update_weather(self):
         """Simple weather logic"""
@@ -195,7 +211,7 @@ class DataGenerator:
                 self.weather_state = "Sunny"
                 
         # Update simulator weather
-        condition = "Raining" if self.weather_state == "Raining" else "Sunny"
+        condition = "Rain" if self.weather_state == "Raining" else "Clear"
         intensity = random.randint(20, 80) if self.weather_state == "Raining" else 0
         
         self.esp32.current_weather = {
@@ -210,7 +226,7 @@ class DataGenerator:
         cursor = conn.cursor()
         
         steps = int(90 * 24 * (60/self.interval)) # 90 days of steps
-        print(f"[GEN] Generating {steps} steps ({self.interval} min interval)...")
+        logger.info(f"Generating {steps} steps ({self.interval} min interval)...")
         
         # Sync simulator hour
         self.esp32.sim_hour = self.start_date.hour + (self.start_date.minute / 60.0)
@@ -275,11 +291,11 @@ class DataGenerator:
                             forecast_minutes))
             
             if i % 1000 == 0:
-                print(f"   Step {i}/{steps} | {self.current_time} | M:{self.esp32.soil_moisture:.1f}%")
+                logger.info(f"Step {i}/{steps} | {self.current_time} | M:{self.esp32.soil_moisture:.1f}%")
                 
         conn.commit()
         conn.close()
-        print("[DONE] Data Generation Complete.")
+        logger.info("Data Generation Complete.")
 
 if __name__ == "__main__":
     gen = DataGenerator()

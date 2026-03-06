@@ -65,12 +65,16 @@ REM Start Database Subscriber
 start "Database Subscriber" cmd /k "echo Starting Database Subscriber... && cd src\backend && python mqtt_subscriber.py"
 timeout /t 2 >nul
 
+REM Start Weather Simulator (Source of Truth for Offline Weather)
+start "Weather Simulator" cmd /k "echo Starting Weather Simulator... && cd src\simulation && python weather_simulator.py"
+timeout /t 2 >nul
+
 REM Start Simulated ESP32
 start "Simulated ESP32" cmd /k "echo Starting Simulated ESP32... && cd src\simulation && python esp32_simulator.py 5"
 timeout /t 2 >nul
 
 REM Start Live Weather Dashboard
-start "Live Weather Dashboard" cmd /k "echo Starting Live Weather Dashboard... && python scripts/analysis/live_weather_dashboard.py"
+start "Live Weather Dashboard" cmd /k "echo Starting Live Weather Dashboard... && python scripts/monitors/live_weather_dashboard.py"
 timeout /t 2 >nul
 
 
@@ -83,7 +87,7 @@ start "P-WOS Autopilot" cmd /k "echo Starting Automation Controller... && cd src
 timeout /t 2 >nul
 
 REM Start ML Monitor
-start "Brain Monitor" cmd /k "echo Starting ML Monitor... && python scripts/analysis/ml_monitor.py"
+start "Brain Monitor" cmd /k "echo Starting ML Monitor... && python scripts/monitors/ml_monitor.py"
 timeout /t 2 >nul
 
 REM Start React Dev Server

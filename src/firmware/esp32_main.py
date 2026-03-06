@@ -74,9 +74,9 @@ def connect_wifi():
             print(".", end="")
         
         if wlan.isconnected():
-            print(f"\n✅ Connected! IP: {wlan.ifconfig()[0]}")
+            print(f"\n[OK] Connected! IP: {wlan.ifconfig()[0]}")
         else:
-            print("\n❌ WiFi connection failed!")
+            print("\n[ERROR] WiFi connection failed!")
             machine.reset()
     
     return wlan
@@ -104,7 +104,7 @@ def connect_mqtt():
     client.connect()
     client.subscribe(TOPIC_CONTROL)
     
-    print("✅ MQTT Connected!")
+    print("[OK] MQTT Connected!")
     return client
 
 def on_message(topic, msg):
@@ -115,16 +115,16 @@ def on_message(topic, msg):
         duration = cmd.get("duration", 30)
         
         if action == "ON":
-            print(f"🚿 PUMP ON for {duration}s")
+            print(f"[PUMP] ON for {duration}s")
             relay.value(1)
             time.sleep(duration)
             relay.value(0)
-            print("🛑 PUMP OFF")
+            print("[PUMP] OFF")
         elif action == "OFF":
             relay.value(0)
-            print("🛑 PUMP OFF (manual)")
+            print("[PUMP] OFF (manual)")
     except Exception as e:
-        print(f"❌ Message Error: {e}")
+        print(f"[ERROR] Message Error: {e}")
 
 # ============================================================================
 # SENSOR READING
@@ -139,7 +139,7 @@ def read_sensors():
     except OSError:
         temp = 25.0
         hum = 60.0
-        print("⚠️ DHT22 read error")
+        print("[WARN] DHT22 read error")
     
     # Read Soil Moisture (ADC)
     # Calibration: Dry ~3500, Wet ~1500 (adjust for your sensor)
@@ -169,7 +169,7 @@ def main():
     # Connect to MQTT
     mqtt = connect_mqtt()
     
-    print(f"📡 Publishing every {SAMPLE_INTERVAL}s")
+    print(f"[INFO] Publishing every {SAMPLE_INTERVAL}s")
     print("-" * 50)
     
     while True:
@@ -182,17 +182,17 @@ def main():
             
             # Publish to MQTT
             mqtt.publish(TOPIC_SENSOR, json.dumps(data))
-            print(f"📊 M:{data['soil_moisture']}% T:{data['temperature']}°C H:{data['humidity']}%")
+            print(f"[DATA] M:{data['soil_moisture']}% T:{data['temperature']}C H:{data['humidity']}%")
             
             # Wait for next sample
             time.sleep(SAMPLE_INTERVAL)
             
         except OSError as e:
-            print(f"❌ Connection Error: {e}")
+            print(f"[ERROR] Connection Error: {e}")
             time.sleep(5)
             mqtt = connect_mqtt()
         except KeyboardInterrupt:
-            print("\n👋 Stopping...")
+            print("\n[STOP] Stopping...")
             relay.value(0)
             mqtt.disconnect()
             break

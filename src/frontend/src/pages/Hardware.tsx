@@ -36,14 +36,14 @@ export const Hardware: React.FC = () => {
                             Simulator Connected
                         </Badge>
                     </h1>
-                    <p className="text-slate-500 text-sm font-medium">
+                    <p className="text-slate-950 dark:text-slate-400 text-sm font-medium">
                         Blueprint and real-time pinout status for the ESP32-S3 Core Hub.
                     </p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2 border-none shadow-sm dark:bg-slate-900/50 relative overflow-hidden">
+                <Card className="lg:col-span-2  shadow-sm dark:bg-card relative overflow-hidden">
                     <CardHeader className="pb-8">
                         <div className="flex items-center gap-4">
                             <div className="bg-primary/10 p-3 rounded-2xl border border-primary/20">
@@ -51,7 +51,7 @@ export const Hardware: React.FC = () => {
                             </div>
                             <div>
                                 <CardTitle className="text-xl font-black italic">Node Blueprint</CardTitle>
-                                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">ESP32-S3 Core Hub • Rev 2.0</p>
+                                <p className="text-[10px] text-slate-950 dark:text-slate-400 uppercase tracking-widest font-bold">ESP32-S3 Core Hub • Rev 2.0</p>
                             </div>
                         </div>
                     </CardHeader>
@@ -63,7 +63,7 @@ export const Hardware: React.FC = () => {
                                 </div>
                                 <div>
                                     <p className="text-lg font-bold text-slate-900 dark:text-white">Soil Moisture</p>
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Analog • ADC1_0</p>
+                                    <p className="text-[10px] text-slate-950 dark:text-slate-400 font-bold uppercase tracking-tighter">Analog • ADC1_0</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-6 group">
@@ -72,19 +72,19 @@ export const Hardware: React.FC = () => {
                                 </div>
                                 <div>
                                     <p className="text-lg font-bold text-slate-900 dark:text-white">DHT22 Sense</p>
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Digital • Single Bus</p>
+                                    <p className="text-[10px] text-slate-950 dark:text-slate-400 font-bold uppercase tracking-tighter">Digital • Single Bus</p>
                                 </div>
                             </div>
                         </div>
 
                         <div className="space-y-10">
                             <div className="flex items-center gap-6 group">
-                                <div className={`size-14 rounded-2xl border-2 transition-all flex items-center justify-center font-black text-xs ${pumping ? 'border-primary bg-primary/20 text-primary shadow-[0_0_25px_rgba(16,185,129,0.3)]' : 'border-slate-200 dark:border-slate-800 text-slate-400'}`}>
+                                <div className={`size-14 rounded-2xl border-2 transition-all flex items-center justify-center font-black text-xs ${pumping ? 'border-primary bg-primary/20 text-primary shadow-[0_0_25px_rgba(16,185,129,0.3)]' : 'border-slate-200 dark:border-border text-slate-800'}`}>
                                     P27
                                 </div>
                                 <div>
                                     <p className="text-lg font-bold text-slate-900 dark:text-white">Pump Relay</p>
-                                    <p className={`text-[10px] font-bold uppercase tracking-tighter ${pumping ? 'text-primary' : 'text-slate-400'}`}>{pumping ? 'ACTIVE' : 'IDLE'}</p>
+                                    <p className={`text-[10px] font-bold uppercase tracking-tighter ${pumping ? 'text-primary' : 'text-slate-800'}`}>{pumping ? 'ACTIVE' : 'IDLE'}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-6 group">
@@ -93,7 +93,7 @@ export const Hardware: React.FC = () => {
                                 </div>
                                 <div>
                                     <p className="text-lg font-bold text-slate-900 dark:text-white">Rain Node</p>
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Analog/Digital</p>
+                                    <p className="text-[10px] text-slate-950 dark:text-slate-400 font-bold uppercase tracking-tighter">Analog/Digital</p>
                                 </div>
                             </div>
                         </div>
@@ -103,9 +103,9 @@ export const Hardware: React.FC = () => {
                 </Card>
 
                 <div className="space-y-6">
-                    <Card className="border-none shadow-sm dark:bg-slate-900/50">
+                    <Card className=" shadow-sm dark:bg-card">
                         <CardHeader className="pb-4">
-                            <CardTitle className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Quick Diagnostics</CardTitle>
+                            <CardTitle className="text-[10px] font-black text-slate-950 dark:text-slate-400 uppercase tracking-widest">Quick Diagnostics</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {[
@@ -115,12 +115,12 @@ export const Hardware: React.FC = () => {
                             ].map((item, idx) => (
                                 <div key={idx} className="flex items-center gap-3">
                                     <item.icon className="size-4 text-primary" />
-                                    <span className="text-sm font-bold text-slate-600 dark:text-slate-400">{item.label}</span>
+                                    <span className="text-sm font-bold text-slate-900 dark:text-neutral-300">{item.label}</span>
                                 </div>
                             ))}
                         </CardContent>
                     </Card>
-                    <Card className="border-none shadow-sm bg-gradient-to-br from-primary to-emerald-800 text-white overflow-hidden">
+                    <Card className=" shadow-sm bg-gradient-to-br from-primary to-emerald-800 text-white overflow-hidden">
                         <CardContent className="p-8 space-y-4">
                             <div className="space-y-2">
                                 <h3 className="text-xl font-black tracking-tight">Controller Reset</h3>

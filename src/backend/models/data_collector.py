@@ -1,11 +1,16 @@
 import sqlite3
+import logging
 import pandas as pd
 from datetime import datetime, timedelta
 import os
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from log_config import setup_logger
+logger = setup_logger("DataCollector", "data_collector.log", "app")
+
 # Ensure we can find the DB
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'data', 'pwos_simulation.db')
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'data', 'database', 'pwos_simulation.db')
 
 class DataCollector:
     """Prepare simulation data for ML training."""
@@ -15,14 +20,14 @@ class DataCollector:
     
     def load_sensor_data(self):
         """Load all sensor readings."""
-        print(f"   Connecting to: {self.db_path}")
+        logger.info(f"Connecting to: {self.db_path}")
         conn = sqlite3.connect(self.db_path)
         # Check if forecast_minutes exists
         try:
             query = "SELECT timestamp, soil_moisture, temperature, humidity, forecast_minutes FROM sensor_readings ORDER BY timestamp ASC"
             df = pd.read_sql_query(query, conn)
         except Exception as e:
-            print(f"   [WARN] forecast_minutes not found, filling with 0. Error: {e}")
+            logger.warning(f"forecast_minutes not found, filling with 0. Error: {e}")
             query = "SELECT timestamp, soil_moisture, temperature, humidity FROM sensor_readings ORDER BY timestamp ASC"
             df = pd.read_sql_query(query, conn)
             df['forecast_minutes'] = 0
@@ -52,7 +57,7 @@ class DataCollector:
         sensor_df = sensor_df.copy()
         sensor_df['needs_watering_soon'] = 0
         
-        print(f"Creating labels for {len(sensor_df)} readings...")
+        logger.info(f"Creating labels for {len(sensor_df)} readings...")
         
         # Sort both by time to optimize optimization?
         # For now, simplistic loop (can be slow for millions of rows, fine for 10k)
@@ -73,7 +78,7 @@ class DataCollector:
                 sensor_df.at[idx, 'needs_watering_soon'] = 1
             
             if idx % 2000 == 0:
-                print(f"  Processed {idx}/{len(sensor_df)}...")
+                logger.debug(f"Processed {idx}/{len(sensor_df)}...")
         
         return sensor_df
     
@@ -104,36 +109,38 @@ class DataCollector:
         
         return df
     
-    def export_training_data(self, output_file='training_data.csv'):
+    def export_training_data(self, output_file=None):
         """Main export function."""
+        if output_file is None:
+             output_file = os.path.join(os.path.dirname(self.db_path), '..', 'processed', 'training_data.csv')
         
-        print("="*60)
-        print("P-WOS DATA COLLECTOR")
-        print("="*60)
-        print(f"DB Path: {self.db_path}")
+        logger.info("=" * 60)
+        logger.info("P-WOS DATA COLLECTOR")
+        logger.info("=" * 60)
+        logger.info(f"DB Path: {self.db_path}")
         
         # Load data
-        print("\\n[LOAD] Loading sensor data...")
+        logger.info("Loading sensor data...")
         sensor_df = self.load_sensor_data()
-        print(f"   [OK] Loaded {len(sensor_df)} sensor readings")
+        logger.info(f"Loaded {len(sensor_df)} sensor readings")
         
-        print("\\n[LOAD] Loading watering events...")
+        logger.info("Loading watering events...")
         watering_df = self.load_watering_events()
-        print(f"   [OK] Loaded {len(watering_df)} watering events")
+        logger.info(f"Loaded {len(watering_df)} watering events")
         
         # Create labels
-        print("\\n[PROC] Creating training labels...")
+        logger.info("Creating training labels...")
         df = self.create_labels(sensor_df, watering_df, hours_ahead=24)
         positive = df['needs_watering_soon'].sum()
-        print(f"   [OK] Labels created:")
-        print(f"      Positive (needs water): {positive}")
-        print(f"      Negative (no water):    {len(df) - positive}")
-        print(f"      Class balance:          {positive/len(df)*100:.1f}% positive")
+        logger.info(f"Labels created:")
+        logger.info(f"  Positive (needs water): {positive}")
+        logger.info(f"  Negative (no water):    {len(df) - positive}")
+        logger.info(f"  Class balance:          {positive/len(df)*100:.1f}% positive")
         
         # Add features
-        print("\\n[PROC] Engineering features...")
+        logger.info("Engineering features...")
         df = self.add_features(df)
-        print("   [OK] Features added")
+        logger.info("Features added")
         
         # Select columns for training
         feature_cols = [
@@ -155,23 +162,23 @@ class DataCollector:
         training_df = training_df.dropna()  # Remove any NaN rows
         
         # Save
-        print(f"\\n[SAVE] Saving to {output_file}...")
+        logger.info(f"Saving to {output_file}...")
         training_df.to_csv(output_file, index=False)
         
         # Statistics
-        print("\\n" + "="*60)
-        print("EXPORT COMPLETE")
-        print("="*60)
-        print(f"File:            {output_file}")
-        print(f"Total samples:   {len(training_df)}")
-        print(f"Features:        {len(feature_cols) - 1}")
+        logger.info("=" * 60)
+        logger.info("EXPORT COMPLETE")
+        logger.info("=" * 60)
+        logger.info(f"File:            {output_file}")
+        logger.info(f"Total samples:   {len(training_df)}")
+        logger.info(f"Features:        {len(feature_cols) - 1}")
         
         # Feature correlations
-        print("\\n[INFO] Feature Correlations with Target:")
+        logger.info("Feature Correlations with Target:")
         corr = training_df.corr()['needs_watering_soon'].sort_values(ascending=False)
         for feature, value in corr.items():
             if feature != 'needs_watering_soon':
-                print(f"   {feature:25s}: {value:+.3f}")
+                logger.info(f"  {feature:25s}: {value:+.3f}")
         
         return training_df
 

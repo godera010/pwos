@@ -30,15 +30,16 @@ CORS(app)
 # Get project root (2 levels up from src/backend/app.py)
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
-log_dir = os.path.join(project_root, "logs")
+log_dir = os.path.join(project_root, "logs", "app")
 
-# Create 'logs' directory if it doesn't exist
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
+# Create 'logs/app' directory if it doesn't exist
+os.makedirs(log_dir, exist_ok=True)
 
 # Configure file logging
+# Configure file logging
 log_file_path = os.path.join(log_dir, 'app.log')
-file_handler = RotatingFileHandler(log_file_path, maxBytes=10*1024*1024, backupCount=5)
+# Use standard FileHandler instead of RotatingFileHandler to avoid WinError 32 (file lock) on Windows with Flask reloader
+file_handler = logging.FileHandler(log_file_path, mode='a', encoding='utf-8')
 file_handler.setFormatter(logging.Formatter(
     '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
 ))
@@ -74,12 +75,15 @@ mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id)
 
 def on_connect(client, userdata, flags, rc, properties=None):
     if rc == 0:
-        print("[OK] API Connected to MQTT Broker")
+        app.logger.info("API Connected to MQTT Broker")
         client.subscribe("pwos/sensor/data")
         client.subscribe("pwos/weather/current")
-        print("[INFO] API Subscribed to sensor & weather topics")
+        app.logger.info("API Subscribed to sensor & weather topics")
     else:
-        print(f"[FAIL] API MQTT Connection failed with code {rc}")
+        app.logger.error(f"API MQTT Connection failed with code {rc}")
+
+from src.config import WEATHER_API_MODE
+from src.backend.weather_api import weather_api
 
 def on_message(client, userdata, msg):
     try:
@@ -94,13 +98,46 @@ def on_message(client, userdata, msg):
                 'humidity': payload.get('humidity'),
                 'timestamp': payload.get('timestamp')
             })
+
+            # If in Real Weather Mode, fetch forecast NOW and update latest_sensor_data
+            if WEATHER_API_MODE == 'openweathermap':
+                try:
+                    forecast = weather_api.get_forecast()
+                    latest_sensor_data.update({
+                        'forecast_minutes': forecast.get('forecast_minutes', 0),
+                        'rain_intensity': forecast.get('rain_intensity', 0.0),
+                        'cloud_cover': forecast.get('cloud_cover', 0.0),
+                        'weather_condition': forecast.get('condition', 'unknown'),
+                        'precipitation_chance': forecast.get('precipitation_chance', 0),
+                        'wind_speed': forecast.get('wind_speed', 0.0),
+                        'forecast_temp': forecast.get('forecast_temp', 0.0),
+                        'forecast_humidity': forecast.get('forecast_humidity', 0.0),
+                        'weather_source': 'openweathermap'
+                    })
+                except Exception as e:
+                    app.logger.warning(f"Failed to fetch real weather on sensor update: {e}")
+            
+            # Persist the latest reading to the database
+            log_sensor_data()
             
         elif topic == "pwos/weather/current":
-            # Update forecast
-            latest_sensor_data['forecast_minutes'] = payload.get('forecast_minutes', 0)
+            # ONLY update if we are in Simulation Mode
+            # If we are in OpenWeatherMap mode, we IGNORE the simulator's weather broadcasts
+            if WEATHER_API_MODE == 'simulation':
+                latest_sensor_data.update({
+                    'forecast_minutes': payload.get('forecast_minutes', 0),
+                    'rain_intensity': payload.get('rain_intensity', 0.0),
+                    'cloud_cover': payload.get('cloud_cover', 0.0),
+                    'weather_condition': payload.get('condition', 'unknown'),
+                    'precipitation_chance': payload.get('precipitation_chance', 0),
+                    'wind_speed': payload.get('wind_speed', 0.0),
+                    'forecast_temp': payload.get('temperature') or payload.get('forecast_temp', 0.0),
+                    'forecast_humidity': payload.get('humidity') or payload.get('forecast_humidity', 0.0),
+                    'weather_source': 'simulation'
+                })
             
     except Exception as e:
-        print(f"[ERROR] API MQTT Message Error: {e}")
+        app.logger.error(f"API MQTT Message Error: {e}")
 
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
@@ -110,7 +147,7 @@ try:
     mqtt_client.connect("localhost", 1883, 60)
     mqtt_client.loop_start()
 except Exception as e:
-    print(f"[WARN] MQTT connection failed: {e}")
+    app.logger.warning(f"MQTT connection failed: {e}")
 
 # ML Prediction logic is now handled by the MLPredictor class
 
@@ -177,8 +214,8 @@ def get_latest_sensor_data():
 @app.route('/api/sensor-data/history', methods=['GET'])
 def get_sensor_history():
     """Get historical sensor data"""
-    limit = request.args.get('limit', 100, type=int)
-    readings = db.get_recent_readings(limit=limit)
+    hours = request.args.get('hours', 24, type=int)
+    readings = db.get_readings_by_timerange(hours=hours)
     
     data = []
     for row in readings:
@@ -188,10 +225,76 @@ def get_sensor_history():
             'soil_moisture': row[2],
             'temperature': row[3],
             'humidity': row[4],
-            'device_id': row[5]
+            'device_id': row[5],
+            'vpd': row[9] if len(row) > 9 else 0.0
         })
     
     return jsonify(data)
+
+@app.route('/api/analytics/aggregated', methods=['GET'])
+def get_aggregated_analytics():
+    """Get bucketed historical sensor data and watering events"""
+    hours = request.args.get('hours', 24, type=int)
+    interval_str = request.args.get('interval', '15 minutes')
+    
+    interval_map = {
+        '1 minute': 60,
+        '5 minutes': 300,
+        '10 minutes': 600,
+        '15 minutes': 900,
+        '1 hour': 3600,
+        '6 hours': 21600
+    }
+    interval_seconds = interval_map.get(interval_str, 900)
+    
+    try:
+        sensors, events = db.get_aggregated_data(hours, interval_seconds)
+        merged = {}
+        
+        for s in sensors:
+            if not s['bucket']: continue
+            bucket_iso = s['bucket'].isoformat()
+            merged[bucket_iso] = {
+                'timestamp': bucket_iso,
+                'soil_moisture': float(s['avg_moisture']) if s['avg_moisture'] is not None else None,
+                'temperature': float(s['avg_temp']) if s['avg_temp'] is not None else None,
+                'humidity': float(s['avg_humidity']) if s['avg_humidity'] is not None else None,
+                'vpd': float(s['avg_vpd']) if s['avg_vpd'] is not None else None,
+                'watering': {
+                    'total_duration': 0,
+                    'ai_duration': 0,
+                    'ai_event_count': 0
+                }
+            }
+            
+        for e in events:
+            if not e['bucket']: continue
+            bucket_iso = e['bucket'].isoformat()
+            if bucket_iso not in merged:
+                # Bucket with events but no history -> history fields should be null
+                merged[bucket_iso] = {
+                    'timestamp': bucket_iso,
+                    'soil_moisture': None, 
+                    'temperature': None,
+                    'humidity': None,
+                    'vpd': None,
+                    'watering': {
+                        'total_duration': 0,
+                        'ai_duration': 0,
+                        'ai_event_count': 0
+                    }
+                }
+            
+            merged[bucket_iso]['watering']['total_duration'] = int(e['total_duration']) if e['total_duration'] else 0
+            merged[bucket_iso]['watering']['ai_duration'] = int(e['ai_duration']) if e['ai_duration'] else 0
+            merged[bucket_iso]['watering']['ai_event_count'] = int(e['ai_event_count']) if e['ai_event_count'] else 0
+            
+        sorted_merged = sorted(merged.values(), key=lambda x: x['timestamp'])
+        return jsonify(sorted_merged)
+        
+    except Exception as e:
+        app.logger.error(f"Aggregation error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/statistics', methods=['GET'])
 def get_statistics():
@@ -224,12 +327,31 @@ def control_pump():
         
         # Log watering event
         if action == 'ON' and moisture_before:
-            db.insert_watering_event(
+            event_id = db.insert_watering_event(
                 duration=duration,
                 trigger_type=trigger_source,
                 moisture_before=moisture_before,
                 moisture_after=None
             )
+            
+            # Schedule moisture_after capture (read 60s after watering completes)
+            def capture_moisture_after(eid, delay_s):
+                import time as _time
+                _time.sleep(delay_s)
+                try:
+                    readings = db.get_recent_readings(limit=1)
+                    if readings:
+                        moisture_after = readings[0][2]
+                        db.update_moisture_after(eid, moisture_after)
+                        app.logger.info(f"Updated moisture_after={moisture_after:.1f}% for event {eid}")
+                except Exception as ex:
+                    app.logger.error(f"moisture_after capture failed: {ex}")
+            
+            import threading
+            # Wait for pump duration + 60s settling time
+            total_delay = duration + 60
+            t = threading.Thread(target=capture_moisture_after, args=(event_id, total_delay), daemon=True)
+            t.start()
         
         return jsonify({
             'status': 'success',
@@ -255,21 +377,28 @@ def get_weather_forecast():
         
         forecast = weather_api.get_forecast()
         
-        # Update global state for logging
-        wind_speed = forecast.get('wind_speed_kmh', 0)
+        # Extract values from forecast dict
+        wind_speed = forecast.get('wind_speed', 0)
         precipitation = forecast.get('precipitation_chance', 0)
-        rain_minutes = forecast.get('rain_forecast_minutes', 0)
+        rain_minutes = forecast.get('forecast_minutes', 0)
         temp = forecast.get('forecast_temp', 25.0)
         humidity = forecast.get('forecast_humidity', 60.0)
+        condition = forecast.get('condition', 'unknown')
+        cloud_cover = forecast.get('cloud_cover', 0)
         
         # Calculate VPD
         vpd = calculate_vpd(temp, humidity)
         
+        # Update global state for logging and predictions
         latest_sensor_data.update({
             'forecast_minutes': rain_minutes,
             'wind_speed': wind_speed,
             'precipitation_chance': precipitation,
-            'vpd': vpd
+            'vpd': vpd,
+            'weather_condition': condition,
+            'forecast_temp': temp,
+            'forecast_humidity': humidity,
+            'weather_source': forecast.get('source', 'openweathermap')
         })
         
         return jsonify({
@@ -278,8 +407,9 @@ def get_weather_forecast():
             'precipitation_chance': precipitation,
             'wind_speed_kmh': wind_speed,
             'rain_forecast_minutes': rain_minutes,
+            'cloud_cover': cloud_cover,
             'vpd': vpd,
-            'condition': 'rainy' if rain_minutes > 0 else 'clear',
+            'condition': condition,
             'source': forecast.get('source', 'simulation'),
             'timestamp': datetime.now().isoformat()
         })
@@ -305,49 +435,50 @@ def predict_next_watering():
     Logic is now centralized in MLPredictor class.
     """
     try:
-        # Use real data if available, otherwise use simulated fallback
+        # Use real data if available, otherwise return error
         if latest_sensor_data and 'soil_moisture' in latest_sensor_data:
             sensor_data = latest_sensor_data
         else:
-            # Simulated fallback (Legacy / Safety Net)
-            sensor_data = {
-                'soil_moisture': 45 + random.uniform(-10, 10),
-                'temperature': 28 + random.uniform(-5, 5),
-                'humidity': 65 + random.uniform(-10, 10),
-                'forecast_minutes': 0,
-                'precipitation_chance': 0,
-                'timestamp': datetime.now().isoformat()
-            }
+            return jsonify({'error': 'No active sensor data available for prediction'}), 503
             
-        current_moisture = sensor_data.get('soil_moisture', 50)
-        forecast_minutes = sensor_data.get('forecast_minutes', 0)
-        precipitation_chance = sensor_data.get('precipitation_chance', 0)
+        current_moisture = float(sensor_data.get('soil_moisture', 50))
+        forecast_minutes = int(sensor_data.get('forecast_minutes', 0))
+        precipitation_chance = int(sensor_data.get('precipitation_chance', 0))
         
-        # --- RAIN SAFETY RAIL ---
-        # If imminent rain is detected, force system to wait/stall
-        if precipitation_chance > 60 or (0 < forecast_minutes < 120):
-             return jsonify({
-                'timestamp': datetime.now().isoformat(),
-                'current_moisture': current_moisture,
-                'forecast_minutes': forecast_minutes,
-                'sensor_snapshot': sensor_data,
-                'recommended_action': 'STALL',
-                'recommended_duration': 0,
-                'system_status': 'STALL - RAIN IMMINENT',
-                'ml_analysis': {'confidence': 100, 'reason': f"Rain expected in {forecast_minutes} mins (Chance: {precipitation_chance}%)"}
-            })
+
 
         # Run ML Prediction (Includes Rules & Safety Checks)
         ml_result = predictor.predict_next_watering(sensor_data)
+
+        # Log ML decision to database
+        try:
+            db.insert_ml_decision({
+                'soil_moisture': current_moisture,
+                'temperature': sensor_data.get('temperature', 25),
+                'humidity': sensor_data.get('humidity', 60),
+                'vpd': ml_result.get('vpd', 0.0),
+                'forecast_minutes': forecast_minutes,
+                'precipitation_chance': precipitation_chance,
+                'wind_speed': sensor_data.get('wind_speed', 0.0),
+                'rain_intensity': sensor_data.get('rain_intensity', 0.0),
+                'decay_rate': ml_result.get('decay_rate'),
+                'decision': ml_result['recommended_action'],
+                'confidence': ml_result.get('confidence', 0),
+                'reason': ml_result.get('reason', ''),
+                'recommended_duration': ml_result['recommended_duration'],
+                'features': ml_result.get('features_used', {})
+            })
+        except Exception as e:
+            app.logger.error(f"[ML LOG] Failed to log decision: {e}")
         
         return jsonify({
             'timestamp': datetime.now().isoformat(),
             'current_moisture': current_moisture,
             'forecast_minutes': forecast_minutes,
             'sensor_snapshot': {
-                'moisture': round(current_moisture, 1),
-                'temperature': round(sensor_data.get('temperature', 28), 1),
-                'humidity': round(sensor_data.get('humidity', 65), 1)
+                'moisture': float(f"{float(current_moisture):.1f}"),
+                'temperature': float(f"{float(sensor_data.get('temperature', 28.0)):.1f}"),
+                'humidity': float(f"{float(sensor_data.get('humidity', 65.0)):.1f}")
             },
             
             # Use standardized fields from Predictor
@@ -363,6 +494,7 @@ def predict_next_watering():
 
 system_state = {
     'mode': 'AUTO', # 'AUTO' or 'MANUAL'
+    'pump_active': False,
 }
 
 @app.route('/api/system/state', methods=['GET', 'POST'])
@@ -374,20 +506,14 @@ def get_system_state():
         data = request.json
         if 'mode' in data:
             system_state['mode'] = data['mode']
-            add_log(f"System switched to {data['mode']} mode", type='ACTION')
+            add_log(f"System switched to {data['mode']} mode", category='ACTION')
             
     return jsonify(system_state)
 
 def log_sensor_data():
-    """Background task to log sensor data"""
+    """Background task to log sensor data with weather context"""
     if latest_sensor_data and 'soil_moisture' in latest_sensor_data:
         try:
-            # Use current forecast data if not in latest_sensor_data
-            if 'forecast_minutes' not in latest_sensor_data:
-                 # Try to get from weather API cache if possible, or default to 0
-                 # For now, just default to 0 to avoid circular import or lag
-                 pass
-
             db.insert_sensor_reading({
                 'timestamp': datetime.now().isoformat(),
                 'soil_moisture': latest_sensor_data.get('soil_moisture'),
@@ -397,11 +523,16 @@ def log_sensor_data():
                 'forecast_minutes': latest_sensor_data.get('forecast_minutes', 0),
                 'wind_speed': latest_sensor_data.get('wind_speed', 0.0),
                 'precipitation_chance': latest_sensor_data.get('precipitation_chance', 0),
-                'vpd': latest_sensor_data.get('vpd', 0.0)
+                'vpd': latest_sensor_data.get('vpd', 0.0),
+                'rain_intensity': latest_sensor_data.get('rain_intensity', 0.0),
+                'cloud_cover': latest_sensor_data.get('cloud_cover', 0.0),
+                'forecast_temp': latest_sensor_data.get('forecast_temp', 0.0),
+                'forecast_humidity': latest_sensor_data.get('forecast_humidity', 0.0),
+                'weather_condition': latest_sensor_data.get('weather_condition', 'unknown'),
+                'weather_source': latest_sensor_data.get('weather_source', 'none')
             })
-            # print("[LOG] Sensor data saved to DB")
         except Exception as e:
-            print(f"[ERROR] Failed to log sensor data: {e}")
+            app.logger.error(f"Failed to log sensor data: {e}")
         
 @app.route('/api/logs', methods=['GET', 'POST'])
 def handle_logs():
@@ -447,8 +578,8 @@ def add_log(message, category="INFO"):
 @app.route('/api/watering-events', methods=['GET'])
 def get_watering_events():
     """Get watering event history"""
-    limit = request.args.get('limit', 50, type=int)
-    events = db.get_watering_events(limit=limit)
+    hours = request.args.get('hours', 24, type=int)
+    events = db.get_watering_events_by_timerange(hours=hours)
     
     data = []
     for row in events:
@@ -463,252 +594,25 @@ def get_watering_events():
     
     return jsonify(data)
 
-
-# ============================================================================
-# LIVE SIMULATION API
-# ============================================================================
-
-import numpy as np
-
-# Simulation State (in-memory)
-simulation_state = {
-    'running': False,
-    'step': 0,
-    'scenario': 'mixed_weather',
-    'fields': {
-        'reactive': {'moisture': 60.0, 'water_used': 0.0, 'pump_events': 0},
-        'predictive': {'moisture': 60.0, 'water_used': 0.0, 'pump_events': 0}
-    },
-    'weather': {
-        'temperature': 26.0,
-        'humidity': 60.0,
-        'is_raining': False,
-        'forecast_minutes': 0
-    },
-    'forecast_queue': [],  # Steps until rain events
-    'rain_remaining': 0,
-    'rain_events': 0,
-    'decision_log': [],
-    'hour': 8  # Simulation hour (0-23)
+# In-memory operational settings (persisted per server session)
+operational_settings = {
+    'moisture_threshold': 30,
+    'max_duration': 45,
 }
-
-# Scenario configurations
-SIMULATION_SCENARIOS = {
-    'dry_season': {'rain_prob': 0.05, 'decay_mult': 1.5, 'base_temp': 32, 'humidity': 40, 'rain_intensity': 10},
-    'rainy_season': {'rain_prob': 0.4, 'decay_mult': 0.6, 'base_temp': 24, 'humidity': 85, 'rain_intensity': 15},
-    'mixed_weather': {'rain_prob': 0.2, 'decay_mult': 1.0, 'base_temp': 26, 'humidity': 60, 'rain_intensity': 12},
-    'heat_wave': {'rain_prob': 0.02, 'decay_mult': 2.0, 'base_temp': 38, 'humidity': 25, 'rain_intensity': 5},
-    'cool_period': {'rain_prob': 0.25, 'decay_mult': 0.5, 'base_temp': 18, 'humidity': 75, 'rain_intensity': 10},
-}
-
-@app.route('/api/simulation/reset', methods=['POST'])
-def simulation_reset():
-    """Reset simulation to initial state."""
-    global simulation_state
-    
-    data = request.json or {}
-    scenario = data.get('scenario', 'mixed_weather')
-    
-    if scenario not in SIMULATION_SCENARIOS:
-        scenario = 'mixed_weather'
-    
-    config = SIMULATION_SCENARIOS[scenario]
-    
-    simulation_state = {
-        'running': False,
-        'step': 0,
-        'scenario': scenario,
-        'fields': {
-            'reactive': {'moisture': 60.0, 'water_used': 0.0, 'pump_events': 0},
-            'predictive': {'moisture': 60.0, 'water_used': 0.0, 'pump_events': 0}
-        },
-        'weather': {
-            'temperature': config['base_temp'],
-            'humidity': config['humidity'],
-            'is_raining': False,
-            'forecast_minutes': 0
-        },
-        'forecast_queue': [],
-        'rain_remaining': 0,
-        'rain_events': 0,
-        'decision_log': [],
-        'hour': 8
-    }
-    
-    return jsonify({'status': 'reset', 'scenario': scenario, 'state': simulation_state})
-
-@app.route('/api/simulation/step', methods=['POST'])
-def simulation_step():
-    """Execute one simulation step (15 minutes of simulated time)."""
-    global simulation_state
-    
-    state = simulation_state
-    scenario = state['scenario']
-    config = SIMULATION_SCENARIOS.get(scenario, SIMULATION_SCENARIOS['mixed_weather'])
-    
-    state['step'] += 1
-    state['hour'] = (state['hour'] + 0.25) % 24  # 15 min = 0.25 hours
-    hour = int(state['hour'])
-    
-    # --- Generate Weather ---
-    temp_variance = 6.0
-    temp = config['base_temp'] + temp_variance * np.sin((hour - 8) * np.pi / 12)
-    temp += random.uniform(-2, 2)
-    
-    humidity = config['humidity'] - (temp - config['base_temp']) * 1.5
-    humidity = max(20, min(100, humidity + random.uniform(-5, 5)))
-    
-    # Rain logic
-    is_raining = False
-    forecast_minutes = 0
-    
-    if state['rain_remaining'] > 0:
-        is_raining = True
-        state['rain_remaining'] -= 1
-    
-    # Process forecast queue
-    new_queue = []
-    for steps_until in state['forecast_queue']:
-        if steps_until <= 0:
-            is_raining = True
-            state['rain_remaining'] = 4
-            state['rain_events'] += 1
-        else:
-            new_queue.append(steps_until - 1)
-            if forecast_minutes == 0:
-                forecast_minutes = steps_until * 15
-    state['forecast_queue'] = new_queue
-    
-    # Schedule new rain (every 6 hours of sim time = every 24 steps)
-    if state['step'] % 24 == 0:
-        if random.random() < config['rain_prob']:
-            steps_until_rain = random.randint(16, 96)
-            state['forecast_queue'].append(steps_until_rain)
-            if forecast_minutes == 0:
-                forecast_minutes = steps_until_rain * 15
-    
-    state['weather'] = {
-        'temperature': round(temp, 1),
-        'humidity': round(humidity, 1),
-        'is_raining': is_raining,
-        'forecast_minutes': forecast_minutes
-    }
-    
-    # --- Apply Physics ---
-    base_decay = 0.4 if not (10 <= hour <= 16) else 0.8
-    decay = base_decay * config['decay_mult']
-    
-    for field in state['fields'].values():
-        if is_raining:
-            field['moisture'] += config['rain_intensity']
-        else:
-            field['moisture'] -= decay
-        field['moisture'] = max(0, min(100, field['moisture']))
-    
-    # --- Control Logic ---
-    reactive_field = state['fields']['reactive']
-    predictive_field = state['fields']['predictive']
-    
-    reactive_action = 'WAIT'
-    predictive_action = 'WAIT'
-    predictive_status = 'MONITORING'
-    predictive_reason = ''
-    
-    # Reactive: Simple threshold
-    if reactive_field['moisture'] < 30.0:
-        reactive_action = 'WATER_NOW'
-        reactive_field['moisture'] += 25.0
-        reactive_field['moisture'] = min(100, reactive_field['moisture'])
-        reactive_field['water_used'] += 15.0
-        reactive_field['pump_events'] += 1
-    
-    # Predictive: Use ML predictor
-    ml_result = predictor.predict_next_watering({
-        'soil_moisture': predictive_field['moisture'],
-        'temperature': temp,
-        'humidity': humidity,
-        'forecast_minutes': forecast_minutes
-    })
-    
-    predictive_action = ml_result['recommended_action']
-    predictive_status = ml_result['system_status']
-    predictive_reason = ml_result['reason']
-    
-    if predictive_action == 'WATER_NOW':
-        predictive_field['moisture'] += 25.0
-        predictive_field['moisture'] = min(100, predictive_field['moisture'])
-        predictive_field['water_used'] += 15.0
-        predictive_field['pump_events'] += 1
-    
-    # Log decision
-    decision_entry = {
-        'step': state['step'],
-        'time': f"{int(hour):02d}:{int((state['hour'] % 1) * 60):02d}",
-        'reactive_action': reactive_action,
-        'predictive_action': predictive_action,
-        'predictive_status': predictive_status,
-        'reason': predictive_reason,
-        'moisture_reactive': round(reactive_field['moisture'], 1),
-        'moisture_predictive': round(predictive_field['moisture'], 1),
-        'forecast_minutes': forecast_minutes,
-        'is_raining': is_raining
-    }
-    state['decision_log'].insert(0, decision_entry)
-    state['decision_log'] = state['decision_log'][:50]  # Keep last 50
-    
-    # Calculate savings
-    water_saved = reactive_field['water_used'] - predictive_field['water_used']
-    savings_percent = (water_saved / reactive_field['water_used'] * 100) if reactive_field['water_used'] > 0 else 0
-    
-    return jsonify({
-        'step': state['step'],
-        'hour': round(state['hour'], 2),
-        'weather': state['weather'],
-        'fields': state['fields'],
-        'latest_decision': decision_entry,
-        'decision_log': state['decision_log'][:10],
-        'rain_events': state['rain_events'],
-        'water_saved': round(water_saved, 1),
-        'savings_percent': round(savings_percent, 1)
-    })
-
-@app.route('/api/simulation/state', methods=['GET'])
-def get_simulation_state():
-    """Get current simulation state."""
-    global simulation_state
-    state = simulation_state
-    
-    water_saved = state['fields']['reactive']['water_used'] - state['fields']['predictive']['water_used']
-    savings_percent = (water_saved / state['fields']['reactive']['water_used'] * 100) if state['fields']['reactive']['water_used'] > 0 else 0
-    
-    return jsonify({
-        'step': state['step'],
-        'scenario': state['scenario'],
-        'hour': round(state['hour'], 2),
-        'weather': state['weather'],
-        'fields': state['fields'],
-        'decision_log': state['decision_log'][:10],
-        'rain_events': state['rain_events'],
-        'water_saved': round(water_saved, 1),
-        'savings_percent': round(savings_percent, 1)
-    })
-
 
 @app.route('/api/settings', methods=['GET', 'POST'])
 def api_settings():
+    global operational_settings
     if request.method == 'POST':
-        settings_data = request.json
-        # Here we would normally save to DB
-        # For now, let's log it
-        db.insert_log(f"System settings updated: {settings_data}", type='ACTION')
-        return jsonify({"status": "success", "message": "Settings saved"})
+        data = request.json or {}
+        if 'moisture_threshold' in data:
+            operational_settings['moisture_threshold'] = int(data['moisture_threshold'])
+        if 'max_duration' in data:
+            operational_settings['max_duration'] = int(data['max_duration'])
+        add_log(f"Settings updated: threshold={operational_settings['moisture_threshold']}%, duration={operational_settings['max_duration']}s", category="ACTION")
+        return jsonify({"status": "success", "settings": operational_settings})
     
-    # Mock settings return
-    return jsonify({
-        "soil_moisture": {"min": 25, "max": 75},
-        "temperature": {"min": 5, "max": 32},
-        "humidity": {"min": 40, "max": 90}
-    })
+    return jsonify(operational_settings)
 
 if __name__ == '__main__':
     print("\n" + "=" * 60)
@@ -726,4 +630,12 @@ if __name__ == '__main__':
     print("   POST /api/control/pump")
     print("\n" + "=" * 60 + "\n")
     
-    app.run(debug=True, port=5000, host='0.0.0.0')
+    # Start the Background Scheduler
+    try:
+        print("[INFO] Starting Background Scheduler...")
+        from scheduler import scheduler
+        scheduler.start()
+    except Exception as e:
+        print(f"[ERROR] Failed to start scheduler: {e}")
+
+    app.run(debug=True, port=5000, host='0.0.0.0', use_reloader=False) # use_reloader=False prevents duplicate scheduler threads

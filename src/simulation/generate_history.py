@@ -12,16 +12,32 @@ Includes:
 import sys
 import os
 import random
+import logging
 import numpy as np
 from datetime import datetime, timedelta
 
 # Add project root to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(project_root)
 
 from src.backend.database import PWOSDatabase
 
+# Setup Logging
+log_dir = os.path.join(project_root, "logs", "sim")
+os.makedirs(log_dir, exist_ok=True)
+logger = logging.getLogger("HistoryGen")
+if not logger.handlers:
+    logger.setLevel(logging.INFO)
+    fmt = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh = logging.FileHandler(os.path.join(log_dir, "data_generator.log"), encoding='utf-8')
+    fh.setFormatter(fmt)
+    ch = logging.StreamHandler()
+    ch.setFormatter(fmt)
+    logger.addHandler(fh)
+    logger.addHandler(ch)
+
 def generate_history(days=90):
-    print(f"[START] Generating {days} days of synthetic history...")
+    logger.info(f"Generating {days} days of synthetic history...")
     db = PWOSDatabase()
     
     # Start date: 7 days ago
@@ -38,7 +54,7 @@ def generate_history(days=90):
     step_minutes = 15
     steps = int((days * 24 * 60) / step_minutes)
     
-    print(f"[INFO] Simulating {steps} time steps...")
+    logger.info(f"Simulating {steps} time steps...")
     
     for i in range(steps):
         # Time progression
@@ -113,7 +129,7 @@ def generate_history(days=90):
             'device_id': 'SIM_HIST_001'
         })
         
-    print(f"[INFO] Inserting {len(records)} sensor readings...")
+    logger.info(f"Inserting {len(records)} sensor readings...")
     
     # Bulk insert for speed
     import sqlite3
@@ -132,7 +148,7 @@ def generate_history(days=90):
         VALUES (:timestamp, :soil_moisture, :temperature, :humidity, :device_id, :forecast_minutes)
     ''', records)
     
-    print(f"[INFO] Inserting {len(waterings)} watering events...")
+    logger.info(f"Inserting {len(waterings)} watering events...")
     for w in waterings:
         cursor.execute('''
             INSERT INTO watering_events 
@@ -143,7 +159,7 @@ def generate_history(days=90):
     conn.commit()
     conn.close()
     
-    print(f"[SUCCESS] Database populated with 1 week of data!")
+    logger.info(f"Database populated with {days} days of data!")
 
 if __name__ == "__main__":
     days = 90

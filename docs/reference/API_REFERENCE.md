@@ -54,6 +54,28 @@ GET /api/sensor-data/latest
 GET /api/sensor-data/history?limit=30
 ```
 
+### Aggregated Analytics
+```
+GET /api/analytics/aggregated?hours=24&interval=15 minutes
+```
+Fetches historical sensor and irrigation data aggregated by exact time intervals using PostgreSQL `DATE_TRUNC`. Returns a continuous array of objects with pre-calculated averages and counts.
+```json
+[
+  {
+    "timestamp": "2026-02-08T10:00:00",
+    "soil_moisture": 45.5,
+    "temperature": 23.1,
+    "humidity": 60.2,
+    "vpd": 1.1,
+    "watering": {
+      "total_duration": 120,
+      "ai_duration": 90,
+      "ai_event_count": 2
+    }
+  }
+]
+```
+
 ---
 
 ## 3. ML Prediction

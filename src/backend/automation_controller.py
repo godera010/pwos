@@ -18,13 +18,8 @@ def run_autopilot():
     # Get project root (2 levels up from src/backend/automation_controller.py)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
-    log_dir = os.path.join(project_root, "logs")
-    
-    if not os.path.exists(log_dir):
-        try:
-            os.makedirs(log_dir)
-        except:
-            pass
+    log_dir = os.path.join(project_root, "logs", "app")
+    os.makedirs(log_dir, exist_ok=True)
         
     logging.basicConfig(
         level=logging.INFO,
@@ -107,8 +102,8 @@ def run_autopilot():
                 print(f"[STATUS] M:{moisture}% | Action: {action} | {reason}")
 
                 # 2. Execute Action (Only if AUTO - verified above)
-                if action == "WATER_NOW" and duration > 0:
-                    log_msg = f"📉 Moisture {moisture}%. Triggering Pump for {duration}s."
+                if action == "NOW" and duration > 0:
+                    log_msg = f"Moisture {moisture}%. Triggering Pump for {duration}s."
                     logger.info(log_msg)
                     
                     # Post Log
@@ -123,17 +118,22 @@ def run_autopilot():
                     
                     if ctrl_response.status_code == 200:
                         logger.info("Pump activated. Waiting for cycle to finish...")
-                        requests.post(f"{API_URL}/logs", json={"message": "✅ Pump cycle started.", "type": "SUCCESS"})
+                        requests.post(f"{API_URL}/logs", json={"message": "Pump cycle started.", "type": "SUCCESS"})
                         time.sleep(duration + 5) 
                     else:
-                        requests.post(f"{API_URL}/logs", json={"message": "❌ Pump activation failed!", "type": "ERROR"})
+                        requests.post(f"{API_URL}/logs", json={"message": "Pump activation failed!", "type": "ERROR"})
                 
+                elif action == "STOP":
+                    if poll_count % 12 == 0: # Every minute
+                         requests.post(f"{API_URL}/logs", json={"message": f"STOP: {reason}", "type": "ERROR"})
+
                 elif action == "STALL":
                     if poll_count % 12 == 0: # Every minute
-                        requests.post(f"{API_URL}/logs", json={"message": f"⏳ STALL: {reason}", "type": "INFO"})
-                elif action == "WAIT":
+                        requests.post(f"{API_URL}/logs", json={"message": f"STALL: {reason}", "type": "INFO"})
+
+                elif action == "MONITOR":
                     if poll_count % 12 == 0: # Every minute
-                        requests.post(f"{API_URL}/logs", json={"message": f"👀 Monitoring: Moisture {moisture}% (OK)", "type": "INFO"})
+                        requests.post(f"{API_URL}/logs", json={"message": f"Monitoring: Moisture {moisture}% (Optimal)", "type": "INFO"})
 
             except requests.exceptions.ConnectionError:
                 logger.error("Connection refused. Is the API server running?")

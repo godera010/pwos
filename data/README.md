@@ -1,71 +1,69 @@
-# data/ - Data Storage
+# data/ - Data & Simulation Hub 🧠
 
-**P-WOS Databases, Training Data, and Scenarios**
+Central storage for P-WOS simulation artifacts, training datasets, and raw inputs.
 
 ---
 
-## 📁 Structure
+## 📂 Directory Structure
 
-```
+```graphql
 data/
-├── pwos_simulation.db       # Main SQLite database (565KB)
-├── training_sim.db          # Training simulation DB (717KB)
-├── training_data.csv        # ML training data (817KB, main)
-├── real_training_data.csv   # Real sensor data (39KB)
-├── synthetic_training_data.csv # Generated scenarios
+├── database/            # 🗄️ Storage
+│   ├── pwos_simulation.db   # Main SQLite simulation database (Source for training)
+│   └── schemas/             # SQL definitions (schema.sql, etc.)
 │
-├── scenarios.txt            # Test scenario definitions
-├── ML Plant Watering_ Extreme Scenarios.md  # Edge cases
-├── Bulawayo, Zimbabwe.txt   # Weather history data
-├── raw_weather_history.json # Weather API cache
+├── processed/           # ⚙️ Machine Learning Ready
+│   ├── training_data.csv    # Final Feature-Engineered Dataset
+│   ├── synthetic_*.csv      # Generated scenario data
+│   └── simulation_logs/     # JSON logs from specific test runs
 │
-└── scenario_results/        # Test run outputs
-    └── (4 files)
+├── raw/                 # 🧱 Source Material
+│   ├── raw_weather_history.json
+│   └── scenarios.txt        # Scenario definitions
+│
+└── docs/                # 📝 Documentation
+    ├── Extreme_Scenarios.md # Edge case definitions
+    └── README.md            # You are here
 ```
 
 ---
 
-## Key Files
+## 🔑 Key Files
 
-| File | Size | Description |
-|------|------|-------------|
-| `pwos_simulation.db` | 565KB | Main SQLite (sensor readings, logs) |
-| `training_data.csv` | 817KB | ML training dataset |
-| `training_sim.db` | 717KB | Training data collection |
-| `scenarios.txt` | 7KB | 50+ test scenarios |
-
----
-
-## Database Schema
-
-### `sensor_readings` Table
-| Column | Type | Description |
-|--------|------|-------------|
-| id | INTEGER | Primary key |
-| timestamp | DATETIME | Reading time |
-| soil_moisture | REAL | 0-100% |
-| temperature | REAL | Celsius |
-| humidity | REAL | 0-100% |
-| device_id | TEXT | Sensor ID |
-
-### `watering_events` Table
-| Column | Type | Description |
-|--------|------|-------------|
-| id | INTEGER | Primary key |
-| timestamp | DATETIME | Event time |
-| duration | INTEGER | Seconds |
-| trigger | TEXT | AUTO/MANUAL |
+| Category | File | Description |
+|----------|------|-------------|
+| **Database** | `pwos_simulation.db` | The sandbox database where `data_generator.py` stores 90 days of simulated sensor data. |
+| **Training** | `training_data.csv` | The "Cleaned" dataset used by `train_model.py`. Derived from the DB, with added features (Rolling Averages, VPD). |
+| **Raw** | `raw_weather_history.json` | Real-world weather data used to seed the simulation with realistic patterns. |
 
 ---
 
-## Training Data Columns
+## 📊 Database Schema (SQLite)
 
-```csv
-timestamp,soil_moisture,temperature,humidity,
-hour,day_of_week,is_daytime,is_hot_hours,
-moisture_rolling_6,temp_rolling_6,moisture_change_rate,
-forecast_minutes,needs_water,vpd,is_extreme_vpd,
-wind_speed,rain_intensity,is_raining,is_high_wind
-```
+### `sensor_readings`
+The simulation logs every "tick" (15 mins) here.
+| Column | Type | Description |
+|--------|------|-------------|
+| `timestamp` | DATETIME | Event Time |
+| `soil_moisture` | REAL | 0-100% |
+| `temperature` | REAL | Celsius |
+| `humidity` | REAL | % |
+| `forecast_minutes`| INTEGER | Rain prediction buffer |
 
-**Total Features:** 17 (for ML model)
+### `watering_events`
+Tracks when the system decided to turn the pump on.
+| Column | Type | Description |
+|--------|------|-------------|
+| `timestamp` | DATETIME | Event Time |
+| `duration_seconds`| INTEGER | How long pump ran |
+| `trigger_type` | TEXT | `THRESHOLD` (Reactive) or `ML` (AI) |
+
+---
+
+## 🤖 Feature Engineering
+The **CSV** files in `processed/` contain extra calculated fields used for training:
+
+*   **`moisture_rolling_6`**: Average moisture over last 1.5 hours.
+*   **`vpd`**: Vapor Pressure Deficit (Plant stress level).
+*   **`moisture_change_rate`**: How fast the soil is drying (derivative).
+*   **`is_hot_hours`**: Boolean flag for peak sun (10:00 - 16:00).

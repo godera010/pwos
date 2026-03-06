@@ -6,10 +6,12 @@ export interface SensorData {
     soil_moisture: number;
     timestamp: string;
     forecast_minutes: number;
+    device_id?: string;
+    vpd?: number;
 }
 
 export interface PredictionData {
-    recommended_action: 'WATER_NOW' | 'STALL' | 'WAIT';
+    recommended_action: 'NOW' | 'STALL' | 'STOP' | 'MONITOR';
     ml_analysis: {
         confidence: number;
         prob_rain: number;
@@ -29,12 +31,34 @@ export interface SystemLog {
     type: 'INFO' | 'ACTION' | 'ERROR';
 }
 
+export interface SystemState {
+    mode: 'AUTO' | 'MANUAL';
+    pump_active: boolean;
+}
+
+export interface SystemStats {
+    total_readings: number;
+    total_waterings: number;
+    total_ml_decisions: number;
+    avg_moisture: number;
+}
+
+export interface WateringEvent {
+    id: number;
+    timestamp: string;
+    duration_seconds: number;
+    trigger_type: string;
+    moisture_before: number;
+    moisture_after: number | null;
+}
+
 export interface WeatherForecast {
     temperature: number;
     humidity: number;
     precipitation_chance: number;
     wind_speed_kmh: number;
     rain_forecast_minutes: number;
+    cloud_cover: number;
     condition: string;
     source: string;
     timestamp: string;
@@ -79,8 +103,20 @@ export const api = {
         const res = await fetch(`${API_BASE_URL}/logs`);
         return res.json();
     },
-    getHistory: async (limit = 30): Promise<SensorData[]> => {
-        const res = await fetch(`${API_BASE_URL}/sensor-data/history?limit=${limit}`);
+    getHistory: async (hours = 24): Promise<SensorData[]> => {
+        const res = await fetch(`${API_BASE_URL}/sensor-data/history?hours=${hours}`);
+        return res.json();
+    },
+    getAggregatedAnalytics: async (hours = 24, interval = '15 minutes'): Promise<any[]> => {
+        const res = await fetch(`${API_BASE_URL}/analytics/aggregated?hours=${hours}&interval=${interval}`);
+        return res.json();
+    },
+    getStatistics: async (): Promise<SystemStats> => {
+        const res = await fetch(`${API_BASE_URL}/statistics`);
+        return res.json();
+    },
+    getWateringEvents: async (hours = 24): Promise<WateringEvent[]> => {
+        const res = await fetch(`${API_BASE_URL}/watering-events?hours=${hours}`);
         return res.json();
     },
     toggleMode: async (mode: 'AUTO' | 'MANUAL') => {
@@ -89,6 +125,14 @@ export const api = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ mode })
         });
+    },
+    controlPump: async (action: 'ON' | 'OFF', duration = 30) => {
+        const res = await fetch(`${API_BASE_URL}/control/pump`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, duration, trigger_source: 'MANUAL' })
+        });
+        return res.json();
     },
     getSystemState: async () => {
         const res = await fetch(`${API_BASE_URL}/system/state`);
@@ -99,23 +143,17 @@ export const api = {
         return res.json();
     },
 
-    // Simulation API
-    simulationReset: async (scenario: string) => {
-        const res = await fetch(`${API_BASE_URL}/simulation/reset`, {
+
+    getSettings: async () => {
+        const res = await fetch(`${API_BASE_URL}/settings`);
+        return res.json();
+    },
+    saveSettings: async (settings: { moisture_threshold: number; max_duration: number }) => {
+        const res = await fetch(`${API_BASE_URL}/settings`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scenario })
+            body: JSON.stringify(settings)
         });
-        return res.json();
-    },
-    simulationStep: async () => {
-        const res = await fetch(`${API_BASE_URL}/simulation/step`, {
-            method: 'POST'
-        });
-        return res.json();
-    },
-    simulationState: async () => {
-        const res = await fetch(`${API_BASE_URL}/simulation/state`);
         return res.json();
     }
 };

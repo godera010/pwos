@@ -16,23 +16,23 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 98.5%;
+    --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
+    --popover-foreground: 0 0% 0%;
     --primary: 158 94% 30%;
     /* Emerald-600 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
+    --secondary: 220 14.3% 97.5%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 220 14.3% 97.5%;
+    --muted-foreground: 0 0% 0%;
+    --accent: 220 14.3% 97.5%;
+    --accent-foreground: 0 0% 0%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
+    --border: 0 0% 85%;
     --input: 220 13% 91%;
     --ring: 158 94% 30%;
     --chart-1: 158 94% 30%;
@@ -45,31 +45,65 @@
   }
 
   .dark {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
+    --background: 0 0% 0%;
+    --foreground: 0 0% 98%;
+
+    /* Pure Black Surfaces */
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 98%;
+
     --primary: 158 94% 45%;
-    /* Emerald-500 */
-    --primary-foreground: 224 71.4% 4.1%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
+    --primary-foreground: 0 0% 0%;
+
+    /* Neutral Greys for Interactions (No Blue Tint) */
+    --secondary: 0 0% 9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 9%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 0 0% 9%;
+    --accent-foreground: 0 0% 98%;
+
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* High Contrast Borders */
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
     --ring: 158 94% 45%;
+
+    /* Sidebar - Strictly Black */
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 60%;
+    --sidebar-primary: 158 94% 45%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 9%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 12%;
+    --sidebar-ring: 158 94% 45%;
+
+    /* Chart Colors (Dark Mode Adjustments) */
     --chart-1: 158 94% 45%;
     --chart-2: 243 75% 59%;
     --chart-3: 199 89% 48%;
     --chart-4: 47 95% 42%;
     --chart-5: 350 89% 60%;
+  }
+
+  /* We keep Sidebar Light variables in a separate root block or merged with main root. 
+     Since main root is above, we can just declare them here for clarity or move them up. 
+     Keeping them here as a separate block validly. */
+  :root {
+    /* Sidebar Variables (Light) */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 40%;
+    --sidebar-primary: 158 94% 30%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 94%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 158 94% 30%;
   }
 }
 
@@ -81,4 +115,86 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom Landscape Override for React Weather Widget */
+.daniel-szulc-weather-widget {
+  width: 100% !important;
+  height: 200px !important;
+  border-radius: 0.5rem !important;
+}
+
+.daniel-szulc-weather-widget .weather-widget {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-evenly !important;
+  padding: 1rem !important;
+  height: 100% !important;
+}
+
+/* Hide location text as it's already in the CardHeader */
+.daniel-szulc-weather-widget .weather-widget .content {
+    display: none !important;
+}
+
+.daniel-szulc-weather-widget .weather-widget .weather-icon {
+    width: 30% !important;
+    height: 100% !important;
+}
+
+.daniel-szulc-weather-widget .weather-widget .current-weather {
+    width: 30% !important;
+    height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.daniel-szulc-weather-widget .weather-widget .current-weather h1 {
+    font-size: 3rem !important;
+    line-height: 1 !important;
+}
+
+.daniel-szulc-weather-widget .weather-widget .details {
+    width: 40% !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+}
+
+.daniel-szulc-weather-widget .weather-widget .details .detail-item {
+    display: flex !important;
+    flex-direction: row-reverse !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: auto !important;
+    padding: 0 1rem !important;
+}
+
+.daniel-szulc-weather-widget .weather-widget .details .detail-item div {
+    height: auto !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+}
+
+.daniel-szulc-weather-widget .weather-widget .details .detail-item h2 {
+    font-size: 1.125rem !important;
+    width: auto !important;
+    font-weight: 900 !important;
+}
+
+.daniel-szulc-weather-widget .weather-widget .details .detail-item h4 {
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    opacity: 0.8 !important;
 }

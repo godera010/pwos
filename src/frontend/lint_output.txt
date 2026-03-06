@@ -1,0 +1,57 @@
+
+> app@0.0.0 lint
+> eslint .
+
+
+C:\Users\Godwin\Documents\projects\pwos\src\frontend\src\components\LoadChart.tsx
+  25:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Godwin\Documents\projects\pwos\src\frontend\src\components\ui\badge.tsx
+  36:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Godwin\Documents\projects\pwos\src\frontend\src\components\ui\button.tsx
+  57:18  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Godwin\Documents\projects\pwos\src\frontend\src\pages\Analytics.tsx
+  51:38  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  60:9   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Godwin\Documents\projects\pwos\src\frontend\src\pages\Analytics.tsx:60:9
+  58 |     useEffect(() => {
+  59 |         // practical mock for UI development
+> 60 |         setData(generateMockHistory(24));
+     |         ^^^^^^^ Avoid calling setState() directly within an effect
+  61 |         try {
+  62 |             // Attempt to pre-fetch real history if available
+  63 |             api.getHistory(50).then(h => {  react-hooks/set-state-in-effect
+
+C:\Users\Godwin\Documents\projects\pwos\src\frontend\src\pages\Control.tsx
+  54:18  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Godwin\Documents\projects\pwos\src\frontend\src\pages\Terminal.tsx
+  14:9   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Godwin\Documents\projects\pwos\src\frontend\src\pages\Terminal.tsx:14:9
+  12 |
+  13 |     useEffect(() => {
+> 14 |         append('-- P-WOS Kernel Shell Initialized --');
+     |         ^^^^^^ Avoid calling setState() directly within an effect
+  15 |         append('ESP-ROM: esp32s3-20210211');
+  16 |
+  17 |         const fetchLogs = () => {  react-hooks/set-state-in-effect
+  21:48  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+
+✖ 8 problems (8 errors, 0 warnings)
+

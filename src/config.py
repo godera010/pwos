@@ -48,7 +48,7 @@ WEATHER_API_MODE = os.getenv("WEATHER_API_MODE", "openweathermap")  # "simulatio
 OPENWEATHERMAP_API_KEY = os.getenv("OPENWEATHERMAP_API_KEY", "")
 
 if WEATHER_API_MODE == "openweathermap" and not OPENWEATHERMAP_API_KEY:
-    print("⚠️  WARNING: OpenWeatherMap Mode enabled but no API Key found!")
+    print("[WARN] OpenWeatherMap Mode enabled but no API Key found!")
     print("    Please set OPENWEATHERMAP_API_KEY in your .env file.")
 
 WEATHER_LATITUDE = float(os.getenv("WEATHER_LATITUDE", "-26.2041"))  # Default: Johannesburg
@@ -58,7 +58,7 @@ WEATHER_LONGITUDE = float(os.getenv("WEATHER_LONGITUDE", "28.0473"))
 # Database Configuration
 # ============================================================================
 DATABASE_MODE = os.getenv("DATABASE_MODE", "sqlite")  # "sqlite" or "postgresql"
-SQLITE_PATH = os.getenv("SQLITE_PATH", "pwos_simulation.db")
+SQLITE_PATH = os.getenv("SQLITE_PATH", os.path.join("data", "database", "pwos_simulation.db"))
 POSTGRESQL_URL = os.getenv("DATABASE_URL", "")  # Railway provides this
 
 # PostgreSQL Locals

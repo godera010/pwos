@@ -1,22 +1,15 @@
-# ============================================================
-# Intel GPU Acceleration (Safe Import)
-# ============================================================
-try:
-    from sklearnex import patch_sklearn
-    patch_sklearn()
-except (ImportError, Exception):
-    pass # Silent fallback for inference
-
 import joblib
+import logging
 import pandas as pd
 import numpy as np
 import os
 import json
+import sys
 from datetime import datetime
-import warnings
 
-# Suppress sklearn feature name warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from log_config import setup_logger
+logger = setup_logger("MLPredictor", "ml_predictor.log", "app")
 
 # Paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -28,18 +21,84 @@ class MLPredictor:
         self.model = None
         self.metadata = {}
         self.load_model()
+
+    def _build_response(self, prediction, confidence, probs, features, decision, duration, status, reason):
+        return {
+            'prediction': int(prediction),
+            'confidence': round(confidence * 100, 1),
+            'probability_class_1': round(float(probs[1]) * 100, 1) if probs is not None else 0,
+            'features_used': features,
+            'recommended_action': decision,
+            'recommended_duration': duration,
+            'system_status': status,
+            'reason': reason
+        }
         
     def load_model(self):
         """Load the trained model and metadata"""
         if os.path.exists(MODEL_PATH):
-            print(f"[ML] Loading model from {MODEL_PATH}")
+            logger.info(f"Loading model from {MODEL_PATH}")
             self.model = joblib.load(MODEL_PATH)
             
             with open(METADATA_PATH, 'r') as f:
                 self.metadata = json.load(f)
         else:
-            print(f"[ML-ERROR] Model not found at {MODEL_PATH}")
+            logger.error(f"Model not found at {MODEL_PATH}")
+    def get_seasonal_thresholds(self, month):
+        """
+        Adjust moisture thresholds based on season (Southern Hemisphere - Zimbabwe).
+        Summer (Nov-Mar): Hot, high evap -> Higher thresholds
+        Winter (May-Sep): Cool, low evap -> Lower thresholds
+        """
+        if month in [11, 12, 1, 2, 3]:  # Summer
+            return {'critical': 15, 'low': 35, 'proactive': 50, 'high': 80}
+        elif month in [5, 6, 7, 8, 9]:  # Winter
+            return {'critical': 10, 'low': 25, 'proactive': 40, 'high': 70}
+        else:  # Autumn/Spring
+            return {'critical': 12, 'low': 30, 'proactive': 45, 'high': 75}
+
+    def predict_decay_rate(self, temp, humidity, vpd, hour):
+        """Predict moisture loss rate (%/hour)."""
+        base_decay = 0.5
+        temp_factor = 1 + (temp - 25) * 0.08 if temp > 25 else 0.7
+        vpd_factor = 1 + (vpd * 0.4)
+        
+        time_factor = 1.0
+        if 10 <= hour <= 16: time_factor = 1.5
+        elif 22 <= hour or hour <= 4: time_factor = 0.3
             
+        return base_decay * temp_factor * vpd_factor * time_factor
+
+    def calculate_rain_confidence(self, forecast_minutes, current_moisture):
+        """Return (should_wait, confidence, reason)"""
+        if forecast_minutes == 0: return (False, 0.0, "")
+        
+        hours_until_rain = forecast_minutes / 60.0
+        
+        if hours_until_rain < 2:
+            return (True, 0.95, f"Rain immiment ({hours_until_rain:.1f}h).")
+        elif hours_until_rain < 6:
+            # Can we wait?
+            if current_moisture > 25:
+                return (True, 0.75, f"Rain in {hours_until_rain:.1f}h. Waiting.")
+        elif hours_until_rain < 12:
+            if current_moisture > 40:
+                return (True, 0.5, f"Rain in {hours_until_rain:.1f}h. Monitoring.")
+                
+        return (False, 0.0, "")
+
+    def check_saturation_risk(self, current_moisture):
+        """Prevent overwatering."""
+        if current_moisture > 85:
+            return (True, "SATURATED", "Soil saturated (>85%).")
+        return (False, "", "")
+
+    def detect_false_dry(self, wind_speed, humidity, change_rate):
+        """Detect if sensor is drying faster than soil."""
+        if wind_speed > 20 and humidity < 40 and change_rate < -0.5:
+            return (True, "False dry suspected (High Wind/Low Hum).")
+        return (False, "")
+
     def predict_next_watering(self, current_data, history_df=None):
         """
         Predict if watering is needed in next 24 hours.
@@ -113,8 +172,12 @@ class MLPredictor:
         for col in training_features:
             input_data.append(features.get(col, 0))
             
-        # Reshape for sklearn
-        X = np.array(input_data).reshape(1, -1)
+        # Build DataFrame with feature names to match training data
+        try:
+            X = pd.DataFrame([input_data], columns=training_features)
+        except Exception as e:
+            logger.critical(f"Input Data: {input_data}")
+            raise e
         
         # 2. Predict
         prediction = self.model.predict(X)[0]
@@ -123,180 +186,136 @@ class MLPredictor:
         
         # 3. Intelligent Control Logic (Centralized with VPD-Aware Timing)
         
-        # Configurable Thresholds
-        CRITICAL_THRESHOLD = 10.0    # Emergency - must water regardless
-        LOW_THRESHOLD = 30.0         # Standard watering trigger
-        PROACTIVE_THRESHOLD = 45.0   # Consider stalling if rain coming
-        HIGH_THRESHOLD = 75.0        # No watering needed
-        RAIN_WINDOW_MINUTES = 6 * 60 # 6 hours - proactive rain window
+        # =====================================================
+        # 1. SETUP & UTILS
+        # =====================================================
+        current_moisture = features['soil_moisture']
+        thresholds = self.get_seasonal_thresholds(now.month)
+        CRITICAL_THRESHOLD = thresholds['critical']
+        LOW_THRESHOLD = thresholds['low']
+        PROACTIVE_THRESHOLD = thresholds['proactive']
+        HIGH_THRESHOLD = thresholds['high']
         
-        # VPD Thresholds
-        HIGH_VPD_THRESHOLD = 2.0     # High evaporation - avoid watering
-        EXTREME_VPD_THRESHOLD = 3.0  # Extreme - only water at optimal times
+        decay_rate = self.predict_decay_rate(features['temperature'], features['humidity'], vpd, now.hour)
         
         # Default State
-        decision = "WAIT"
-        status = "MONITORING"
-        reason = "Soil moisture is stable."
+        decision = "MONITOR"
+        status = "STABLE"
+        reason = f"Moisture {current_moisture:.1f}%. Decay: {decay_rate:.2f}%/h."
 
-        current_moisture = features['soil_moisture']
-        forecast_mins = features['forecast_minutes']
-        rain_incoming = 0 < forecast_mins < (12 * 60)  # Rain within 12h
-        rain_imminent = 0 < forecast_mins < RAIN_WINDOW_MINUTES  # Rain within 6h
+        # Environmental Checks
+        is_raining_now = features.get('is_raining', 0) == 1
+        is_high_wind = features.get('is_high_wind', 0) == 1
         
+        # Saturation Check
+        is_saturated, sat_status, sat_reason = self.check_saturation_risk(current_moisture)
+        
+        # Rain Confidence
+        should_wait_rain, rain_conf, rain_reason = self.calculate_rain_confidence(features['forecast_minutes'], current_moisture)
+        
+        # False Dry Check
+        is_false_dry, fd_reason = self.detect_false_dry(features['wind_speed'], features['humidity'], features.get('moisture_change_rate', 0))
+
         # =====================================================
-        # VPD-AWARE OPTIMAL WATERING TIME DETECTION
-        # =====================================================
-        
-        # Check if current hour is in optimal watering window
-        current_hour = now.hour
-        is_optimal_morning = 4 <= current_hour <= 6    # 04:00-06:00
-        is_optimal_evening = 18 <= current_hour <= 20  # 18:00-20:00
-        is_optimal_time = is_optimal_morning or is_optimal_evening
-        
-        # Check if in high evaporation period (midday heat)
-        is_high_evap_period = 10 <= current_hour <= 16  # 10:00-16:00
-        
-        # VPD-based decisions
-        is_high_vpd = vpd > HIGH_VPD_THRESHOLD
-        is_extreme_vpd = vpd > EXTREME_VPD_THRESHOLD
-        
-        # =====================================================
-        # DECISION MATRIX (Priority Order)
+        # 2. DECISION LOGIC (Standardized: NOW, STALL, STOP, MONITOR)
         # =====================================================
         
-        # 3.1 HIGH MOISTURE - No action needed
-        if current_moisture > HIGH_THRESHOLD:
-            decision = "WAIT"
-            status = "OPTIMAL"
-            reason = f"Moisture high ({current_moisture:.1f}%). No action needed."
-        
-        # 3.2 CRITICAL LOW - Emergency override (ignores VPD and rain)
-        elif current_moisture < CRITICAL_THRESHOLD:
-            decision = "WATER_NOW"
-            status = "EMERGENCY_OVERRIDE"
-            reason = f"CRITICAL: Moisture at {current_moisture:.1f}%. Emergency watering."
-        
-        # 3.3 LOW MOISTURE (<30%) - Smart timing based on VPD
-        elif current_moisture < LOW_THRESHOLD:
-            
-            # 3.3.1 Rain coming soon? STALL and wait for free water
-            if rain_imminent:
-                decision = "STALL"
-                status = "RAIN_DELAY"
-                reason = f"Moisture low ({current_moisture:.1f}%) but rain in {forecast_mins}m. Stalling."
-            
-            # 3.3.2 High VPD during midday? Delay until cooler
-            elif is_extreme_vpd and is_high_evap_period:
-                decision = "STALL"
-                status = "VPD_DELAY"
-                reason = f"VPD extreme ({vpd:.2f}kPa). Waiting for evening (18:00) to reduce evaporation loss."
-            
-            # 3.3.3 High VPD but optimal time? Water now (best compromise)
-            elif is_high_vpd and is_optimal_time:
-                decision = "WATER_NOW"
-                status = "OPTIMAL_TIMING"
-                reason = f"Low moisture ({current_moisture:.1f}%) at optimal time. VPD={vpd:.2f}kPa."
-            
-            # 3.3.4 High VPD, not optimal time? If morning coming soon, wait; else water
-            elif is_high_vpd and not is_optimal_time:
-                # If it's late evening (21:00-03:00), wait for optimal morning
-                if 21 <= current_hour or current_hour < 4:
-                    decision = "STALL"
-                    status = "WAIT_OPTIMAL"
-                    reason = f"Low moisture. Waiting for 04:00 optimal window (current VPD={vpd:.2f}kPa)."
-                else:
-                    # It's morning/early afternoon - can't wait, water now
-                    decision = "WATER_NOW"
-                    status = "DRY_TRIGGER"
-                    reason = f"Moisture below {LOW_THRESHOLD}%. VPD={vpd:.2f}kPa. Watering required."
-            
-            # 3.3.5 Normal VPD, no rain - water now
+        # 2.1 STOP / STALL CONDITIONS (Safety First)
+        if is_raining_now:
+            if current_moisture < CRITICAL_THRESHOLD:
+                decision = "NOW"
+                status = "EMERGENCY"
+                reason = "Water pump is turned ON (CRITICAL moisture despite rain)."
             else:
-                decision = "WATER_NOW"
-                status = "DRY_TRIGGER"
-                reason = f"Moisture below {LOW_THRESHOLD}%. VPD OK ({vpd:.2f}kPa). Watering."
-        
-        # 3.4 PROACTIVE ZONE (30-45%) - Stall if rain coming, watch decay rate
-        elif current_moisture < PROACTIVE_THRESHOLD:
-            if rain_imminent:
-                decision = "STALL"
-                status = "PROACTIVE_DELAY"
-                reason = f"Moisture at {current_moisture:.1f}%, rain in {forecast_mins}m. Delaying to save water."
-            elif is_extreme_vpd:
-                decision = "MONITOR"
-                status = "VPD_WATCH"
-                reason = f"High VPD ({vpd:.2f}kPa). Moisture will drop fast. Monitoring."
+                decision = "STOP"
+                status = "RAINING"
+                reason = "System stopped: Currently raining."
+                
+        elif is_saturated:
+            decision = "STOP"
+            status = "SATURATED"
+            reason = f"System stopped: {sat_reason}"
+            
+        elif is_high_wind:
+            if current_moisture < CRITICAL_THRESHOLD:
+                decision = "NOW"
+                status = "EMERGENCY"
+                reason = "Water pump is turned ON (CRITICAL moisture despite wind)."
             else:
-                decision = "WAIT"
-                status = "MONITORING"
-                reason = f"Moisture at {current_moisture:.1f}%. VPD={vpd:.2f}kPa. Watching."
-        
-        # 3.5 COMFORTABLE ZONE (45-75%) - Proactive pre-heat watering
-        else:
-            if rain_imminent:
-                decision = "WAIT"
+                decision = "STALL"
+                status = "WIND_DELAY"
+                reason = f"Wind too high ({features.get('wind_speed')} km/h). Stalling."
+                
+        elif should_wait_rain:
+            if current_moisture < CRITICAL_THRESHOLD:
+                decision = "NOW"
+                status = "EMERGENCY"
+                reason = "Water pump is turned ON (CRITICAL moisture, cannot wait for rain)."
+            else:
+                decision = "STALL"
                 status = "RAIN_EXPECTED"
-                reason = f"Rain expected in {forecast_mins}m. No action needed."
-            
-            # NEW: Proactive watering before hot day
-            # If it's early morning and VPD will be extreme later, top up now
-            elif is_optimal_morning and features.get('is_extreme_vpd', 0) == 1:
-                if current_moisture < 55:
-                    decision = "WATER_NOW"
-                    status = "PROACTIVE_PREHEAT"
-                    reason = f"Pre-heat watering at {current_moisture:.1f}%. Hot day predicted."
+                reason = rain_reason
+                
+        elif is_false_dry:
+            decision = "MONITOR"
+            status = "FALSE_DRY_CHECK"
+            reason = f"Monitoring: {fd_reason}"
+
+        # 2.2 WATERING LOGIC
+        else:
+            # CRITICAL
+            if current_moisture < CRITICAL_THRESHOLD:
+                decision = "NOW"
+                status = "CRITICAL"
+                reason = "Water pump is turned ON (Critically low moisture)."
+                
+            # LOW (Action Needed)
+            elif current_moisture < LOW_THRESHOLD:
+                # VPD / Time Checks
+                is_high_evap = 10 <= now.hour <= 16
+                is_extreme_vpd = vpd > 3.0
+                
+                if is_extreme_vpd and is_high_evap:
+                    decision = "STALL"
+                    status = "VPD_DELAY"
+                    reason = f"VPD extreme ({vpd:.2f}kPa) at midday. Stalling until evening."
                 else:
-                    decision = "WAIT"
-                    status = "OPTIMAL"
-                    reason = f"Moisture OK for hot day. VPD={vpd:.2f}kPa."
+                    decision = "NOW"
+                    status = "DRY_TRIGGER"
+                    reason = "Water pump is turned ON (Moisture below threshold)."
+
+            # PROACTIVE (Optimizations)
+            elif current_moisture < PROACTIVE_THRESHOLD:
+                # Pre-heat watering?
+                is_morning = 4 <= now.hour <= 6
+                if is_morning and features.get('is_extreme_vpd', 0) == 1:
+                     decision = "NOW"
+                     status = "PREHEAT"
+                     reason = "Water pump is turned ON (Proactive morning top-up for hot day)."
+                else:
+                     decision = "MONITOR"
+                     status = "WATCHING"
+                     reason = f"Moisture stable. Decay rate {decay_rate:.2f}%/h."
             
-            elif prediction == 1 and current_moisture < 55.0:
-                decision = "WAIT"
-                status = "ML_WATCH"
-                reason = f"ML detects drying trend. VPD={vpd:.2f}kPa. Watching closely."
+            # HIGH
             else:
-                decision = "WAIT"
+                decision = "MONITOR"
                 status = "OPTIMAL"
-                reason = f"Moisture at {current_moisture:.1f}%. System optimal."
-        
-        # 4. Calculate Duration (Smart Watering)
-        # Goal: Rate of 0.5% moisture increase per second (calibrated)
-        # Target: 60% moisture
-        target_moisture = 60.0
-        fill_rate_per_sec = 0.5
-        
+                reason = "Soil moisture is optimal."
+
+        # 3. DURATION CALCULATION
         recommended_duration = 0
-        
-        if decision == "WATER_NOW":
-            if current_moisture < target_moisture:
-                deficit = target_moisture - current_moisture
-                raw_duration = deficit / fill_rate_per_sec
-                # Clamp duration (Min 5s, Max 60s for safety)
-                recommended_duration = max(5, min(60, int(raw_duration)))
-                reason += f" Need {recommended_duration}s to reach {target_moisture}%."
-            else:
-                # Catch-all: If for some reason we decided to water but are above target
-                # (e.g. slight logic gap or override), just give 5s burst or 0.
-                if status == "EMERGENCY_OVERRIDE":
-                     recommended_duration = 10
-                     reason += " Emergency Burst."
-                else:
-                     recommended_duration = 5
-                     reason += " (Top-up)"
+        target_moisture = 60.0
+        if decision == "NOW":
+            deficit = target_moisture - current_moisture
+            recommended_duration = max(5, min(60, int(deficit / 0.5)))
+            # If prompt says "Water pump is turned ON", let's append duration for logging
+            # But the UI message is strictly the reason
+            pass
+
             
-        return {
-            'prediction': int(prediction), # Raw ML
-            'confidence': round(confidence * 100, 1),
-            'probability_class_1': round(float(probs[1]) * 100, 1),
-            'features_used': features,
-            
-            # Final Decision
-            'recommended_action': decision,
-            'recommended_duration': recommended_duration,
-            'system_status': status,
-            'reason': reason
-        }
+        return self._build_response(prediction, confidence, probs, features, 
+                                   decision, recommended_duration, status, reason)
 
 if __name__ == "__main__":
     # Test

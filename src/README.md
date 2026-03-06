@@ -9,16 +9,17 @@
 ```
 src/
 ├── backend/              # Flask API Server
-│   ├── app.py            # Main API (26KB, all endpoints)
-│   ├── database.py       # SQLite operations
+│   ├── app.py            # Main API (all endpoints)
+│   ├── database.py       # PostgreSQL operations
 │   ├── mqtt_subscriber.py # MQTT → Database bridge
-│   ├── weather_api.py    # Weather data fetching
+│   ├── weather_api.py    # OpenWeatherMap / sim fallback
 │   ├── automation_controller.py # Autopilot system
-│   └── models/           # ML Predictor & trained model
-│       ├── ml_predictor.py   # 17-feature predictor
-│       ├── train_model.py    # Model training script
-│       ├── data_collector.py # Data collection utilities
-│       └── artifacts/        # rf_model.pkl, metadata
+│   ├── scheduler.py      # Background scheduler
+│   ├── log_config.py     # Centralized logging config
+│   ├── models/           # ML predictor & training
+│   ├── ai_service/       # Self-retraining pipeline
+│   ├── tests/            # Pytest test suite
+│   └── utils/            # Helper functions
 │
 ├── frontend/             # React + Vite + TypeScript
 │   ├── src/
@@ -34,21 +35,35 @@ src/
 │   └── generate_history.py   # Historical data gen
 │
 ├── firmware/             # ESP32 firmware (future)
-├── hardware/             # Hardware abstraction (future)
-├── ai/                   # AI utilities
 └── config.py             # Global configuration
 ```
+
+Each folder contains a `<foldername>.md` documentation file with detailed structure and info.
+
+---
+
+## 📝 Logging
+
+All services log to `logs/` with categorized subdirectories. See [`logs/LOG_STRUCTURE.md`](../logs/LOG_STRUCTURE.md).
+
+| Directory | Services |
+|-----------|----------|
+| `logs/app/` | Backend API, database, MQTT, scheduler, ML, monitors |
+| `logs/sim/` | ESP32 simulator, weather simulator, data generator |
+| `logs/test/` | Pytest runs |
 
 ---
 
 ## Key Files
 
-| File | Purpose | Size |
-|------|---------|------|
-| `backend/app.py` | Main API server | 26KB |
-| `backend/models/ml_predictor.py` | ML prediction engine | 9.7KB |
-| `simulation/esp32_simulator.py` | ESP32 simulation | 12KB |
-| `frontend/src/pages/Dashboard.tsx` | Main dashboard | 12KB |
+| File | Purpose |
+|------|---------|
+| `backend/app.py` | Main API server |
+| `backend/models/ml_predictor.py` | ML prediction engine |
+| `backend/ai_service/retrain_pipeline.py` | Self-retraining orchestrator |
+| `backend/log_config.py` | Centralized logging helper |
+| `simulation/esp32_simulator.py` | ESP32 simulation |
+| `frontend/src/pages/Dashboard.tsx` | Main dashboard |
 
 ---
 

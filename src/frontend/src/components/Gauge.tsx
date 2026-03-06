@@ -24,7 +24,7 @@ export const Gauge: React.FC<GaugeProps> = ({ value, label, unit, color, max = 1
                     <span className="text-[10px] opacity-50 font-bold uppercase">{unit}</span>
                 </div>
             </div>
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-4">{label}</span>
+            <span className="text-[10px] font-bold text-slate-950 uppercase tracking-widest mt-4">{label}</span>
         </div>
     );
 };

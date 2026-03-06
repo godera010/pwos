@@ -56,14 +56,14 @@ export const Settings: React.FC = () => {
                     </div>
                     <div>
                         <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">System Configuration</h1>
-                        <p className="text-slate-500 text-sm font-medium italic">Fine-tune ML thresholds and environmental guard rails.</p>
+                        <p className="text-slate-950 dark:text-neutral-400 text-sm font-medium italic">Fine-tune ML thresholds and environmental guard rails.</p>
                     </div>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Soil Moisture Thresholds */}
-                <Card className="border-none shadow-sm dark:bg-slate-900/50 overflow-hidden">
+                <Card className=" shadow-sm dark:bg-card overflow-hidden">
                     <div className="h-1.5 w-full bg-blue-500" />
                     <CardHeader>
                         <div className="flex items-center justify-between">
@@ -78,21 +78,21 @@ export const Settings: React.FC = () => {
                     <CardContent className="space-y-6">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Min (Trigger)</label>
+                                <label className="text-[10px] font-black uppercase text-slate-800 dark:text-neutral-300 tracking-widest">Min (Trigger)</label>
                                 <input
                                     type="number"
                                     value={moisture.min}
                                     onChange={e => setMoisture({ ...moisture, min: Number(e.target.value) })}
-                                    className="w-full h-12 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-lg px-4 font-black transition-all focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                    className="w-full h-12 bg-slate-50 dark:bg-card border border-slate-200 dark:border-neutral-800 rounded-lg px-4 font-black transition-all focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Max (Target)</label>
+                                <label className="text-[10px] font-black uppercase text-slate-800 dark:text-neutral-300 tracking-widest">Max (Target)</label>
                                 <input
                                     type="number"
                                     value={moisture.max}
                                     onChange={e => setMoisture({ ...moisture, max: Number(e.target.value) })}
-                                    className="w-full h-12 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-lg px-4 font-black transition-all focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                    className="w-full h-12 bg-slate-50 dark:bg-card border border-slate-200 dark:border-neutral-800 rounded-lg px-4 font-black transition-all focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 />
                             </div>
                         </div>
@@ -106,7 +106,7 @@ export const Settings: React.FC = () => {
                 </Card>
 
                 {/* Thermal Guard Rails */}
-                <Card className="border-none shadow-sm dark:bg-slate-900/50 overflow-hidden">
+                <Card className=" shadow-sm dark:bg-card overflow-hidden">
                     <div className="h-1.5 w-full bg-orange-500" />
                     <CardHeader>
                         <div className="flex items-center justify-between">
@@ -121,21 +121,21 @@ export const Settings: React.FC = () => {
                     <CardContent className="space-y-6">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Operating Min</label>
+                                <label className="text-[10px] font-black uppercase text-slate-800 dark:text-neutral-300 tracking-widest">Operating Min</label>
                                 <input
                                     type="number"
                                     value={temperature.min}
                                     onChange={e => setTemperature({ ...temperature, min: Number(e.target.value) })}
-                                    className="w-full h-12 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-lg px-4 font-black transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                                    className="w-full h-12 bg-slate-50 dark:bg-card border border-slate-200 dark:border-neutral-800 rounded-lg px-4 font-black transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Alert Max</label>
+                                <label className="text-[10px] font-black uppercase text-slate-800 dark:text-neutral-300 tracking-widest">Alert Max</label>
                                 <input
                                     type="number"
                                     value={temperature.max}
                                     onChange={e => setTemperature({ ...temperature, max: Number(e.target.value) })}
-                                    className="w-full h-12 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-lg px-4 font-black transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                                    className="w-full h-12 bg-slate-50 dark:bg-card border border-slate-200 dark:border-neutral-800 rounded-lg px-4 font-black transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none"
                                 />
                             </div>
                         </div>
@@ -153,7 +153,7 @@ export const Settings: React.FC = () => {
             <div className="pt-4 space-y-4">
                 <Separator className="bg-slate-200 dark:bg-slate-800" />
                 <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="flex items-center gap-2 text-slate-500">
+                    <div className="flex items-center gap-2 text-slate-950 dark:text-neutral-400">
                         <ShieldCheck className="size-5 text-emerald-500" />
                         <span className="text-xs font-bold uppercase tracking-tight">Configuration Sync Protocol: ACTIVE</span>
                     </div>
@@ -171,7 +171,7 @@ export const Settings: React.FC = () => {
                 </div>
             </div>
 
-            <Card className="border-none shadow-sm bg-slate-900 text-white p-6">
+            <Card className=" shadow-sm bg-card text-white p-6">
                 <div className="flex items-center gap-6">
                     <div className="size-16 rounded-3xl bg-secondary flex items-center justify-center shrink-0">
                         <Brain className="size-8 text-white" />
