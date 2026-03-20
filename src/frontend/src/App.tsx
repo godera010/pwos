@@ -5,11 +5,21 @@ import { Analytics } from './pages/Analytics';
 import { MLInsights } from './pages/MLInsights';
 import { Control } from './pages/Control';
 import { Settings } from './pages/Settings';
-import { PlaceholderPage } from './components/PlaceholderPage';
+import { SystemHealth } from './pages/SystemHealth';
+import { Toaster } from 'sonner';
 
 function App() {
   return (
     <Router>
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton
+        toastOptions={{
+          style: { fontFamily: 'inherit' },
+          duration: 4000,
+        }}
+      />
       <Layout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
@@ -17,7 +27,7 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/ml-insights" element={<MLInsights />} />
           <Route path="/control" element={<Control />} />
-          <Route path="/system" element={<PlaceholderPage title="System Health" description="Node status, MQTT logs, and battery levels." />} />
+          <Route path="/system" element={<SystemHealth />} />
         </Routes>
       </Layout>
     </Router>
@@ -25,3 +35,4 @@ function App() {
 }
 
 export default App;
+

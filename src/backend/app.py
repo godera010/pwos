@@ -69,7 +69,8 @@ db = PWOSDatabase()
 predictor = MLPredictor()
 
 # Global state for latest sensor data (thread-safe ideally, but simple dict for now)
-latest_sensor_data = {}
+latest_sensor_data = {'weather_source': 'initializing'}
+
 client_id = f"PWOS_API_{random.randint(1000, 9999)}"
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id)
 
@@ -112,7 +113,8 @@ def on_message(client, userdata, msg):
                         'wind_speed': forecast.get('wind_speed', 0.0),
                         'forecast_temp': forecast.get('forecast_temp', 0.0),
                         'forecast_humidity': forecast.get('forecast_humidity', 0.0),
-                        'weather_source': 'openweathermap'
+                        'weather_source': 'openweathermap',
+                        'weather_updated_at': datetime.now().isoformat()
                     })
                 except Exception as e:
                     app.logger.warning(f"Failed to fetch real weather on sensor update: {e}")
@@ -121,9 +123,12 @@ def on_message(client, userdata, msg):
             log_sensor_data()
             
         elif topic == "pwos/weather/current":
-            # ONLY update if we are in Simulation Mode
-            # If we are in OpenWeatherMap mode, we IGNORE the simulator's weather broadcasts
-            if WEATHER_API_MODE == 'simulation':
+            # Update from simulator if:
+            # 1. We are in simulation mode, OR
+            # 2. We are in openweathermap mode but API is down (fallback active)
+            api_is_down = getattr(weather_api, '_api_was_down', False)
+            if WEATHER_API_MODE == 'simulation' or api_is_down:
+                source_label = 'simulation' if WEATHER_API_MODE == 'simulation' else 'simulation_fallback'
                 latest_sensor_data.update({
                     'forecast_minutes': payload.get('forecast_minutes', 0),
                     'rain_intensity': payload.get('rain_intensity', 0.0),
@@ -133,7 +138,8 @@ def on_message(client, userdata, msg):
                     'wind_speed': payload.get('wind_speed', 0.0),
                     'forecast_temp': payload.get('temperature') or payload.get('forecast_temp', 0.0),
                     'forecast_humidity': payload.get('humidity') or payload.get('forecast_humidity', 0.0),
-                    'weather_source': 'simulation'
+                    'weather_source': source_label,
+                    'weather_updated_at': datetime.now().isoformat()
                 })
             
     except Exception as e:
@@ -305,10 +311,11 @@ def get_statistics():
 @app.route('/api/control/pump', methods=['POST'])
 def control_pump():
     """Send pump control command via MQTT"""
+    global system_state
     try:
         data = request.json
         action = data.get('action', 'OFF')
-        duration = data.get('duration', 30)
+        duration = data.get('duration', 0)
         
         # Get current moisture before watering
         readings = db.get_recent_readings(limit=1)
@@ -353,11 +360,15 @@ def control_pump():
             t = threading.Thread(target=capture_moisture_after, args=(event_id, total_delay), daemon=True)
             t.start()
         
+        # Update in-memory pump state
+        system_state['pump_active'] = (action == 'ON')
+        
         return jsonify({
             'status': 'success',
             'message': f'Pump {action}',
             'duration': duration,
-            'mqtt_result': result.rc
+            'mqtt_result': result.rc,
+            'pump_active': system_state['pump_active']
         })
         
     except Exception as e:
@@ -493,26 +504,45 @@ def predict_next_watering():
         return jsonify({'error': str(e)}), 500
 
 system_state = {
-    'mode': 'AUTO', # 'AUTO' or 'MANUAL'
+    'mode': 'AUTO',
     'pump_active': False,
 }
 
 @app.route('/api/system/state', methods=['GET', 'POST'])
 def get_system_state():
-    """Get or update system state"""
+    """Get or update system state (mode + pump)."""
     global system_state
     
     if request.method == 'POST':
-        data = request.json
+        data = request.json or {}
         if 'mode' in data:
-            system_state['mode'] = data['mode']
-            add_log(f"System switched to {data['mode']} mode", category='ACTION')
+            new_mode = data['mode'].upper()
+            if new_mode in ('AUTO', 'MANUAL'):
+                system_state['mode'] = new_mode
+                add_log(f"System mode changed to {new_mode}", category='ACTION')
+        if 'pump_active' in data:
+            system_state['pump_active'] = bool(data['pump_active'])
             
     return jsonify(system_state)
 
 def log_sensor_data():
-    """Background task to log sensor data with weather context"""
+    """Background task to log sensor data with weather context.
+    Includes staleness detection for weather data.
+    """
     if latest_sensor_data and 'soil_moisture' in latest_sensor_data:
+        # P3: Weather staleness detection
+        weather_source = latest_sensor_data.get('weather_source', 'none')
+        weather_ts = latest_sensor_data.get('weather_updated_at')
+        if weather_ts:
+            try:
+                age = (datetime.now() - datetime.fromisoformat(weather_ts)).total_seconds()
+                if age > 600:  # 10 minutes
+                    app.logger.warning(f"Weather data is {age/60:.0f}m old — marking as stale")
+                    weather_source = 'stale'
+                    latest_sensor_data['weather_source'] = 'stale'
+            except (ValueError, TypeError):
+                pass
+
         try:
             db.insert_sensor_reading({
                 'timestamp': datetime.now().isoformat(),
@@ -529,7 +559,7 @@ def log_sensor_data():
                 'forecast_temp': latest_sensor_data.get('forecast_temp', 0.0),
                 'forecast_humidity': latest_sensor_data.get('forecast_humidity', 0.0),
                 'weather_condition': latest_sensor_data.get('weather_condition', 'unknown'),
-                'weather_source': latest_sensor_data.get('weather_source', 'none')
+                'weather_source': weather_source
             })
         except Exception as e:
             app.logger.error(f"Failed to log sensor data: {e}")

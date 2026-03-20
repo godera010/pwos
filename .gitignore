@@ -82,6 +82,9 @@ npm-debug.log*
 .env.local
 .env.*.local
 
+# ESP32 firmware credentials (config.h contains WiFi/MQTT secrets)
+src/firmware/pwos_esp32/config.h
+
 # ==============================================================================
 # Build outputs
 # ==============================================================================

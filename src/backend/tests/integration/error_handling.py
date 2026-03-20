@@ -64,6 +64,13 @@ class TestErrorHandling:
 
     def test_predict_endpoint_internal_error(self, client):
         """Test 500 error when predictor crashes."""
+        # Seed latest_sensor_data so we reach the predictor (not 503 early exit)
+        import app as app_module
+        app_module.latest_sensor_data.update({
+            'soil_moisture': 45.0, 'temperature': 25.0, 'humidity': 60.0,
+            'weather_source': 'openweathermap'
+        })
+        
         with patch('app.predictor.predict_next_watering') as mock_pred:
             mock_pred.side_effect = Exception("Critical ML Failure")
             

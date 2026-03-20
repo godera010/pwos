@@ -35,7 +35,8 @@ class TestDecisionLogic:
             'soil_moisture': 30,
             'temperature': 20,
             'humidity': 60,
-            'forecast_minutes': 60 # 1 hour
+            'forecast_minutes': 60, # 1 hour
+            'weather_source': 'openweathermap'
         }
         
         result = predictor.predict_next_watering(data)
@@ -74,7 +75,8 @@ class TestDecisionLogic:
         data = {
             'soil_moisture': 50,
             'temperature': 20,
-            'rain_intensity': 5.0 # Raining
+            'rain_intensity': 5.0, # Raining
+            'weather_source': 'openweathermap'
         }
         
         result = predictor.predict_next_watering(data)

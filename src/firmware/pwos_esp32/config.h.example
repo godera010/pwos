@@ -1,0 +1,87 @@
+/*
+ * P-WOS ESP32 Configuration
+ * 
+ * SETUP:
+ *   1. Copy this file to config.h
+ *   2. Fill in your values below
+ *   3. config.h is gitignored — your secrets stay safe
+ *
+ * MODES:
+ *   USB MODE  — Set WIFI_ENABLED to false. ESP32 outputs JSON on serial.
+ *               Run serial_bridge.py on your PC to forward data to MQTT.
+ *               Pump commands can be sent via serial too.
+ *
+ *   WiFi MODE — Set WIFI_ENABLED to true. ESP32 connects to WiFi and
+ *               publishes directly to your Mosquitto MQTT broker.
+ *               Fill in WiFi + MQTT credentials below.
+ *
+ * CALIBRATION:
+ *   1. Read ADC value with sensor in AIR   → that's SOIL_DRY
+ *   2. Read ADC value with sensor in WATER → that's SOIL_WET
+ *   3. Default values (3500/1500) are a good starting point
+ */
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// ============================================================================
+// CONNECTION MODE
+// ============================================================================
+//   true  = WiFi mode (ESP32 connects to WiFi + MQTT directly)
+//   false = USB mode  (serial output only, PC bridge handles MQTT)
+#define WIFI_ENABLED  false
+
+// ============================================================================
+// WiFi Credentials (only needed if WIFI_ENABLED = true)
+// ============================================================================
+#define WIFI_SSID     "YOUR_WIFI_SSID"
+#define WIFI_PASS     "YOUR_WIFI_PASSWORD"
+
+// ============================================================================
+// MQTT Broker (only needed if WIFI_ENABLED = true)
+// ============================================================================
+// --- LAN MODE (Phase 1) ---
+// Point to your PC's local IP running Mosquitto
+#define MQTT_BROKER   "192.168.1.X"
+#define MQTT_PORT     1883
+#define MQTT_USER     ""            // No auth for local Mosquitto
+#define MQTT_PASS     ""
+
+// --- CLOUD MODE (Phase 2) ---
+// Uncomment these and comment out LAN MODE above
+// #define MQTT_BROKER   "your-cluster.s1.eu.hivemq.cloud"
+// #define MQTT_PORT     8883
+// #define MQTT_USER     "your-username"
+// #define MQTT_PASS     "your-password"
+
+// ============================================================================
+// Device Identity
+// ============================================================================
+#define DEVICE_ID     "ESP32_PWOS_001"
+
+// ============================================================================
+// Pin Assignments (matches docs/hardware/hardware_shopping_list.md)
+// ============================================================================
+#define SOIL_PIN      34    // Capacitive soil moisture sensor (ADC input)
+#define DHT_PIN       25    // DHT22 temperature & humidity (digital)
+#define RELAY_PIN     26    // 5V relay module (pump control)
+#define LED_PIN       2     // Onboard LED (status indicator)
+
+// ============================================================================
+// Soil Sensor Calibration
+// ============================================================================
+// Read raw ADC value in DRY AIR → set as SOIL_DRY
+// Read raw ADC value in WATER   → set as SOIL_WET
+// The firmware maps: SOIL_DRY = 0% moisture, SOIL_WET = 100% moisture
+#define SOIL_DRY      3500  // ADC reading in dry air
+#define SOIL_WET      1500  // ADC reading submerged in water
+
+// ============================================================================
+// Sampling Interval
+// ============================================================================
+// How often to read sensors and publish (milliseconds)
+// Default: 60000 (60 seconds) for production
+// Use 5000 (5 seconds) for testing/calibration
+#define SAMPLE_INTERVAL  60000
+
+#endif // CONFIG_H

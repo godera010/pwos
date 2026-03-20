@@ -11,13 +11,13 @@ class TestEnvironmentalScenarios:
         predictor.model = MagicMock()
         
         # Initial state: Dry
-        data_dry = {'soil_moisture': 40, 'temperature': 25, 'rain_intensity': 0}
+        data_dry = {'soil_moisture': 40, 'temperature': 25, 'rain_intensity': 0, 'weather_source': 'openweathermap'}
         res_dry = predictor.predict_next_watering(data_dry)
         # Assuming model says water or monitor, but not STOP
         assert res_dry['recommended_action'] != "STOP"
         
         # Event: Rain starts
-        data_rain = {'soil_moisture': 42, 'temperature': 24, 'rain_intensity': 10}
+        data_rain = {'soil_moisture': 42, 'temperature': 24, 'rain_intensity': 10, 'weather_source': 'openweathermap'}
         res_rain = predictor.predict_next_watering(data_rain)
         
         assert res_rain['recommended_action'] == "STOP"
@@ -57,7 +57,8 @@ class TestEnvironmentalScenarios:
         data = {
             'soil_moisture': 30,
             'wind_speed': 25.0, # High wind
-            'temperature': 25
+            'temperature': 25,
+            'weather_source': 'openweathermap'
         }
         
         res = predictor.predict_next_watering(data)

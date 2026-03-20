@@ -36,7 +36,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(os.path.join(log_dir, "weather_dashboard.log")),
+        logging.FileHandler(os.path.join(log_dir, "weather_dashboard.log"), encoding='utf-8'),
         # No StreamHandler here to avoid messing up the dashboard TUI
     ]
 )

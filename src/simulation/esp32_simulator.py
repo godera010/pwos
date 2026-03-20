@@ -82,9 +82,15 @@ class SimulatedESP32:
             payload = json.loads(msg.payload.decode())
             
             if topic == "pwos/control/pump":
-                if payload.get('action') == 'ON':
-                    duration = payload.get('duration', 30)
+                action = payload.get('action', 'OFF')
+                duration = payload.get('duration', 30)
+                
+                if action == 'ON':
                     self.activate_pump(duration)
+                elif action == 'OFF':
+                    if self.pump_active:
+                        self.logger.info("PUMP STOPPED (Manual OFF command)")
+                        self.pump_active = False
             
             elif topic == "pwos/weather/current":
                 self.current_weather = payload
@@ -97,12 +103,9 @@ class SimulatedESP32:
     
     def activate_pump(self, duration):
         """Simulate pump activation (Non-blocking)"""
-        # STOP Command
+        # Duration 0 = indefinite manual mode (keeps running until explicit OFF)
         if duration <= 0:
-            if self.pump_active:
-                self.logger.info("PUMP STOPPED Manually")
-                self.pump_active = False
-            return
+            duration = 999999  # ~11.5 days — effectively indefinite
 
         # START Command
         if not self.pump_active:

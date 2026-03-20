@@ -1,5 +1,5 @@
 # P-WOS Hardware Migration Plan
-**Status:** Draft
+**Status:** Phase 1 In Progress
 **Goal:** Transition from `esp32_simulator.py` to physical ESP32 hardware.
 
 ---
@@ -9,83 +9,101 @@ To replace the simulator, you will need:
 *   **Microcontroller:** ESP32 Dev Kit V1
 *   **Sensors:**
     *   Capacitive Soil Moisture Sensor v1.2 (Analog)
-    *   DHT22 or DHT11 (Temperature & Humidity)
+    *   DHT22 (Temperature & Humidity)
 *   **Actuator:**
     *   5V Relay Module (to control the Water Pump)
     *   5V Mini Water Pump + Tubing
 *   **Power:** 5V Power Supply or USB Power Bank
 
+See [hardware_shopping_list.md](hardware_shopping_list.md) for full BOM with prices.
+
 ---
 
-## 2. Wiring Diagram (Conceptual)
+## 2. Wiring Diagram
 | ESP32 Pin | Component | Description |
 | :--- | :--- | :--- |
-| **GPIO 34** | Soil Sensor (Aout) | Analog Input (Read Moisture) |
-| **GPIO 4** | Relay IN | Digital Output (Control Pump) |
-| **GPIO 14** | DHT22 Data | Digital Input (Read Temp/Hum) |
+| **GPIO 34** | Soil Sensor (A0) | Analog Input (Read Moisture) |
+| **GPIO 25** | DHT22 Data | Digital Input (Read Temp/Hum) |
+| **GPIO 26** | Relay IN | Digital Output (Control Pump) |
 | **3V3** | Sensors VCC | Power |
-| **GND** | Sensors GND | Ground |
+| **GND** | All component GNDs | Ground |
 
 ---
 
-## 3. Firmware Implementation (MicroPython)
-The ESP32 needs to run code that mimics the simulator's MQTT behavior.
+## 3. Firmware Implementation (C++ Arduino)
+The ESP32 runs C++ firmware (`src/firmware/pwos_esp32/pwos_esp32.ino`) with:
+- WiFi auto-reconnect with exponential backoff
+- PubSubClient for MQTT (publishes to `pwos/sensor/data`)
+- Non-blocking pump control (no `delay()` blocking)
+- DHT22 + soil moisture sensor reading
+- Watchdog timer for auto-reboot on hangs
 
-### `main.py` Config
-```python
-MQTT_BROKER = "192.168.1.XXX" # Your PC's IP address
-TOPIC_PUB = "pwos/sensors"
-TOPIC_SUB = "pwos/control/pump"
+### Config
+Copy `config.h.example` to `config.h` and edit:
+```cpp
+#define WIFI_SSID     "YourWiFi"
+#define WIFI_PASS     "YourPassword"
+#define MQTT_BROKER   "192.168.1.X"   // Your PC's IP
+#define MQTT_PORT     1883
 ```
 
-### Logic Loop
-1.  **Connect** to WiFi and MQTT Broker.
-2.  **Subscribe** to `pwos/control/pump`.
-3.  **Loop**:
-    *   Read Analog Value from GPIO 34.
-    *   Map 4095 (Dry) -> 0 (Wet) to 0-100% Moisture.
-    *   Read DHT22.
-    *   **Publish** JSON to `pwos/sensors`:
-        ```json
-        {
-          "device_id": "REAL_ESP32_01",
-          "soil_moisture": 45.2,
-          "temperature": 24.5,
-          "humidity": 60.0,
-          "pump_active": false
-        }
-        ```
-    *   **Listen** for incoming "ON" messages to trigger Relay (GPIO 4).
-    *   Sleep for 60 seconds (Deep Sleep optional).
+### JSON Output (matches simulator format)
+```json
+{
+  "device_id": "ESP32_PWOS_001",
+  "soil_moisture": 45.2,
+  "temperature": 24.5,
+  "humidity": 60.0,
+  "pump_active": false
+}
+```
+
+Published to `pwos/sensor/data` — same topic as the simulator.
 
 ---
 
 ## 4. Backend Adjustments
 **Good News:** No changes are required for `app.py`!
-*   The backend listens to `pwos/sensors`. It doesn't care if the JSON comes from Python or a real ESP32.
-*   **Action**: Stop running `src/simulation/esp32_simulator.py`.
-*   **Action**: Start your physical ESP32.
+*   The backend listens to `pwos/sensor/data`. It doesn't care if the JSON comes from Python or a real ESP32.
+*   **Action**: Set `DATA_SOURCE_MODE=hardware` in `.env`
+*   **Action**: Power on your physical ESP32
 
 ---
 
-## 5. Network Configuration
-*   **Crucial**: The ESP32 and your Laptop (running the broker) must be on the **same WiFi network**.
-*   **Firewall**: You must allow inbound connections on Port 1883 on your Laptop.
+## 5. Network Configuration (Phase 1: LAN)
+*   **Crucial**: The ESP32 and your PC must be on the **same WiFi network**
+*   **Firewall**: Allow inbound TCP on Port 1883 (Mosquitto)
+*   **Find your PC's IP**: Run `ipconfig` → look for IPv4 Address
 
 ---
 
-## 6. Real Weather Integration
-The `weather_simulator.py` currently generates fake rain. For the real world:
-*   We need a new script: `src/integrations/real_weather_api.py`.
-*   It should query **OpenWeatherMap API**.
-*   It should publish to `pwos/weather/current` just like the simulator did.
+## 6. Migration to Cloud (Phase 2)
+After LAN testing works:
+1. Update `config.h` to use HiveMQ Cloud (TLS, port 8883)
+2. Deploy Flask API to Railway
+3. Deploy React to Vercel
+4. Set `MQTT_MODE=cloud` in Railway environment
 
 ---
 
 ## 7. Migration Checklist
-- [ ] Buy Hardware.
-- [ ] Install MicroPython on ESP32.
-- [ ] Write `boot.py` (WiFi Connect) and `main.py` (MQTT Logic).
-- [ ] Test turning Relay ON/OFF via Dashboard.
-- [ ] Calibrate Soil Sensor (Air = 0%, Water = 100%).
-- [ ] Replace `weather_simulator.py` with Weather API script.
+
+### Phase 1: LAN
+- [x] C++ firmware created (`src/firmware/pwos_esp32/`)
+- [x] Config template created (`config.h.example`)
+- [x] Serial bridge for USB fallback (`src/hardware/serial_bridge.py`)
+- [x] Hardware manager (`src/hardware/hardware_manager.py`)
+- [x] Config updated with `DATA_SOURCE_MODE`
+- [x] Startup script updated (`start_pwos.bat`)
+- [x] Flash tool created (`tools/flash_esp32.bat`)
+- [x] Setup guide created (`docs/hardware/hardware_setup.md`)
+- [ ] Buy hardware (see [shopping list](hardware_shopping_list.md))
+- [ ] Flash firmware to ESP32
+- [ ] Calibrate soil sensor
+- [ ] Test on LAN
+
+### Phase 2: Cloud
+- [ ] Add TLS to firmware for HiveMQ
+- [ ] Deploy backend to Railway
+- [ ] Deploy frontend to Vercel
+- [ ] Test over internet

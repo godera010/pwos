@@ -76,17 +76,46 @@ def run_autopilot():
                 poll_count += 1
 
                 # 0. Check System Mode
-                state_resp = requests.get(f"{API_URL}/system/state", timeout=5)
+                state_resp = requests.get(f"{API_URL}/system/state", timeout=10)
                 if state_resp.status_code == 200:
                     mode = state_resp.json().get('mode', 'AUTO')
                     if mode == 'MANUAL':
-                        # In Manual mode, we just stand by
-                        # But maybe we still log that we ARE standing by? No, too spammy.
+                        # === CRITICAL SAFETY OVERRIDES ===
+                        # Even in Manual mode, override if moisture is dangerously low or high
+                        try:
+                            sensor_resp = requests.get(f"{API_URL}/sensors/latest", timeout=5)
+                            if sensor_resp.status_code == 200:
+                                moisture = sensor_resp.json().get('soil_moisture', 50)
+
+                                # OVERRIDE: Critically dry (< 15%) → force AUTO
+                                if moisture < 15:
+                                    logger.warning(f"CRITICAL: Moisture {moisture}% < 15% in MANUAL mode! Forcing AUTO.")
+                                    requests.post(f"{API_URL}/system/state", json={'mode': 'AUTO'}, timeout=5)
+                                    requests.post(f"{API_URL}/logs", json={
+                                        'message': f'Safety Override: Moisture {moisture}% critically low. Forced AUTO mode.',
+                                        'type': 'ERROR'
+                                    }, timeout=5)
+                                    continue  # Skip sleep, start AUTO cycle immediately
+
+                                # OVERRIDE: Saturated (>= 95%) → force AUTO + pump OFF
+                                if moisture >= 95:
+                                    logger.warning(f"CRITICAL: Moisture {moisture}% >= 95% in MANUAL mode! Forcing AUTO + pump OFF.")
+                                    requests.post(f"{API_URL}/control/pump", json={'action': 'OFF'}, timeout=5)
+                                    requests.post(f"{API_URL}/system/state", json={'mode': 'AUTO'}, timeout=5)
+                                    requests.post(f"{API_URL}/logs", json={
+                                        'message': f'Safety Override: Moisture {moisture}% saturated. Forced AUTO mode.',
+                                        'type': 'ERROR'
+                                    }, timeout=5)
+                                    continue
+                        except Exception as e:
+                            logger.error(f"Safety check error: {e}")
+
+                        # Normal Manual mode — stand by
                         time.sleep(5)
                         continue
                 
                 # 1. Ask the Brain
-                response = requests.get(f"{API_URL}/predict-next-watering", timeout=5)
+                response = requests.get(f"{API_URL}/predict-next-watering", timeout=15)
                 if response.status_code != 200:
                     logger.warning(f"API Error: {response.status_code}")
                     time.sleep(5)
@@ -138,6 +167,9 @@ def run_autopilot():
             except requests.exceptions.ConnectionError:
                 logger.error("Connection refused. Is the API server running?")
                 time.sleep(10)
+            except requests.exceptions.ReadTimeout:
+                logger.warning("Backend response timed out (prediction may be slow)")
+                time.sleep(5)
             except Exception as e:
                 logger.error(f"Unexpected: {e}")
             

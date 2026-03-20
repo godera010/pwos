@@ -1,25 +1,61 @@
 # P-WOS Hardware & Cloud Architecture
 
 ## Overview
-This document defines how the physical ESP32 hardware will communicate with the cloud-based backend, replacing the current local simulation.
+This document defines how the physical ESP32 hardware communicates with the backend, replacing the current local simulation.
 
 ---
 
 ## Architecture Diagram
 
+### Phase 1: LAN (Local Network)
+
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      PRODUCTION ARCHITECTURE                         │
+│                       LAN ARCHITECTURE                              │
+└─────────────────────────────────────────────────────────────────────┘
+
+                           ┌─────────────────┐
+    ┌─────────────┐  WiFi  │   Mosquitto     │
+    │   ESP32     │───────▶│   (localhost)    │
+    │   + DHT22   │  MQTT  │   Port 1883     │
+    │   + Soil    │        └────────┬────────┘
+    │   + Relay   │                 │
+    └─────────────┘                 │ Sub: pwos/sensor/data
+                                    │ Pub: pwos/control/pump
+                                    ▼
+                           ┌─────────────────┐
+                           │   Flask API     │
+                           │   (localhost)   │◀──── OpenWeatherMap API
+                           │   :5000         │
+                           └────────┬────────┘
+                                    │
+                           ┌────────▼────────┐
+                           │   PostgreSQL    │
+                           │   (localhost)   │
+                           └────────┬────────┘
+                                    │
+                           ┌────────▼────────┐
+                           │   React App     │
+                           │   (localhost)   │
+                           │   :5173         │
+                           └─────────────────┘
+```
+
+### Phase 2: Cloud (Production)
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    PRODUCTION ARCHITECTURE                           │
 └─────────────────────────────────────────────────────────────────────┘
 
                            ┌─────────────────┐
     ┌─────────────┐  WiFi  │   HiveMQ Cloud  │
     │   ESP32     │───────▶│   (MQTT Broker) │
-    │   + DHT22   │  MQTT  │   Free Tier     │
+    │   + DHT22   │  TLS   │   Port 8883     │
     │   + Soil    │        └────────┬────────┘
-    └─────────────┘                 │
-                                    │ Subscribe: pwos/sensor/data
-                                    │ Publish:   pwos/control/pump
+    │   + Relay   │                 │
+    └─────────────┘                 │ Sub: pwos/sensor/data
+                                    │ Pub: pwos/control/pump
                                     ▼
                            ┌─────────────────┐
                            │   Flask API     │
@@ -44,107 +80,96 @@ This document defines how the physical ESP32 hardware will communicate with the 
 
 ### 1. ESP32 Hardware
 **Role:** Field sensor node
-**Firmware:** MicroPython with `umqtt.simple`
+**Firmware:** C++ (Arduino Framework)
 
 **Sensors:**
-- DHT22 (Temperature + Humidity)
-- Capacitive Soil Moisture Sensor
-- Relay Module (Pump Control)
+- DHT22 (Temperature + Humidity) → GPIO 25
+- Capacitive Soil Moisture Sensor → GPIO 34 (ADC)
+- Relay Module (Pump Control) → GPIO 26
+
+**Libraries:**
+- `WiFi.h` (built-in)
+- `PubSubClient` (MQTT)
+- `DHT` (Adafruit)
+- `ArduinoJson` (JSON serialization)
 
 **Communication:**
-```python
-# ESP32 MicroPython Pseudocode
-from umqtt.simple import MQTTClient
+```cpp
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
 
-BROKER = "broker.hivemq.com"
-TOPIC_DATA = "pwos/sensor/data"
-TOPIC_CONTROL = "pwos/control/pump"
+// Publish sensor data
+StaticJsonDocument<384> doc;
+doc["device_id"]    = "ESP32_PWOS_001";
+doc["soil_moisture"] = readSoilMoisture();
+doc["temperature"]   = dht.readTemperature();
+doc["humidity"]      = dht.readHumidity();
+doc["pump_active"]   = pumpActive;
 
-client = MQTTClient("ESP32_PWOS", BROKER)
-client.connect()
-client.publish(TOPIC_DATA, json.dumps(sensor_data))
+char payload[384];
+serializeJson(doc, payload);
+mqttClient.publish("pwos/sensor/data", payload);
 ```
 
 ---
 
-### 2. Cloud MQTT Broker (HiveMQ)
-**Why HiveMQ?**
+### 2. MQTT Broker
+
+**Phase 1 — LAN:** Local Mosquitto on `localhost:1883` (no TLS, no auth)
+
+**Phase 2 — Cloud:** HiveMQ Cloud
 - Free tier: 100 connections, 10GB/month
-- TLS encryption
-- No server to manage
+- TLS encryption, username/password auth
 
 **Setup:**
 1. Create account at [hivemq.com/cloud](https://www.hivemq.com/cloud/)
 2. Create cluster → Get credentials
 3. Store in `.env`:
    ```
-   MQTT_BROKER=your-cluster.hivemq.cloud
-   MQTT_PORT=8883
-   MQTT_USER=your-username
-   MQTT_PASS=your-password
+   MQTT_MODE=cloud
+   MQTT_CLOUD_BROKER=your-cluster.hivemq.cloud
+   MQTT_CLOUD_PORT=8883
+   MQTT_CLOUD_USER=your-username
+   MQTT_CLOUD_PASS=your-password
    ```
 
 ---
 
-### 3. Flask API (Railway Deployment)
-**Changes Required:**
-- `mqtt_subscriber.py` → Connect to HiveMQ (TLS)
-- `database.py` → Switch to PostgreSQL
-- `weather_simulator.py` → Replace with OpenWeatherMap API
+### 3. Flask API
 
-**Deployment:**
-```bash
-# Install Railway CLI
-npm install -g @railway/cli
+**Backend changes:** None required.
 
-# Deploy
-railway login
-railway init
-railway up
-```
+The backend subscribes to `pwos/sensor/data` via MQTT. It doesn't care if data comes from `esp32_simulator.py` or a real ESP32 — the JSON format is identical.
+
+**Configuration:** Set `DATA_SOURCE_MODE=hardware` in `.env`
 
 ---
 
 ### 4. Weather API Integration
 **Provider:** OpenWeatherMap (Free: 1000 calls/day)
 
-**Endpoint:**
-```
-GET https://api.openweathermap.org/data/2.5/forecast
-    ?lat={LAT}&lon={LON}&appid={API_KEY}
-```
-
-**Response Parsing:**
-```python
-def get_rain_forecast_hours() -> int:
-    """Returns minutes until rain, or 0 if no rain predicted."""
-    response = requests.get(WEATHER_URL)
-    for forecast in response.json()["list"]:
-        if forecast["weather"][0]["main"] == "Rain":
-            return minutes_from_now(forecast["dt"])
-    return 0
-```
+Already implemented in `src/backend/weather_api.py`. In hardware mode, weather data comes from the API (not the weather simulator).
 
 ---
 
 ## Implementation Phases
 
-### Phase A: Prepare Codebase (Before Hardware)
-- [ ] Create `src/config.py` for environment variables
-- [ ] Update `mqtt_subscriber.py` for TLS connection
-- [ ] Create `src/backend/weather_api.py` (real API)
-- [ ] Add PostgreSQL support to `database.py`
-- [ ] Test with simulation against HiveMQ Cloud
-
-### Phase B: Hardware Arrives
-- [ ] Flash MicroPython firmware to ESP32
+### Phase 1: LAN (Build & Test Locally)
+- [x] Create C++ Arduino firmware (`src/firmware/pwos_esp32/`)
+- [x] Create config.h.example with pin/credential templates
+- [x] Create serial bridge for USB fallback
+- [x] Create hardware manager with mode selection
+- [x] Update config.py with DATA_SOURCE_MODE
+- [ ] Flash firmware to ESP32
 - [ ] Calibrate sensors
-- [ ] Test end-to-end data flow
+- [ ] Test end-to-end on LAN
 
-### Phase C: Full Deployment
+### Phase 2: Cloud (Go Online)
+- [ ] Add TLS support to firmware (WiFiClientSecure)
 - [ ] Deploy Flask to Railway
 - [ ] Deploy React to Vercel
-- [ ] Configure custom domain (optional)
+- [ ] Test end-to-end over internet
 
 ---
 
@@ -152,10 +177,11 @@ def get_rain_forecast_hours() -> int:
 
 | Layer | Protection |
 |-------|------------|
-| MQTT | TLS 1.3 encryption, username/password auth |
+| MQTT (LAN) | Firewall, local network only |
+| MQTT (Cloud) | TLS 1.3, username/password auth |
 | API | HTTPS only, CORS whitelist |
 | DB | Connection string in environment variables |
-| Secrets | Never commit `.env` to Git |
+| Secrets | `.env` and `config.h` gitignored |
 
 ---
 

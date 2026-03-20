@@ -134,10 +134,10 @@ class TestAggregatedAnalytics:
         assert bucket['humidity'] == 45.0       # (40 + 50) / 2
         assert bucket['vpd'] == 1.75            # (1.5 + 2.0) / 2
         
-        # Verify the sums
-        assert bucket['total_duration'] == 75   # 30 + 45
-        assert bucket['ai_duration'] == 45      # ML_PREDICTION duration only
-        assert bucket['event_count'] == 2
+        # Verify the sums (watering data is nested under 'watering' sub-object)
+        assert bucket['watering']['total_duration'] == 75   # 30 + 45
+        assert bucket['watering']['ai_duration'] == 45      # ML_PREDICTION duration only
+        assert bucket['watering']['ai_event_count'] == 1    # Only ML_PREDICTION counts as AI (MANUAL excluded)
 
 
     def test_bucket_alignment(self, client, db_session):
@@ -193,14 +193,14 @@ class TestAggregatedAnalytics:
         # Fetch the only bucket we have.
         bucket = data[-1]
         
-        # History missing -> fields should be completely zeroed out instead of crashing
-        assert bucket['soil_moisture'] == 0
-        assert bucket['temperature'] == 0 
-        assert bucket['humidity'] == 0
+        # History missing -> fields should be None (no sensor data for this bucket)
+        assert bucket['soil_moisture'] is None
+        assert bucket['temperature'] is None 
+        assert bucket['humidity'] is None
         
-        # Events exist -> valid duration
-        assert bucket['total_duration'] == 100
-        assert bucket['ai_duration'] == 100 # Scheduled is != MANUAL
+        # Events exist -> valid duration (nested under 'watering')
+        assert bucket['watering']['total_duration'] == 100
+        assert bucket['watering']['ai_duration'] == 100 # Scheduled is != MANUAL
 
         # 3. Clean and verify the inverse (History exists but no Events)
         cursor.execute("TRUNCATE watering_events CONTINUE IDENTITY CASCADE")
@@ -215,8 +215,8 @@ class TestAggregatedAnalytics:
         inverse_bucket = inverse_resp.json[-1]
         
         assert inverse_bucket['soil_moisture'] == 70.0
-        assert inverse_bucket['total_duration'] == 0
-        assert inverse_bucket['event_count'] == 0
+        assert inverse_bucket['watering']['total_duration'] == 0
+        assert inverse_bucket['watering']['ai_event_count'] == 0
 
 
     def test_parameter_validation(self, client):

@@ -31,7 +31,7 @@ export const Hardware: React.FC = () => {
                 <div>
                     <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
                         Hardware Node
-                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1 font-bold">
+                        <Badge variant="outline" className="text-emerald-600 border-emerald-500/20 gap-1 font-bold">
                             <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                             Simulator Connected
                         </Badge>
@@ -46,9 +46,7 @@ export const Hardware: React.FC = () => {
                 <Card className="lg:col-span-2  shadow-sm dark:bg-card relative overflow-hidden">
                     <CardHeader className="pb-8">
                         <div className="flex items-center gap-4">
-                            <div className="bg-primary/10 p-3 rounded-2xl border border-primary/20">
-                                <Cpu className="size-8 text-primary" />
-                            </div>
+                            <Cpu className="size-8 text-primary" />
                             <div>
                                 <CardTitle className="text-xl font-black italic">Node Blueprint</CardTitle>
                                 <p className="text-[10px] text-slate-950 dark:text-slate-400 uppercase tracking-widest font-bold">ESP32-S3 Core Hub • Rev 2.0</p>

@@ -38,6 +38,7 @@ class WeatherAPI:
         self._cache_time = None
         self._cache_duration = 600  # 10 minutes
         self._api_was_down = False  # Track recovery state
+        self._last_error_log = None  # Track when we last logged an API error
         
         # MQTT for Simulation
         self._latest_sim_weather = None
@@ -117,10 +118,18 @@ class WeatherAPI:
             return result
             
         except Exception as e:
-            if not getattr(self, '_api_was_down', False):
+            # P2: Re-log every 5 minutes while API is down (not just the first failure)
+            now = datetime.now(timezone.utc)
+            should_log = (
+                not self._api_was_down or
+                self._last_error_log is None or
+                (now - self._last_error_log).total_seconds() > 300
+            )
+            if should_log:
                 logger.warning(f"OpenWeatherMap API Error: {e}")
-                logger.info("Falling back to simulator weather data (Cache set for 60s cooldown)")
-                self._api_was_down = True
+                logger.info("Using simulator weather data as fallback")
+                self._last_error_log = now
+            self._api_was_down = True
             
             # Fallback to simulator and cache it so we don't spam the broken API 
             result = self._simulate_weather()
