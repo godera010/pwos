@@ -1,392 +1,547 @@
 # P-WOS Breadboard Assembly Guide
 
-A step-by-step tutorial for placing and wiring all components on a breadboard.
+Schematics for the **GL No.12** breadboard with the hardware we have.
+
+> See [breadboard.md](breadboard.md) for the raw board layout reference.
 
 ---
 
-## What You Need
+## Your Components
 
-| # | Item | Qty |
-|---|------|-----|
-| 1 | ESP32 DevKit V1 | 1 |
-| 2 | 830-point Breadboard | 1 |
-| 3 | DHT22 Sensor | 1 |
-| 4 | Capacitive Soil Moisture Sensor | 1 |
-| 5 | 5V Single-Channel Relay Module | 1 |
-| 6 | 10kΩ Resistor (optional, for DHT22 pull-up) | 1 |
-| 7 | Jumper Wires (Male-to-Male, Male-to-Female) | ~12 |
-| 8 | Micro-USB Cable + 5V 2A USB Charger | 1 |
-| 9 | Mini Water Pump + Tubing | 1 |
-| 10 | East Dragon Adapter (pump power) | 1 |
-
----
-
-## Understanding Your Breadboard
-
-```
-          BREADBOARD (830 tie-points)
-     ┌────────────────────────────────────────┐
-     │  (+) ● ● ● ● ● ● ● ● ● ● ● ● ● (+) │ ← Power Rail (RED)
-     │  (-) ● ● ● ● ● ● ● ● ● ● ● ● ● (-) │ ← Ground Rail (BLUE)
-     │                                        │
-     │  a  ● ● ● ● ● ● ● ● ● ● ● ● ● ● ●  │
-     │  b  ● ● ● ● ● ● ● ● ● ● ● ● ● ● ●  │  Each COLUMN of 5
-     │  c  ● ● ● ● ● ● ● ● ● ● ● ● ● ● ●  │  holes (a-e) is
-     │  d  ● ● ● ● ● ● ● ● ● ● ● ● ● ● ●  │  connected internally
-     │  e  ● ● ● ● ● ● ● ● ● ● ● ● ● ● ●  │
-     │     ─ ─ ─ ─ CENTER GAP ─ ─ ─ ─ ─ ─   │ ← Gap separates sides
-     │  f  ● ● ● ● ● ● ● ● ● ● ● ● ● ● ●  │
-     │  g  ● ● ● ● ● ● ● ● ● ● ● ● ● ● ●  │  Each COLUMN of 5
-     │  h  ● ● ● ● ● ● ● ● ● ● ● ● ● ● ●  │  holes (f-j) is
-     │  i  ● ● ● ● ● ● ● ● ● ● ● ● ● ● ●  │  connected internally
-     │  j  ● ● ● ● ● ● ● ● ● ● ● ● ● ● ●  │
-     │                                        │
-     │  (+) ● ● ● ● ● ● ● ● ● ● ● ● ● (+) │ ← Power Rail (RED)
-     │  (-) ● ● ● ● ● ● ● ● ● ● ● ● ● (-) │ ← Ground Rail (BLUE)
-     └────────────────────────────────────────┘
-          1  2  3  4  5 ... ... ... 28 29 30
-
-     KEY RULES:
-     • Rows a-e are connected horizontally (same column)
-     • Rows f-j are connected horizontally (same column)
-     • The center gap SEPARATES a-e from f-j
-     • Power rails (+/-) run the full length of the board
-     • The ESP32 straddles the center gap
-```
+| # | Item | Status |
+|---|------|--------|
+| 1 | ESP32-WROOM-32 DevKit (**38-pin — 19 per side**) | ✅ |
+| 2 | GL No.12 Breadboard (840 holes, 64 columns) | ✅ |
+| 3 | DHT22 Temperature & Humidity Sensor | ✅ |
+| 4 | Water Sensor (resistive, used as moisture sensor) | ✅ |
+| 5 | Mini DC 5V Submersible Pump | ✅ |
+| 6 | Jumper Wires (M-M + M-F) | ✅ |
+| 7 | USB Cable (Micro-USB) | ✅ |
+| 8 | East Dragon AC/DC Adapter (external pump power) | ✅ |
+| 9 | 5V Relay Module | ❌ **Missing** |
 
 ---
 
-## Step 1: Place the ESP32
+## Your GL No.12 Breadboard Layout
 
-The ESP32 DevKit has **two rows of pins** (15 pins on each side). It straddles the center gap so each pin gets its own column.
-
-```
-     Breadboard Columns:   1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
-                          ┌──────────────────────────────────────────────
-     Row a-e (top):       │     ●  ●  ●  ●  ●  ●  ●  ●  ●  ●  ●  ●  ●
-                          │     ║  ║  ║  ║  ║  ║  ║  ║  ║  ║  ║  ║  ║
-                          │  ┌──╨──╨──╨──╨──╨──╨──╨──╨──╨──╨──╨──╨──╨──┐
-     LEFT PINS ──────────▶│  │ 3V3 EN 36 39 34 35 32 33 25 26 27 14 12 │
-                          │  │              ESP32 DevKit                │
-                          │  │             ┌──[USB]──┐                  │
-                          │  │             └─────────┘                  │
-                          │  │              ESP32 DevKit                │
-     RIGHT PINS ─────────▶│  │ GND 23  22 TX0 RX0 21 19 18  5  17 16  4│
-                          │  └──╥──╥──╥──╥──╥──╥──╥──╥──╥──╥──╥──╥──╥──┘
-                          │     ║  ║  ║  ║  ║  ║  ║  ║  ║  ║  ║  ║  ║
-     Row f-j (bottom):    │     ●  ●  ●  ●  ●  ●  ●  ●  ●  ●  ●  ●  ●
-                          └──────────────────────────────────────────────
-
-     NOTE: Pin layout varies by board! Check YOUR board's silkscreen labels.
-     The labels printed next to each pin on your actual ESP32 are the truth.
-```
-
-### How to Do It
-
-1. **Orient the ESP32** with the **USB port facing LEFT** (toward column 1)
-2. **Gently press** the ESP32 pins into the breadboard, straddling the center gap
-3. The **left row of pins** goes into row `e` (top section)
-4. The **right row of pins** goes into row `f` (bottom section)
-5. **Don't force it** — wiggle gently if the pins are tight
-
-> ⚠️ **IMPORTANT:** The pin labels on **your actual ESP32 board** are what matter. The diagram above is typical but your board's layout might differ slightly. Always read the silkscreen printed on the board itself.
-
----
-
-## Step 2: Set Up Power Rails
-
-Connect the ESP32's power pins to the breadboard power rails.
+This is the **exact layout** of your board. All schematics below reference these rows and columns.
 
 ```
-     ESP32 Pin          Breadboard
-     ─────────          ──────────
-     3V3  ───────────── (+) Red Power Rail (top)
-     GND  ───────────── (-) Blue Ground Rail (top)
-```
+                                                              BusBoard.com / GL No.12
+┌──────────────────────────────────────────────────────────────────────┐
+│-    ─────────────────────────────  ─────────────────────────────    -│  ← BLUE (−) GND
+│     □□□□□ □□□□□ □□□□□ □□□□□ □□□□□  □□□□□ □□□□□ □□□□□ □□□□□ □□□□□     │  ← BUS (grouped 5s)
+│     □□□□□ □□□□□ □□□□□ □□□□□ □□□□□  □□□□□ □□□□□ □□□□□ □□□□□ □□□□□     │  ← BUS (grouped 5s)
+│+    ═════════════════════════════  ═════════════════════════════    +│  ← RED (+) 3.3V
+│     1   5   10   15   20   25   30   35   40   45   50   55   60     │
+│A  □□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□  J│
+│B  □□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□  I│
+│C  □□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□  H│
+│D  □□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□  G│
+│E  □□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□  F│
+│                GL No.12                    BREADBOARD                │
+│F  □□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□  E│
+│G  □□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□  D│
+│H  □□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□  C│
+│I  □□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□  B│
+│J  □□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□□  A│
+│    60   55   50   45   40   35   30   25   20   15   10    5   1     │
+│+    ═════════════════════════════  ═════════════════════════════    +│  ← RED (+)
+│     □□□□□ □□□□□ □□□□□ □□□□□ □□□□□  □□□□□ □□□□□ □□□□□ □□□□□ □□□□□     │  ← BUS
+│     □□□□□ □□□□□ □□□□□ □□□□□ □□□□□  □□□□□ □□□□□ □□□□□ □□□□□ □□□□□     │  ← BUS
+│-    ─────────────────────────────  ─────────────────────────────    -│  ← BLUE (−) GND
+└──────────────────────────────────────────────────────────────────────┘
 
-### How to Do It
+KEY:
+  ═══  Red  (+) power rail — SPLIT at center (left 25 + right 25 holes)
+  ───  Blue (−) ground rail — SPLIT at center (left 25 + right 25 holes)
+  A–E  Top terminal rows (each column of 5 holes A–E is connected)
+  F–J  Bottom terminal rows (each column of 5 holes F–J is connected)
+  Row labels are MIRRORED: left edge reads A/B/C/D/E/F/G/H/I/J
+                           right edge reads J/I/H/G/F/E/D/C/B/A
+  1–64 Column numbers (top: left→right, bottom: right→left — MIRRORED)
 
-1. Find the **3V3** pin on your ESP32 (usually top-left area)
-2. Use a **red jumper wire** from the 3V3 pin's column (any hole a-e in that column) to the top **(+) red rail**
-3. Find the **GND** pin on your ESP32 (usually bottom-left area)
-4. Use a **black jumper wire** from the GND pin's column (any hole f-j in that column) to the top **(-) blue rail**
-
-Now the top power rail has **3.3V** and **GND** available anywhere along its length.
-
-```
-     (+) ── 3.3V ─── ● ● ● ● ● ● ● ● ● ● ● ● ● ── Available everywhere
-     (-) ── GND ──── ● ● ● ● ● ● ● ● ● ● ● ● ● ── Available everywhere
+  ⚠️  Bus rails are SPLIT at center! Bridge with a jumper if needed.
 ```
 
 ---
 
-## Step 3: Connect the DHT22 Sensor
+## ESP32 Pin Map (38-pin DevKit — 19 per side)
 
-The DHT22 has **3 or 4 pins** (depending on module type):
-
-```
-     DHT22 Module (3-pin breakout):
-     ┌─────────┐
-     │  DHT22  │
-     │ ┌─────┐ │
-     │ │     │ │
-     │ └─────┘ │
-     │  ●  ●  ●│
-     └──┬──┬──┬┘
-        │  │  │
-       VCC DATA GND
-
-     If you have a 4-pin raw DHT22:
-     Pin 1 = VCC, Pin 2 = DATA, Pin 3 = NC (unused), Pin 4 = GND
-```
-
-### Wiring
-
-| DHT22 Pin | Connects To | Wire Color |
-|-----------|-------------|------------|
-| **VCC** | (+) Power Rail (3.3V) | Red |
-| **DATA** | ESP32 **GPIO 25** | Yellow/Green |
-| **GND** | (-) Ground Rail | Black |
-
-### Optional Pull-Up Resistor
-
-Add a **10kΩ resistor** between **VCC** and **DATA** for reliable readings:
+> ⚠️ **This is YOUR exact board** as verified from photos of your silkscreen labels.
+> **Pin 1 (USB end) = 5V, Pin 19 (far end) = 3V3.**
 
 ```
-     (+) 3.3V Rail ──┬──── DHT22 VCC
-                     │
-                  [10kΩ]   ← Resistor bridges VCC to DATA
-                     │
-     GPIO 25 ────────┴──── DHT22 DATA
-     
-     (-) GND Rail ──────── DHT22 GND
+                        ┌──────────────────────────────────────┐
+                        │         ┌───[USB]───┐                │
+                        │         └───────────┘                │
+          5V (VIN)      │ ●  1                           1  ● │  CLK          ⛔
+   GPIO 11 (CMD)   ⛔   │ ●  2                           2  ● │  SD0          ⛔
+   GPIO 10 (SD3)   ⛔   │ ●  3                           3  ● │  SD1          ⛔
+   GPIO 9  (SD2)   ⛔   │ ●  4                           4  ● │  GPIO 15
+      GPIO 13           │ ●  5                           5  ● │  GPIO 2 (LED)
+      GND               │ ●  6                           6  ● │  GPIO 0 (BOOT)
+      GPIO 12           │ ●  7                           7  ● │  GPIO 4
+      GPIO 14           │ ●  8                           8  ● │  GPIO 16
+      GPIO 27           │ ●  9                           9  ● │  GPIO 17
+   ►  GPIO 26           │ ● 10                          10  ● │  GPIO 5
+   ►  GPIO 25           │ ● 11                          11  ● │  GPIO 18
+      GPIO 23           │ ● 12                          12  ● │  GPIO 19
+      GPIO 32           │ ● 13                          13  ● │  GND
+      GPIO 35           │ ● 14                          14  ● │  GPIO 21
+   ►  GPIO 34 (ADC)     │ ● 15                          15  ● │  RXD (RX0)
+      GPIO 39 (SN/VN)   │ ● 16                          16  ● │  TXD (TX0)
+      GPIO 36 (SP/VP)   │ ● 17                          17  ● │  GPIO 22
+                  EN    │ ● 18                          18  ● │  GPIO 23
+                 3V3    │ ● 19                          19  ● │  GND
+                        └──────────────────────────────────────┘
+
+  ► Pins we use:
+    GPIO 34  = Water Sensor signal (analog input)  — Left pin 15  → Col 15
+    GPIO 25  = DHT22 data (digital)                — Left pin 11  → Col 11
+    GPIO 26  = Relay IN (future)                   — Left pin 10  → Col 10
+    GPIO 2   = Onboard LED (built-in)              — Right pin 5  → Col 5
+    3V3      = 3.3V for sensors                    — Left pin 19  → Col 19
+    GND      = Common ground                       — Left pin 6   → Col 6
+    5V (VIN) = 5V from USB (for relay — future)    — Left pin 1   → Col 1
 ```
 
-### How to Do It
-
-1. **Place the DHT22** on the breadboard to the RIGHT of the ESP32 (around column 20-22)
-2. If it's a breakout module with pins, push the pins into empty columns
-3. **Red wire:** DHT22 VCC pin → (+) power rail
-4. **Black wire:** DHT22 GND pin → (-) ground rail
-5. **Yellow wire:** DHT22 DATA pin → same column as ESP32's GPIO 25 pin
-6. **Resistor (optional but recommended):** Bridge between the VCC column and DATA column of the DHT22
+> ⚠️ **Pins 1–4 on the left (5V, CMD, SD3, SD2) and pins 1–3 on the right (CLK, SD0, SD1) are flash/internal pins. Do NOT connect sensors to these — they may cause crashes.**
 
 ---
 
-## Step 4: Connect the Soil Moisture Sensor
+## The 5 vs 4 Row Split — THIS IS NORMAL ✅
 
-The capacitive soil moisture sensor has a cable with **3 wires**:
+When you place the ESP32 on the breadboard, its body is **so wide** that it covers one side of the center gap **completely** (all 5 rows) and **nearly covers** the other side (4 of 5 rows). This means you have **only 1 free row total** under the ESP32 footprint.
+
+Depending on how you push it in, you get one of two orientations:
 
 ```
-     Soil Moisture Sensor:
-     ┌──────────────┐
-     │   ████████   │   ← Sensing area (goes in soil)
-     │   ████████   │
-     │   ████████   │
-     │              │
-     │   ┌──────┐   │
-     │   │ chip │   │   ← Electronics
-     │   └──────┘   │
-     │  ●    ●    ● │
-     └──┬────┬────┬─┘
-        │    │    │
-       VCC  GND  AOUT (Analog Output)
+  ════════════════════════════════════════════════════════════════════
+  ORIENTATION A:  "4 vs 5"  — Free row on TOP (Row A)
+  ════════════════════════════════════════════════════════════════════
+
+  (+) bus  ═══════════     ← Red power rail
+  (-) bus  ───────────     ← Blue ground rail
+
+  Row A  ○ ○ ○ ○ ○ ○ ○    ← FREE ✅ (only accessible row!)
+  Row B  ■ ■ ■ ■ ■ ■ ■    ← ESP32 LEFT PINS go here
+  Row C  ████████████████  ← BLOCKED by ESP32 body
+  Row D  ████████████████  ← BLOCKED by ESP32 body
+  Row E  ████████████████  ← BLOCKED by ESP32 body
+         ═══ center gap ═══
+  Row F  ████████████████  ← BLOCKED by ESP32 body
+  Row G  ████████████████  ← BLOCKED by ESP32 body
+  Row H  ████████████████  ← BLOCKED by ESP32 body
+  Row I  ████████████████  ← BLOCKED by ESP32 body
+  Row J  ■ ■ ■ ■ ■ ■ ■    ← ESP32 RIGHT PINS go here
+                              (NO free row on this side — all 5 covered)
+  (-) bus  ───────────
+  (+) bus  ═══════════
+
+  RESULT:  Top side = 4 rows used (B,C,D,E) → Row A is FREE
+           Bottom side = 5 rows used (F,G,H,I,J) → NOTHING free
+
+
+  ════════════════════════════════════════════════════════════════════
+  ORIENTATION B:  "5 vs 4"  — Free row on BOTTOM (Row J)
+  ════════════════════════════════════════════════════════════════════
+
+  (+) bus  ═══════════
+  (-) bus  ───────────
+
+  Row A  ■ ■ ■ ■ ■ ■ ■    ← ESP32 LEFT PINS go here
+                              (NO free row on this side — all 5 covered)
+  Row B  ████████████████  ← BLOCKED by ESP32 body
+  Row C  ████████████████  ← BLOCKED by ESP32 body
+  Row D  ████████████████  ← BLOCKED by ESP32 body
+  Row E  ████████████████  ← BLOCKED by ESP32 body
+         ═══ center gap ═══
+  Row F  ████████████████  ← BLOCKED by ESP32 body
+  Row G  ████████████████  ← BLOCKED by ESP32 body
+  Row H  ████████████████  ← BLOCKED by ESP32 body
+  Row I  ■ ■ ■ ■ ■ ■ ■    ← ESP32 RIGHT PINS go here
+  Row J  ○ ○ ○ ○ ○ ○ ○    ← FREE ✅ (only accessible row!)
+
+  (-) bus  ───────────
+  (+) bus  ═══════════
+
+  RESULT:  Top side = 5 rows used (A,B,C,D,E) → NOTHING free
+           Bottom side = 4 rows used (F,G,H,I) → Row J is FREE
 ```
 
-### Wiring
+### ⭐ Recommended: Use Orientation A (4 vs 5) — Row A free on top
 
-| Sensor Wire | Connects To | Wire Color |
-|-------------|-------------|------------|
-| **VCC** | (+) Power Rail (3.3V) | Red |
-| **GND** | (-) Ground Rail | Black |
-| **AOUT** | ESP32 **GPIO 34** | Blue/White |
+**Why?** Row A is closest to the **top bus strips** (power/ground rails), making it easy to run short wires from the ESP32 pins to power.
 
-### How to Do It
+- **Left pins (3V3 side) → Row B** (top half)
+- **Right pins (GND side) → Row J** (bottom half, outermost row)
+- **Free row = Row A only** (top side)
 
-1. The soil sensor has a cable — use **Male-to-Male jumper wires** or plug directly if the connector fits
-2. **Red wire:** Sensor VCC → (+) power rail
-3. **Black wire:** Sensor GND → (-) ground rail
-4. **Blue wire:** Sensor AOUT → same column as ESP32's GPIO 34 pin
+> ⚠️ **Critical:** You only have **1 free row** (Row A) to access ESP32 pins via the breadboard. For all other connections, you **must use M-F jumper wires** clipped directly onto the ESP32 header pins poking up from the top.
 
-> 💡 **TIP:** GPIO 34 is an **input-only** ADC pin on the ESP32, perfect for reading analog sensors.
+> 💡 **Columns 20–64** are completely clear of the ESP32 — all 10 rows (A–J) are fully accessible there. Place sensors in this free zone.
 
 ---
 
-## Step 5: Connect the Relay Module
+## PHASE 1 — Sensors Only (Build Now)
 
-The relay module has **3 control pins** on one side and **3 screw terminals** on the other:
+### Step 1: Place the ESP32
 
-```
-     Relay Module:
-     ┌──────────────────────────┐
-     │                          │
-     │  ┌──────┐  [LED] [LED]  │
-     │  │RELAY │               │
-     │  │      │               │
-     │  └──────┘               │
-     │                          │
-     │  ●      ●      ●        │  ← Control Pins (bottom or side)
-     └──┬──────┬──────┬────────┘
-        │      │      │
-       VCC    GND     IN (Signal)
-     
-     Screw Terminals (other side):
-     ┌──┐  ┌──┐  ┌──┐
-     │NO│  │COM│  │NC│
-     └──┘  └──┘  └──┘
-      │      │      │
-      │      │      └── NC = Normally Closed (don't use)
-      │      └── COM = Common (power input)
-      └── NO = Normally Open (connects to COM when relay activates)
-```
+The ESP32 has **19 pins per side**. It occupies **columns 1–19** on the breadboard.
 
-### Wiring — Control Side (to ESP32)
+- **Push the ESP32 so the free row is on TOP** (Orientation A)
+- **Left pins** go into **Row B** (columns 1–19)
+- **Right pins** go into **Row J** (columns 1–19)
+- **USB port faces LEFT** (toward column 1 / off the edge of the board)
+- **Row A is your only free row** under the ESP32 — use it wisely!
 
-| Relay Pin | Connects To | Wire Color |
-|-----------|-------------|------------|
-| **VCC** | ESP32 **VIN** pin (5V from USB) | Red |
-| **GND** | (-) Ground Rail | Black |
-| **IN** | ESP32 **GPIO 26** | Orange |
-
-> ⚠️ **The relay needs 5V**, not 3.3V! Use the ESP32's **VIN** pin, which outputs 5V directly from USB. Do NOT use the 3.3V power rail for the relay.
-
-### How to Do It
-
-1. The relay module is usually too big for the breadboard — **place it beside the breadboard**
-2. Use **Male-to-Female jumper wires** to connect (female end plugs onto relay pins)
-3. **Red wire:** Relay VCC → ESP32 VIN pin column
-4. **Black wire:** Relay GND → (-) ground rail
-5. **Orange wire:** Relay IN → same column as ESP32's GPIO 26 pin
-
----
-
-## Step 6: Wire the Pump Circuit (Separate Power)
-
-The pump gets its own power from the East Dragon adapter, switched by the relay.
+> ⚠️ **If your ESP32 clicks into the "5 vs 4" orientation instead** (free row on bottom = Row J), that works too. Just mentally swap: wherever the instructions say "Row A", use "Row J" instead, and use M-F jumpers from the top-side pins since Row A won't be accessible.
 
 ```
-     PUMP CIRCUIT (completely separate from ESP32 power):
-     
-     East Dragon Adapter
-          │
-          ├── (+) wire ──────── Relay COM terminal (screw in)
-          │
-          │                     Relay NO terminal ──── Pump (+) wire
-          │
-          └── (-) wire ──────────────────────────── Pump (-) wire
+  Col: 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19
+       ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║
+  B: ╔═╧═══╧═══╧═══╧═══╧═══╧═══╧═══╧═══╧═══╧═══╧═══╧═══╧═══╧═══╧═══╧═══╧═══╧═══╗
+     ║  5V CMD SD3 SD2 G13 GND G12 G14 G27 G26 G25 G23 G32 G35 G34  SN  SP  EN 3V3 ║ ← LEFT
+     ║  [USB►]                       ESP32                                          ║
+     ║ CLK SD0 SD1 G15  G2  G0  G4 G16 G17  G5 G18 G19 GND G21 RXD TXD G22 G23 GND ║ ← RIGHT
+  J: ╚═╤═══╤═══╤═══╤═══╤═══╤═══╤═══╤═══╤═══╤═══╤═══╤═══╤═══╤═══╤═══╤═══╤═══╤═══╝
+       ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║   ║
 
+  Each ESP32 pin occupies its own column (1–19).
+  USB PORT IS ON THE LEFT (Column 1 side).
 
-     When ESP32 activates GPIO 26:
-       → Relay clicks ON
-       → NO connects to COM
-       → Adapter power flows through pump
-       → Pump runs!
-     
-     When ESP32 deactivates GPIO 26:
-       → Relay clicks OFF
-       → NO disconnects from COM
-       → No power to pump
-       → Pump stops
-```
+  PIN → COLUMN REFERENCE (YOUR ESP32 — VERIFIED FROM PHOTOS):
+  ┌────────────────────────────────────┬────────────────────────────────────┐
+  │ LEFT SIDE (Row B)                  │ RIGHT SIDE (Row J)                 │
+  ├──────────┬─────────────────────────┼──────────┬─────────────────────────┤
+  │ Col  1   │ 5V (VIN)               │ Col  1   │ CLK           ⛔       │
+  │ Col  2   │ CMD (GPIO 11)  ⛔       │ Col  2   │ SD0           ⛔       │
+  │ Col  3   │ SD3 (GPIO 10)  ⛔       │ Col  3   │ SD1           ⛔       │
+  │ Col  4   │ SD2 (GPIO 9)   ⛔       │ Col  4   │ GPIO 15                │
+  │ Col  5   │ GPIO 13                 │ Col  5   │ GPIO 2 (LED)           │
+  │ Col  6   │ GND            ★        │ Col  6   │ GPIO 0 (BOOT)          │
+  │ Col  7   │ GPIO 12                 │ Col  7   │ GPIO 4                  │
+  │ Col  8   │ GPIO 14                 │ Col  8   │ GPIO 16                │
+  │ Col  9   │ GPIO 27                 │ Col  9   │ GPIO 17                │
+  │ Col 10   │ GPIO 26 ►               │ Col 10   │ GPIO 5                  │
+  │ Col 11   │ GPIO 25 ►               │ Col 11   │ GPIO 18                │
+  │ Col 12   │ GPIO 23                 │ Col 12   │ GPIO 19                │
+  │ Col 13   │ GPIO 32                 │ Col 13   │ GND                     │
+  │ Col 14   │ GPIO 35                 │ Col 14   │ GPIO 21                │
+  │ Col 15   │ GPIO 34 (ADC) ►         │ Col 15   │ RXD (RX0)              │
+  │ Col 16   │ GPIO 39 (SN/VN)         │ Col 16   │ TXD (TX0)              │
+  │ Col 17   │ GPIO 36 (SP/VP)         │ Col 17   │ GPIO 22                │
+  │ Col 18   │ EN                      │ Col 18   │ GPIO 23                │
+  │ Col 19   │ 3V3            ★        │ Col 19   │ GND                     │
+  └──────────┴─────────────────────────┴──────────┴─────────────────────────┘
 
-### How to Do It
-
-1. **Identify the adapter wires** — strip ~5mm of insulation from each wire if not already stripped
-2. Usually: wire with a **white stripe or text = positive (+)**, plain wire = negative (-)
-3. **If unsure**: use a multimeter to check polarity, or test with the pump directly for a second
-4. **Screw the (+) adapter wire** into the relay **COM** terminal
-5. **Connect a wire** from relay **NO** terminal to the **pump's (+) wire** (red)
-6. **Connect the pump's (-) wire** (black) to the **adapter's (-) wire**
-7. **Twist and tape** or use wire connectors for secure connections
-
-> ⚠️ **SAFETY:** Make sure the adapter is UNPLUGGED while you're wiring the screw terminals!
-
----
-
-## Complete Wiring Summary
-
-```
-     ┌─────────────────── BREADBOARD ────────────────────┐
-     │                                                    │
-     │  (+) 3.3V Rail ◄── ESP32 3V3 pin                  │
-     │  (-) GND Rail  ◄── ESP32 GND pin                  │
-     │                                                    │
-     │  ┌──────────────────────────────────────────────┐  │
-     │  │              ESP32 DevKit V1                 │  │
-     │  │         (powered via USB cable)              │  │
-     │  │                                              │  │
-     │  │  GPIO 25 ─── yellow ──▶ DHT22 DATA           │  │
-     │  │  GPIO 34 ─── blue ────▶ Soil Sensor AOUT     │  │
-     │  │  GPIO 26 ─── orange ──▶ Relay IN             │  │
-     │  │  VIN ─────── red ─────▶ Relay VCC (5V)       │  │
-     │  └──────────────────────────────────────────────┘  │
-     │                                                    │
-     │  DHT22:      VCC → (+) rail    GND → (-) rail     │
-     │  Soil:       VCC → (+) rail    GND → (-) rail     │
-     │  Relay:      GND → (-) rail                        │
-     │                                                    │
-     └────────────────────────────────────────────────────┘
-
-     ┌─────────── PUMP CIRCUIT (separate) ────────────────┐
-     │                                                     │
-     │  East Dragon (+) ──▶ Relay COM                      │
-     │                      Relay NO ──▶ Pump (+)          │
-     │  East Dragon (-) ──────────────▶ Pump (-)           │
-     │                                                     │
-     └─────────────────────────────────────────────────────┘
+  ► = Pin we use for P-WOS
+  ★ = Power/ground pin we tap
+  ⛔ = Internal flash SPI — do NOT connect anything
 ```
 
 ---
 
-## Wire Color Guide
+### Step 2: Set Up Power Rails
 
-| Wire Color | Purpose | From → To |
-|------------|---------|-----------|
-| 🔴 Red | 3.3V Power | ESP32 3V3 → (+) rail |
-| ⚫ Black | Ground | ESP32 GND → (-) rail |
-| 🔴 Red | Relay 5V | ESP32 VIN → Relay VCC |
-| 🟡 Yellow | DHT22 Data | ESP32 GPIO 25 → DHT22 DATA |
-| 🔵 Blue | Soil Data | ESP32 GPIO 34 → Soil AOUT |
-| 🟠 Orange | Relay Signal | ESP32 GPIO 26 → Relay IN |
-| ⚫ Black | DHT22 GND | DHT22 GND → (-) rail |
-| ⚫ Black | Soil GND | Soil GND → (-) rail |
-| ⚫ Black | Relay GND | Relay GND → (-) rail |
+Connect 3.3V and GND from the ESP32 to the **top power rails**.
 
----
+**Your wires:**
+- **M-M** (pin on both ends): Both ends plug into breadboard holes. Use for ESP32 + DHT22.
+- **M-F** (pin on one end, socket on the other): Socket clips onto a sensor pin. Use for water sensor.
 
-## Checklist Before Powering On
+**Why M-M for ESP32?** When the ESP32 is seated on the breadboard, its pins go **down into the holes**. There's nothing sticking up to clip onto. You access them through **Row A** (the only free row), which is electrically connected to the ESP32 pin in Row B below it.
 
-- [ ] ESP32 straddles the center gap properly (no bent pins)
-- [ ] 3V3 connected to (+) rail, GND to (-) rail
-- [ ] DHT22: VCC → (+), GND → (-), DATA → GPIO 25
-- [ ] Soil sensor: VCC → (+), GND → (-), AOUT → GPIO 34
-- [ ] Relay: VCC → VIN (5V!), GND → (-), IN → GPIO 26
-- [ ] Pump: Adapter (+) → COM, NO → Pump (+), Adapter (-) → Pump (-)
-- [ ] No loose wires or short circuits
-- [ ] Pump adapter is UNPLUGGED during assembly
-- [ ] USB cable connected to ESP32
+```
+  TOP POWER RAILS (the ones closest to Row A):
 
----
+  (−) BLUE strip  ──────────────────  = GND
+  (+) RED strip   ══════════════════  = 3.3V
+                  1       6              19
+  Row A: ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○  ← FREE ROW
+  Row B: ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ●  ← ESP32 LEFT PINS
+               5V       GND                         3V3
 
-## Powering On (Order Matters!)
+  WIRE 1 — ⚪ White M-M (3.3V to power rail):
+    Pin 1: Plug into Col 19, Row A  (this connects to 3V3 in Row B)
+    Pin 2: Plug into Top (+) RED strip (any hole)
 
-1. **Double-check all connections** one more time
-2. **Plug USB cable** into ESP32 → blue LED should light up
-3. **Open Serial Monitor** (115200 baud) → verify sensor readings
-4. **Calibrate soil sensor** → see [hardware_setup.md](hardware_setup.md#7-calibrate-soil-sensor)
-5. **Only then plug in the pump adapter** → test with `PUMP ON` command in Serial Monitor
-6. Run `start_pwos.bat` → select Hardware → USB mode
+  WIRE 2 — 🟤 Brown M-M (GND to ground rail):
+    Pin 1: Plug into Col 6, Row A  (this connects to GND in Row B)
+    Pin 2: Plug into Top (−) BLUE strip (any hole)
+
+  ⚠️  The bus strips are SPLIT at the center of the board.
+      If you need power on both halves, bridge with a short jumper.
+```
+
+**After this step:** Any hole on the RED (+) strip = 3.3V, any hole on the BLUE (−) strip = GND.
 
 ---
 
-## Common Mistakes to Avoid
+### Step 3: Wire the DHT22
 
-| Mistake | What Happens | Fix |
-|---------|-------------|-----|
-| ESP32 pins not in center gap | Pins short-circuit | Re-seat ESP32, one row each side of gap |
-| Using 3.3V for relay | Relay doesn't click | Use VIN (5V) for relay VCC |
-| Using 5V for DHT22/Soil | Can damage sensors over time | Use 3.3V from (+) rail |
-| Forgetting pull-up resistor on DHT22 | Intermittent read errors | Add 10kΩ between VCC and DATA |
-| Pump wired to ESP32 power | ESP32 resets/browns out | Always use separate power for pump |
-| Wrong relay terminal (NC instead of NO) | Pump runs when it should be off | Use NO (Normally Open) terminal |
-| Adapter polarity reversed | Pump spins backward (or not at all) | Swap the + and - wires |
+The DHT22 has 3 pins (breakout) or 4 pins (bare). Place it at **columns 25, 26, 27** in **Row A** (well clear of the ESP32 at columns 1–19).
+
+```
+  DHT22 PLACEMENT:
+
+  Col:  6       11      15             25  26  27
+  (+)  ═══════════════════════════════════════════════     (power rail)
+  (-)  ───────────────────────────────────────────────     (ground rail)
+        │        │       │              │       │
+        │        │       │         ┌────┘   ┌───┘
+        │        │       │         │RD      │BK          (bus strip wires)
+        │        │       │         │        │
+  A:    ●GND     ●G25    ●G34      ●VCC  ●  ●GND    ← DHT22 pins in Row A
+  B:  [ESP32 LEFT PINS ...]        ●     ●DAT  ●    ← Only ESP32 in cols 1-19
+  C:  [  blocked by body  ]        ●     ●  ●
+  D:  [  blocked by body  ]        ●     ●  ●
+  E:  [  blocked by body  ]                            ← up to col 19 only!
+       ═══════════ CENTER GAP ════════════
+  ...
+  J:  [ESP32 RIGHT PINS ...]
+
+  WIRING (all M-M — both pins plug into breadboard holes):
+  ┌─────┬────────────────────────────────────────────────────────────┐
+  │ #   │ Description                                                    │
+  ├─────┼────────────────────────────────────────────────────────────┤
+  │ 3   │ 🟢 Green M-M:  Col 25, Row B  ─►  Top (+) RED strip        │
+  │ 4   │ 🟡 Yellow M-M: Col 26, Row B  ─►  Col 11, Row A (GPIO 25)  │
+  │ 5   │ ⚫ Grey M-M:   Col 27, Row B  ─►  Top (−) BLUE strip       │
+  └─────┴────────────────────────────────────────────────────────────┘
+
+  💡 DHT22 is at columns 25–27, which are OUTSIDE the ESP32 area.
+     All rows A–E are fully accessible there. Both pins of each
+     M-M wire simply plug into breadboard holes.
+
+  CIRCUIT:
+
+  (+) RED strip ◄── 🟢 Green M-M ── Col 25, Row B (DHT22 VCC)
+                                         │
+                                      [DHT22]
+                                         │
+  Col 11, Row A (GPIO 25) ◄─ 🟡 Yellow M-M ─ Col 26, Row B (DHT22 DATA)
+                                         │
+  (−) BLUE strip ◄── ⚫ Grey M-M ─── Col 27, Row B (DHT22 GND)
+```
+
+> 💡 **Pull-up resistor:** If you have a 10kΩ resistor, bridge it between Col 25 Row C and Col 26 Row C (VCC to DATA). Most DHT22 breakout boards have one built in — try without first.
+
+> 💡 **Why columns 25–27?** They're safely beyond column 19 (the last ESP32 pin), so all rows A–J are fully accessible here. No fighting with the ESP32 body.
+
+---
+
+### Step 4: Wire the Water Sensor
+
+The water sensor has 3 pins (**S**, **+**, **−**) with header pins sticking out. These are the ONLY pins you clip **M-F sockets** onto.
+
+```
+  WATER SENSOR MODULE:
+  ┌──────────────────────────┐
+  │  │ │ │ │ │ │ │ │ │ │    │  ← Exposed traces
+  │  │ │ │ │ │ │ │ │ │ │    │    (dip in water/soil)
+  │                          │
+  │    ┌────────────────┐    │
+  │    │   Electronics  │    │
+  │    └────────────────┘    │
+  │     ●      ●      ●     │
+  └─────┬──────┬──────┬─────┘
+        │      │      │      ← pins sticking OUT (you can clip sockets here!)
+        S      +      −
+     (Signal)(VCC)  (GND)
+
+  ⚠️ Check YOUR sensor — pin order may differ. Read the PCB labels!
+
+  WIRING (all M-F — socket clips onto sensor pin, pin plugs into breadboard):
+  ┌─────┬──────────────────────────────────────────────────────────────┐
+  │ #   │ Description                                                    │
+  ├─────┼──────────────────────────────────────────────────────────────┤
+  │ 6   │ 🔴 Red M-F:    Socket on (+) ─► Pin into (+) RED strip    │
+  │ 7   │ 🟣 Purple M-F: Socket on (−) ─► Pin into (−) BLUE strip   │
+  │ 8   │ 🔵 Blue M-F:   Socket on (S) ─► Pin into Col 15, Row A    │
+  └─────┴──────────────────────────────────────────────────────────────┘
+
+  💡 Wire 8: The pin end goes into Col 15, Row A. This connects
+     to GPIO 34 (ESP32 left pin in Row B at the same column).
+
+  CIRCUIT:
+
+  (+) RED strip ◄──── 🔴 Red M-F ──── Water Sensor + (VCC)
+
+  Col 15, Row A (GPIO 34) ◄─ 🔵 Blue M-F ─ Water Sensor S (Signal)
+
+  (−) BLUE strip ◄─── 🟣 Purple M-F ── Water Sensor − (GND)
+```
+
+> 💡 **GPIO 34 is input-only** with a built-in ADC — perfect for reading the sensor's analog voltage.
+
+---
+
+### Phase 1 — Complete Board View
+
+```
+  Orientation A: "4 vs 5" — Row A free on top, bottom fully covered
+
+                                                            GL No.12
+┌──────────────────────────────────────────────────────────────────────┐
+│(-)  ─────BK──────────────────────  ─────────────────────────────  (-)│
+│     □□□□□ □□□□□ □□□□□ □□□□□ □□□□□  □□□□□ □□□□□ □□□□□ □□□□□ □□□□□     │
+│     □□□□□ □□□□□ □□□□□ □□□□□ □□□□□  □□□□□ □□□□□ □□□□□ □□□□□ □□□□□     │
+│(+)  ═RD══════════════════════════  ═════════════════════════════  (+)│
+│     1   5   10   15   20   25   30   35   40   45   50   55   60     │
+│     │BL│RD                        │RD  │YW      │BK                  │
+│A   ·●··●··························●····●·DHT22··●···················J│  ← FREE ROW
+│    ┌───┼──────────────────────────┼────┼──────────────────────────┐  │
+│B   │5V │CMD SD3 SD2 G13 GND G12 G14│G27 G26│G25 G23 G32 G35 G34│  │  ← LEFT PINS
+│    │   │                          │   ▲   ▲          ▲           │  │
+│    │   │  [USB►]   ESP32          │   │   │          │           │  │
+│    │   │                          │  G26 G25        G34          │  │
+│C   │   │  [███████ blocked by ESP32 body ████████████████████]   │ H│
+│D   │   │  [███████ blocked by ESP32 body ████████████████████]   │ G│
+│E   │   │  [███████ blocked by ESP32 body ████████████████████]   │ F│
+│    │   │             ═══ center gap ═══                          │  │
+│F   │   │  [███████ blocked by ESP32 body ████████████████████]   │ E│
+│G   │   │  [███████ blocked by ESP32 body ████████████████████]   │ D│
+│H   │   │  [███████ blocked by ESP32 body ████████████████████]   │ C│
+│I   │   │  [███████ blocked by ESP32 body ████████████████████]   │ B│
+│    │   │              ▼              │                           │  │
+│J   │CLK│SD0 SD1 G15 G2 G0 G4 G16│G17 G5│G18 G19 GND G21 RXD│  │ A│  ← RIGHT PINS
+│    └───┼─────────────────────────┼───┼────┼───────────────────────┘  │
+│    60   55   50   45   40   35   30   25   20   15   10    5   1     │
+│(+)  ═════════════════════════════  ═════════════════════════════  (+)│
+│     □□□□□ □□□□□ □□□□□ □□□□□ □□□□□  □□□□□ □□□□□ □□□□□ □□□□□ □□□□□     │
+│     □□□□□ □□□□□ □□□□□ □□□□□ □□□□□  □□□□□ □□□□□ □□□□□ □□□□□ □□□□□     │
+│(-)  ─────────────────────────────  ─────────────────────────────  (-)│
+└──────────────────────────────────────────────────────────────────────┘
+  ⚠️ Bottom side: ALL 5 rows (F–J) covered — NO free row!
+     Row J has the right-side pins but nothing below it to tap.
+     Access right-side pins via M-F jumpers clipped onto header pins.
+
+  OFF-BOARD:
+  ┌─────────────────────────────────────────────────┐
+  │  WATER SENSOR (via M-F jumpers)                 │
+  │    S ── 🔵 Blue  ──► Col 15, Row A (GPIO 34)   │
+  │    + ── 🔴 Red   ──► Top (+) bus                │
+  │    − ── ⚫ Black ──► Top (−) bus                │
+  └─────────────────────────────────────────────────┘
+```
+
+---
+
+### Phase 1 — Wire List (8 total)
+
+| # | Color | Type | Pin 1 / Socket | Pin 2 / Hole | Purpose |
+|---|-------|------|----------------|-------------|--------|
+| 1 | ⚪ White | **M-M** | Col 19, Row A | (+) RED strip | 3.3V power |
+| 2 | 🟤 Brown | **M-M** | Col 6, Row A | (−) BLUE strip | Ground |
+| 3 | 🟢 Green | **M-M** | Col 25, Row B | (+) RED strip | DHT22 VCC |
+| 4 | 🟡 Yellow | **M-M** | Col 26, Row B | Col 11, Row A | DHT22 DATA → GPIO 25 |
+| 5 | ⚫ Grey | **M-M** | Col 27, Row B | (−) BLUE strip | DHT22 GND |
+| 6 | 🔴 Red | **M-F** | Socket on Sensor **(+)** | Pin in (+) RED strip | Sensor VCC |
+| 7 | 🟣 Purple | **M-F** | Socket on Sensor **(−)** | Pin in (−) BLUE strip | Sensor GND |
+| 8 | 🔵 Blue | **M-F** | Socket on Sensor **(S)** | Pin in Col 15, Row A | Sensor → GPIO 34 |
+
+**Total: 5× M-M + 3× M-F**
+
+| Wire Type | Colors Used | Remaining Spare |
+|-----------|-------------|----------------|
+| M-M (7 available) | White, Brown, Green, Yellow, Grey | Purple, Blue |
+| M-F (7 available) | Red, Purple, Blue | Brown, Grey, White, Green |
+
+---
+
+## PHASE 2 — Add Relay + Pump (When Acquired)
+
+When you get a **5V single-channel relay module**, add these 3 wires:
+
+### Relay Control Wiring (M-F jumpers — relay sits off-board)
+
+| # | Color | Type | From | To | Purpose |
+|---|-------|------|------|----|---------|
+| 9 | ⚪ White | M-F | Socket on Relay **VCC** | Pin in Col 1, Row A (5V VIN) | Relay power (5V!) |
+| 10 | 🟤 Brown | M-M | Col 1, Row A (alt GND) | (−) BLUE strip | Relay ground |
+| 11 | 🟢 Green | M-M | Col 10, Row A (GPIO 26) | Relay IN (via breadboard) | Relay signal |
+
+> ⚠️ Relay needs **5V** from VIN — NOT 3.3V. The VIN pin is at **Col 1** (nearest to USB).
+> For the relay, you may need to run wires from a breadboard column to the relay module off-board.
+
+### Pump Circuit (Separate Power — Through Relay)
+
+```
+  East Dragon Adapter                          Pump
+       │                                         │
+       ├── (+) ──► Relay COM terminal            │
+       │           Relay NO terminal ──► Pump (+) ┘
+       │
+       └── (−) ─────────────────────► Pump (−)
+
+  GPIO 26 HIGH → Relay activates → COM connects to NO → Pump runs
+  GPIO 26 LOW  → Relay releases  → Circuit open      → Pump stops
+```
+
+> ⚠️ **Check adapter voltage with multimeter first!** Pump is rated 3–6V.
+> If adapter is >6V, use a separate 5V USB charger or 4×AA battery pack instead.
+
+---
+
+## Startup Checklist
+
+### Before Power-On
+
+- [ ] ESP32 placed: 19 pins each side, straddling center gap. One side fully covered, 1 free row on the other
+- [ ] No bent pins — all 38 pins inserted cleanly
+- [ ] Wire 1:  ⚪ White **M-M** — Col 19 Row A → (+) RED strip (3.3V)
+- [ ] Wire 2:  🟤 Brown **M-M** — Col 6 Row A → (−) BLUE strip (GND)
+- [ ] Wire 3:  🟢 Green **M-M** — Col 25 Row B → (+) RED strip (DHT22 VCC)
+- [ ] Wire 4:  🟡 Yellow **M-M** — Col 26 Row B → Col 11 Row A (DHT22 DATA → GPIO 25)
+- [ ] Wire 5:  ⚫ Grey **M-M** — Col 27 Row B → (−) BLUE strip (DHT22 GND)
+- [ ] Wire 6:  🔴 Red **M-F** — Socket on Sensor + → Pin in (+) RED strip
+- [ ] Wire 7:  🟣 Purple **M-F** — Socket on Sensor − → Pin in (−) BLUE strip
+- [ ] Wire 8:  🔵 Blue **M-F** — Socket on Sensor S → Pin in Col 15 Row A (GPIO 34)
+- [ ] No exposed wire ends touching
+- [ ] USB port side is accessible (not blocked by wires)
+
+### Power On
+
+1. Plug USB into ESP32 and PC
+2. Onboard blue LED (GPIO 2) should blink
+3. Arduino IDE → Tools → Port → select COM port
+4. Serial Monitor → **115200 baud**
+5. Expected output:
+   ```
+   ============================================
+     P-WOS ESP32 Firmware
+     Commands: STATUS | READ | PUMP ON | PUMP OFF
+   ============================================
+   [READY] Publishing every 5s
+   [DATA] Soil:XX.X%  Temp:XX.X°C  Hum:XX.X%  Pump:OFF
+   ```
+6. Type `STATUS` to get a reading on demand
+
+### Calibrate Water Sensor
+
+1. **In air (dry):** Note the soil % value in serial output
+2. **Dipped in water:** Note the value
+3. Update firmware constants:
+   ```cpp
+   #define SOIL_DRY   <dry_value>    // what you read dry
+   #define SOIL_WET   <wet_value>    // what you read wet
+   ```
+4. Re-flash and verify readings make sense (0% = dry, 100% = wet)
+
+---
+
+## Common Mistakes
+
+| Mistake | Symptom | Fix |
+|---------|---------|-----|
+| ESP32 not straddling center gap | Short circuit / no power | Pins must be on opposite sides of center gap |
+| 5v4 row split — one side fully covered? | Normal! | ESP32 is too wide — covers 5 rows on one side, 4 on the other. Only 1 free row total |
+| 3.3V for relay | Relay doesn't click | Use VIN (5V from USB) for relay VCC |
+| 5V for DHT22 or water sensor | Sensor damage | Use 3.3V rail only for sensors |
+| Bus strip not bridged at center | Power only on half the board | Add short jumper across the split |
+| Wrong GPIO column | No readings | Verify silkscreen labels on YOUR board |
+| Pump on ESP32 power | ESP32 resets/browns out | Always use separate power for pump |
+| NC terminal instead of NO | Pump runs when it shouldn't | Use NO (Normally Open) on relay |
+| Using flash pins (SD0/SD1/SD2/SD3/CMD/CLK) | ESP32 crashes | These are internal flash pins — leave them unconnected |
