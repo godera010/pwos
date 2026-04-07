@@ -63,7 +63,7 @@
 // Pin Assignments (matches docs/hardware/hardware_shopping_list.md)
 // ============================================================================
 #define SOIL_PIN      34    // Capacitive soil moisture sensor (ADC input)
-#define DHT_PIN       25    // DHT22 temperature & humidity (digital)
+#define DHT_PIN       25    // DHT11 temperature & humidity (digital)
 #define RELAY_PIN     26    // 5V relay module (pump control)
 #define LED_PIN       2     // Onboard LED (status indicator)
 

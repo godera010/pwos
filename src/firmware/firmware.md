@@ -39,7 +39,7 @@ copy src\firmware\pwos_esp32\config.h.example src\firmware\pwos_esp32\config.h
 tools\flash_esp32.bat
 ```
 
-See [docs/hardware/hardware_setup.md](../../docs/hardware/hardware_setup.md) for detailed instructions.
+See [docs/hardware/hardware_setup.md](../../docs/hardware/guides/hardware_setup.md) for detailed instructions.
 
 ## Pin Assignments
 

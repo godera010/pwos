@@ -1,7 +1,7 @@
 # P-WOS Project Roadmap
 
 **Predictive Water Optimization System**  
-**Total Phases:** 12 | **Completed:** 8 | **In Progress:** 1 | **Remaining:** 3
+**Total Phases:** 12 | **Completed:** 9 | **In Progress:** 1 | **Remaining:** 2
 
 ---
 
@@ -10,8 +10,8 @@
 ```
 Phase 1-8: SIMULATION (Software) ████████████████████████ 100%
 Phase 9:   CLOUD MIGRATION       ████░░░░░░░░░░░░░░░░░░░░  20%
-Phase 10:  HARDWARE              ░░░░░░░░░░░░░░░░░░░░░░░░   0%
-Phase 11:  INTEGRATION           ░░░░░░░░░░░░░░░░░░░░░░░░   0%
+Phase 10:  WEATHER API           ████████████████████████ 100%
+Phase 11:  HARDWARE              ██████████████░░░░░░░░░░  60%
 Phase 12:  PRODUCTION            ░░░░░░░░░░░░░░░░░░░░░░░░   0%
 ```
 
@@ -158,36 +158,36 @@ Phase 12:  PRODUCTION            ░░░░░░░░░░░░░░░�
 
 | Task | Status | Priority |
 |------|--------|----------|
-| Get OpenWeatherMap API key | ⬜ Pending | High |
-| Replace weather simulator with API | ⬜ Pending | High |
-| Implement API rate limiting | ⬜ Pending | Medium |
-| Add caching layer | ⬜ Pending | Medium |
-| Handle API failures gracefully | ⬜ Pending | High |
-| Update frontend for real weather | ⬜ Pending | Low |
+| Get OpenWeatherMap API key | ✅ Done | High |
+| Replace weather simulator with API | ✅ Done | High |
+| Implement API rate limiting | ✅ Done | Medium |
+| Add caching layer | ✅ Done | Medium |
+| Handle API failures gracefully | ✅ Done | High |
+| Update frontend for real weather | ✅ Done | Low |
 
 ---
 
 ### Phase 11: Hardware Integration
-**Status:** ⬜ NOT STARTED
+**Status:** 🔄 IN PROGRESS (60%)
 
 | Task | Status | Priority |
 |------|--------|----------|
 | **Purchase Hardware** | | |
-| ESP32-WROOM-32 module | ⬜ Pending | Critical |
-| DHT22 temperature/humidity sensor | ⬜ Pending | Critical |
-| Capacitive soil moisture sensor v1.2 | ⬜ Pending | Critical |
+| ESP32-WROOM-32 module | ✅ Done | Critical |
+| DHT11 temperature/humidity sensor | ✅ Done | Critical |
+| Resistive soil moisture (water) sensor | ✅ Done | Critical |
 | 5V relay module | ⬜ Pending | Critical |
-| 12V water pump | ⬜ Pending | Critical |
-| Power supply | ⬜ Pending | Critical |
+| 5V Mini DC submersible pump | ✅ Done | Critical |
+| Power supply (East Dragon AC/DC + USB) | ✅ Done | Critical |
 | | | |
 | **Firmware Development** | | |
-| Write MicroPython firmware | ⬜ Pending | High |
+| Write C++/Arduino hardware pin tests | ✅ Done | High |
 | Implement MQTT client on ESP32 | ⬜ Pending | High |
 | Calibrate soil sensor | ⬜ Pending | High |
-| Test pump control | ⬜ Pending | High |
+| Test isolated component logic (Relay, DHT, ADC)| ✅ Done | High |
 | | | |
 | **Physical Setup** | | |
-| Wire sensors to ESP32 | ⬜ Pending | High |
+| Wire sensors to ESP32 on breadboard | ✅ Done | High |
 | Setup water tank + pump | ⬜ Pending | Medium |
 | Install in target location | ⬜ Pending | Medium |
 
@@ -219,7 +219,7 @@ Phase 12:  PRODUCTION            ░░░░░░░░░░░░░░░�
 | Testing | 5/5 | 5 | 100% |
 | Documentation | 6/6 | 6 | 100% |
 | Cloud | 0/8 | 8 | 0% |
-| Hardware | 0/14 | 14 | 0% |
+| Hardware | 8/14 | 14 | 57% |
 | Production | 0/8 | 8 | 0% |
 | **TOTAL** | **34** | **64** | **53%** |
 
@@ -233,7 +233,7 @@ Phase 12:  PRODUCTION            ░░░░░░░░░░░░░░░�
 | ML Validation (15% savings) | Feb 2026 | ✅ ACHIEVED (16.7%) |
 | Frontend Complete | Feb 2026 | ✅ ACHIEVED |
 | Cloud Deployment | Mar 2026 | ⬜ Pending |
-| Hardware Integration | Apr 2026 | ⬜ Pending |
+| Hardware Integration | Apr 2026 | 🔄 In Progress |
 | Production Launch | May 2026 | ⬜ Pending |
 | Thesis Submission | Jun 2026 | ⬜ Pending |
 
@@ -260,4 +260,4 @@ Phase 12:  PRODUCTION            ░░░░░░░░░░░░░░░�
 | ML | Scikit-Learn, Random Forest | ✅ Ready |
 | Frontend | React 19, Vite, TypeScript | ✅ Ready |
 | Cloud | Railway/Render, PostgreSQL | ⬜ Pending |
-| Hardware | ESP32, MicroPython | ⬜ Pending |
+| Hardware | ESP32, C++/Arduino | 🔄 In Progress |

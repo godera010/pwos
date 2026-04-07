@@ -126,7 +126,7 @@ export const api = {
             body: JSON.stringify({ mode })
         });
     },
-    controlPump: async (action: 'ON' | 'OFF', duration = 0) => {
+    controlPump: async (action: 'ON' | 'OFF', duration = 60) => {
         const res = await fetch(`${API_BASE_URL}/control/pump`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

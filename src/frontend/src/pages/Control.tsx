@@ -77,7 +77,7 @@ export const Control: React.FC = () => {
     const handlePump = async (action: 'ON' | 'OFF') => {
         setLoading(true);
         try {
-            await api.controlPump(action, action === 'ON' ? 0 : undefined);
+            await api.controlPump(action, action === 'ON' ? 60 : undefined);
             setPumpActive(action === 'ON');
             toast.success(`Pump ${action === 'ON' ? 'Activated' : 'Stopped'}`);
         } catch {

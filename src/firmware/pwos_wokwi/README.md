@@ -1,5 +1,17 @@
 # P-WOS Wokwi Simulation Guide
 
+<!-- NAV_START -->
+<div align="center">
+  <a href="..\..\..\README.md">🏠 Home (Root)</a> |
+  <a href="..\..\README.md">💻 Source Code</a> |
+  <a href="..\..\..\docs\README.md">📚 Documentation</a> |
+  <a href="..\..\..\docs\hardware\README.md">⚙️ Hardware</a> |
+  <a href="..\..\..\data\README.md">💾 Data</a>
+</div>
+<hr>
+<!-- NAV_END -->
+
+
 Test the ESP32 firmware in the browser — no hardware, no flashing required.
 
 **Wokwi folder:** `src/firmware/wokwi_sim/`
@@ -235,3 +247,4 @@ You can also **send pump commands from MQTT Explorer**:
 | [`wokwi.toml`](wokwi.toml) | Project config (libraries) |
 
 Real firmware: [`../pwos_esp32/pwos_esp32.ino`](../pwos_esp32/pwos_esp32.ino)
+\n\n

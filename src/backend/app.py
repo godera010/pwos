@@ -92,12 +92,12 @@ def on_message(client, userdata, msg):
         topic = msg.topic
         
         if topic == "pwos/sensor/data":
-            # Update sensor values
+            # Update sensor values (use server time — ESP32 sends millis())
             latest_sensor_data.update({
                 'soil_moisture': payload.get('soil_moisture'),
                 'temperature': payload.get('temperature'),
                 'humidity': payload.get('humidity'),
-                'timestamp': payload.get('timestamp')
+                'timestamp': datetime.now().isoformat()
             })
 
             # If in Real Weather Mode, fetch forecast NOW and update latest_sensor_data
@@ -627,7 +627,12 @@ def get_watering_events():
 # In-memory operational settings (persisted per server session)
 operational_settings = {
     'moisture_threshold': 30,
+    'moisture_max': 75,
+    'temp_min': 5,
+    'temp_max': 32,
     'max_duration': 45,
+    'latitude': -20.1492,
+    'longitude': 28.5833,
 }
 
 @app.route('/api/settings', methods=['GET', 'POST'])
@@ -635,11 +640,22 @@ def api_settings():
     global operational_settings
     if request.method == 'POST':
         data = request.json or {}
-        if 'moisture_threshold' in data:
-            operational_settings['moisture_threshold'] = int(data['moisture_threshold'])
-        if 'max_duration' in data:
-            operational_settings['max_duration'] = int(data['max_duration'])
-        add_log(f"Settings updated: threshold={operational_settings['moisture_threshold']}%, duration={operational_settings['max_duration']}s", category="ACTION")
+        updatable_keys = [
+            'moisture_threshold', 'moisture_max',
+            'temp_min', 'temp_max',
+            'max_duration',
+            'latitude', 'longitude'
+        ]
+        for key in updatable_keys:
+            if key in data:
+                operational_settings[key] = float(data[key]) if key in ('latitude', 'longitude') else int(data[key])
+        
+        add_log(
+            f"Settings updated: threshold={operational_settings['moisture_threshold']}%, "
+            f"max={operational_settings['moisture_max']}%, "
+            f"duration={operational_settings['max_duration']}s",
+            category="ACTION"
+        )
         return jsonify({"status": "success", "settings": operational_settings})
     
     return jsonify(operational_settings)

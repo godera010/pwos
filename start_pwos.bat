@@ -20,24 +20,12 @@ echo.
 echo  Select Data Source Mode:
 echo.
 echo    [1] SIMULATION  - No hardware needed (default)
-echo    [2] HARDWARE    - Real ESP32 required
-echo    [3] HYBRID      - Hardware preferred, simulator fallback
+echo    [2] HARDWARE    - Real ESP32 over WiFi
 echo.
-set /p MODE_CHOICE="  Enter choice (1/2/3): "
+set /p MODE_CHOICE="  Enter choice (1/2): "
 
 if "%MODE_CHOICE%"=="2" (
     set DATA_SOURCE=hardware
-    echo.
-    echo  How is your ESP32 connected?
-    echo.
-    echo    [A] USB    - Connected via USB cable, no WiFi needed
-    echo                 ^(serial_bridge.py handles MQTT^)
-    echo    [B] WiFi   - Connected to your local network
-    echo                 ^(ESP32 publishes to Mosquitto directly^)
-    echo.
-    set /p HW_CONNECTION="  Enter choice (A/B): "
-) else if "%MODE_CHOICE%"=="3" (
-    set DATA_SOURCE=hybrid
     set HW_CONNECTION=B
 ) else (
     set DATA_SOURCE=simulation
@@ -46,13 +34,9 @@ if "%MODE_CHOICE%"=="2" (
 
 echo.
 if "%DATA_SOURCE%"=="hardware" (
-    if /I "%HW_CONNECTION%"=="A" (
-        echo  Mode: %DATA_SOURCE% [USB]
-    ) else (
-        echo  Mode: %DATA_SOURCE% [WiFi]
-    )
+    echo  Mode: HARDWARE [WiFi]
 ) else (
-    echo  Mode: %DATA_SOURCE%
+    echo  Mode: SIMULATION
 )
 echo =========================================
 echo.
@@ -81,36 +65,25 @@ echo Starting P-WOS in %DATA_SOURCE% mode...
 echo.
 
 if "%DATA_SOURCE%"=="simulation" (
-    echo This will open 8 command windows:
-    echo   1. MQTT Broker [Mosquitto]
-    echo   2. Database Subscriber
+    echo This will start:
+    echo   1. Database Subscriber
+    echo   2. Weather Simulator
     echo   3. Simulated ESP32
-    echo   4. Live Weather Dashboard [Real-Time API]
+    echo   4. Live Weather Dashboard
     echo   5. API Server [Flask]
     echo   6. P-WOS Autopilot
     echo   7. ML Brain Monitor
     echo   8. React Dev Server [Vite]
-) else if "%DATA_SOURCE%"=="hardware" (
-    echo This will open 7 command windows:
-    echo   1. MQTT Broker [Mosquitto]
-    echo   2. Database Subscriber
-    echo   3. Hardware Manager [monitors ESP32]
-    echo   4. Live Weather Dashboard [Real-Time API]
-    echo   5. API Server [Flask]
-    echo   6. P-WOS Autopilot
-    echo   7. React Dev Server [Vite]
-    echo.
-    echo   NOTE: Make sure your ESP32 is powered on and connected!
 ) else (
-    echo This will open 8 command windows:
-    echo   1. MQTT Broker [Mosquitto]
-    echo   2. Database Subscriber
-    echo   3. Hardware Manager [auto-detects source]
-    echo   4. Live Weather Dashboard [Real-Time API]
-    echo   5. API Server [Flask]
-    echo   6. P-WOS Autopilot
-    echo   7. ML Brain Monitor
-    echo   8. React Dev Server [Vite]
+    echo This will start:
+    echo   1. Database Subscriber
+    echo   2. Live Weather Dashboard
+    echo   3. API Server [Flask]
+    echo   4. P-WOS Autopilot
+    echo   5. React Dev Server [Vite]
+    echo.
+    echo   ESP32 sends data directly via WiFi to Mosquitto.
+    echo   Make sure your ESP32 is powered on!
 )
 
 echo.
@@ -118,9 +91,20 @@ echo Press Ctrl+C in each window to stop
 echo.
 pause
 
-REM Start MQTT Broker
-start "MQTT Broker" cmd /k "echo Starting MQTT Broker... && mosquitto -v"
-timeout /t 3 >nul
+REM Check MQTT Broker (use the Windows Service — configured by fix_mosquitto.bat)
+sc query mosquitto | findstr "RUNNING" >nul 2>&1
+if errorlevel 1 (
+    echo [WARN] Mosquitto service is not running!
+    echo [INFO] Attempting to start it...
+    net start mosquitto >nul 2>&1
+    if errorlevel 1 (
+        echo [ERROR] Could not start Mosquitto service.
+        echo [INFO]  Run fix_mosquitto.bat as Administrator first.
+        pause
+        exit /b 1
+    )
+)
+echo [OK] Mosquitto MQTT Broker is running.
 
 REM Start Database Subscriber
 start "Database Subscriber" cmd /k "echo Starting Database Subscriber... && cd src\backend && python mqtt_subscriber.py"
@@ -133,20 +117,10 @@ if "%DATA_SOURCE%"=="simulation" (
     timeout /t 2 >nul
     start "Simulated ESP32" cmd /k "echo Starting Simulated ESP32... && cd src\simulation && python esp32_simulator.py 5"
     timeout /t 2 >nul
-) else if "%DATA_SOURCE%"=="hardware" (
-    if /I "%HW_CONNECTION%"=="A" (
-        REM USB Mode: Start serial bridge (bidirectional: sensor data + pump commands)
-        start "Serial Bridge [USB]" cmd /k "echo Starting Serial Bridge ^(ESP32 USB ^<-^> MQTT^)... && python src\hardware\serial_bridge.py"
-        timeout /t 2 >nul
-    ) else (
-        REM WiFi Mode: ESP32 talks to Mosquitto directly, start monitor
-        start "Hardware Monitor [WiFi]" cmd /k "echo Starting Hardware Monitor... && set DATA_SOURCE_MODE=hardware && python src\hardware\hardware_manager.py --mode hardware"
-        timeout /t 2 >nul
-    )
 ) else (
-    REM Hybrid: Start hardware manager with fallback
-    start "Hardware Manager" cmd /k "echo Starting Hardware Manager [Hybrid]... && set DATA_SOURCE_MODE=hybrid && python src\hardware\hardware_manager.py --mode hybrid"
-    timeout /t 2 >nul
+    REM Hardware WiFi Mode: ESP32 talks to Mosquitto directly
+    echo [OK] Hardware WiFi Mode — ESP32 publishes to Mosquitto directly.
+    echo      No serial bridge needed.
 )
 
 REM Start Live Weather Dashboard

@@ -168,7 +168,7 @@ export const Dashboard: React.FC = () => {
 
             // Turn pump ON (indefinite — duration 0)
             pumpManuallyOn.current = true;
-            await api.controlPump('ON', 0);
+            await api.controlPump('ON', 60);
             if (systemState) setSystemState({ ...systemState, pump_active: true });
 
             toast.success('Pump ON', {

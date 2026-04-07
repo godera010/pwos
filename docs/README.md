@@ -1,5 +1,17 @@
 # P-WOS Documentation
 
+<!-- NAV_START -->
+<div align="center">
+  <a href="..\README.md">🏠 Home (Root)</a> |
+  <a href="..\src\README.md">💻 Source Code</a> |
+  <a href="README.md">📚 Documentation</a> |
+  <a href="hardware\README.md">⚙️ Hardware</a> |
+  <a href="..\data\README.md">💾 Data</a>
+</div>
+<hr>
+<!-- NAV_END -->
+
+
 **Predictive Water Optimization System**
 
 ---
@@ -61,9 +73,9 @@ ESP32 hardware integration (future/pending).
 
 | Document | Description |
 |----------|-------------|
-| [Hardware Architecture](hardware/hardware_architecture.md) | System schematic and components |
-| [Migration Plan](hardware/hardware_migration_plan.md) | Transition from simulation to hardware |
-| [Shopping List](hardware/hardware_shopping_list.md) | Component list and costs (~$60-80) |
+| [Hardware Architecture](hardware/architecture/hardware_architecture.md) | System schematic and components |
+| [Migration Plan](hardware/planning/hardware_migration_plan.md) | Transition from simulation to hardware |
+| [Shopping List](hardware/planning/hardware_shopping_list.md) | Component list and costs (~$60-80) |
 
 ---
 
@@ -77,3 +89,4 @@ Cloud ML deployment and implementation guides.
 | [Local Implementation](deployment/local_implementation.md) | Full local setup guide |
 | [ML Implementation Roadmap](deployment/ml_implementation_roadmap.md) | ML feature roadmap |
 | [Progress Tracker](deployment/progress_tracker.md) | Implementation progress |
+\n\n
