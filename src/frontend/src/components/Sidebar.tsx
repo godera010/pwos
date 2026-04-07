@@ -4,7 +4,6 @@ import {
     Home,
     BarChart3,
     Brain,
-    Settings,
     Activity,
     Sliders,
     Droplets
@@ -18,7 +17,6 @@ const navItems = [
     { icon: Brain, label: "ML Insights", path: "/ml-insights" },
     { icon: Sliders, label: "Control", path: "/control" },
     { icon: Activity, label: "System Health", path: "/system" },
-    { icon: Settings, label: "Settings", path: "/settings" }
 ];
 
 export const Sidebar: React.FC = () => {

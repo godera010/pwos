@@ -11,12 +11,15 @@ import {
     Activity,
     AlertTriangle,
     Lock,
-    Wifi,
-    WifiOff,
     RefreshCw,
     Gauge,
     Zap,
-    X
+    X,
+    Settings2,
+    Timer,
+    Save,
+    ChevronDown,
+    ChevronUp,
 } from 'lucide-react';
 import { api } from '../services/api';
 import { toast } from 'sonner';
@@ -27,8 +30,16 @@ export const Control: React.FC = () => {
     const [pumpActive, setPumpActive] = useState(false);
     const [emergencyStop, setEmergencyStop] = useState(false);
     const [showEmergencyModal, setShowEmergencyModal] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [savingSettings, setSavingSettings] = useState(false);
 
-    const [sensors, setSensors] = useState({
+    const [sensors, setSensors] = useState<{
+        soil_moisture: number;
+        temperature: number;
+        humidity: number;
+        timestamp: string;
+        device_id: string | null;
+    }>({
         soil_moisture: 0,
         temperature: 0,
         humidity: 0,
@@ -36,16 +47,39 @@ export const Control: React.FC = () => {
         device_id: null
     });
 
+    const [settings, setSettings] = useState({
+        moistureMin: 25,
+        moistureMax: 75,
+        tempMin: 5,
+        tempMax: 32,
+        maxDuration: 45,
+        latitude: -20.1492,
+        longitude: 28.5833
+    });
+
     const fetchState = useCallback(async () => {
         try {
-            const [stateRes, sensorRes] = await Promise.all([
+            const [stateRes, sensorRes, settingsRes] = await Promise.all([
                 api.getSystemState(),
                 api.getLatestSensors(),
+                api.getSettings(),
             ]);
             if (stateRes?.mode) setSystemMode(stateRes.mode);
             if (sensorRes) {
-                setSensors(sensorRes);
+                setSensors({ ...sensorRes, device_id: sensorRes.device_id ?? null });
                 setPumpActive(stateRes.pump_active || false);
+            }
+            if (settingsRes) {
+                setSettings(prev => ({
+                    ...prev,
+                    moistureMin: settingsRes.moisture_threshold ?? prev.moistureMin,
+                    moistureMax: settingsRes.moisture_max ?? prev.moistureMax,
+                    tempMin: settingsRes.temp_min ?? prev.tempMin,
+                    tempMax: settingsRes.temp_max ?? prev.tempMax,
+                    maxDuration: settingsRes.max_duration ?? prev.maxDuration,
+                    latitude: settingsRes.latitude ?? prev.latitude,
+                    longitude: settingsRes.longitude ?? prev.longitude,
+                }));
             }
         } catch (error) {
             console.error('Fetch error:', error);
@@ -58,6 +92,13 @@ export const Control: React.FC = () => {
         return () => clearInterval(interval);
     }, [fetchState]);
 
+    // Auto-expand settings panel when switching to MANUAL
+    useEffect(() => {
+        if (systemMode === 'MANUAL') {
+            setShowSettings(true);
+        }
+    }, [systemMode]);
+
     const handleModeToggle = async () => {
         const newMode = systemMode === 'AUTO' ? 'MANUAL' : 'AUTO';
         setLoading(true);
@@ -65,7 +106,7 @@ export const Control: React.FC = () => {
             await api.toggleMode(newMode);
             setSystemMode(newMode);
             toast.success(`Mode: ${newMode}`, {
-                description: newMode === 'AUTO' ? 'AI controlling irrigation.' : 'Manual mode enabled.',
+                description: newMode === 'AUTO' ? 'AI controlling irrigation.' : 'Manual mode enabled. Configure thresholds below.',
             });
         } catch {
             toast.error('Mode switch failed');
@@ -77,9 +118,11 @@ export const Control: React.FC = () => {
     const handlePump = async (action: 'ON' | 'OFF') => {
         setLoading(true);
         try {
-            await api.controlPump(action, action === 'ON' ? 60 : undefined);
+            await api.controlPump(action, action === 'ON' ? settings.maxDuration : undefined);
             setPumpActive(action === 'ON');
-            toast.success(`Pump ${action === 'ON' ? 'Activated' : 'Stopped'}`);
+            toast.success(`Pump ${action === 'ON' ? 'Activated' : 'Stopped'}`, {
+                description: action === 'ON' ? `Running for ${settings.maxDuration}s` : undefined,
+            });
         } catch {
             toast.error('Pump command failed');
         } finally {
@@ -107,6 +150,28 @@ export const Control: React.FC = () => {
             toast.error('Emergency stop failed');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSaveSettings = async () => {
+        setSavingSettings(true);
+        try {
+            await api.saveSettings({
+                moisture_threshold: settings.moistureMin,
+                moisture_max: settings.moistureMax,
+                temp_min: settings.tempMin,
+                temp_max: settings.tempMax,
+                max_duration: settings.maxDuration,
+                latitude: settings.latitude,
+                longitude: settings.longitude,
+            });
+            toast.success('Settings Saved', {
+                description: 'Configuration updated and applied.',
+            });
+        } catch {
+            toast.error('Save Failed');
+        } finally {
+            setSavingSettings(false);
         }
     };
 
@@ -164,14 +229,11 @@ export const Control: React.FC = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
+                    <h1 className="text-3xl font-black tracking-tight">
                         Hardware Control
-                        <Badge variant="outline" className={`${systemMode === 'AUTO' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-orange-500/10 text-orange-600'} border-current gap-1 font-bold`}>
-                            {systemMode}
-                        </Badge>
                     </h1>
                     <p className="text-slate-500 text-sm font-medium">
-                        Monitor sensors, control pump, and manage hardware status.
+                        Monitor sensors, control pump, and configure system parameters.
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -209,21 +271,21 @@ export const Control: React.FC = () => {
                             label="Temperature"
                             value={`${sensors.temperature.toFixed(1)}°C`}
                             status="normal"
-                            sensor="DHT22"
+                            sensor="DHT11"
                         />
                         <SensorCard
                             icon={<Wind className="size-5 text-teal-500" />}
                             label="Humidity"
                             value={`${sensors.humidity.toFixed(1)}%`}
                             status="normal"
-                            sensor="DHT22"
+                            sensor="DHT11"
                         />
                         <SensorCard
                             icon={<Zap className="size-5 text-yellow-500" />}
                             label="Relay Module"
                             value={isOnline ? 'Active' : 'Offline'}
                             status={isOnline ? 'normal' : 'critical'}
-                            sensor="4-Channel"
+                            sensor="5V Relay"
                         />
                     </div>
                 </CardContent>
@@ -245,20 +307,20 @@ export const Control: React.FC = () => {
                                     {systemMode === 'AUTO' ? 'Auto Mode' : 'Manual Mode'}
                                 </p>
                                 <p className="text-xs text-slate-500">
-                                    {systemMode === 'AUTO' ? 'AI controls irrigation automatically' : 'Manual pump control enabled'}
+                                    {systemMode === 'AUTO' ? 'AI controls irrigation automatically' : 'Manual pump control & settings enabled'}
                                 </p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <span className="text-xs font-bold text-slate-400">AUTO</span>
-                            <Switch checked={systemMode === 'MANUAL'} onCheckedChange={handleModeToggle} disabled={loading} />
+                            <Switch checked={systemMode === 'MANUAL'} onCheckedChange={handleModeToggle} disabled={loading} className={systemMode === 'MANUAL' ? 'data-[state=checked]:bg-orange-500' : 'data-[state=unchecked]:bg-emerald-500'} />
                             <span className="text-xs font-bold text-slate-400">MANUAL</span>
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Pump Control */}
-                <Card className="shadow-none border border-slate-200 dark:border-slate-800 relative overflow-hidden">
+                <Card className={`shadow-none border relative overflow-hidden transition-colors ${pumpActive ? 'border-emerald-500/50 bg-emerald-50/30 dark:bg-emerald-950/20' : 'border-slate-200 dark:border-slate-800'}`}>
                     {isLocked && (
                         <div className="absolute inset-0 bg-slate-100/80 dark:bg-black/80 z-10 backdrop-blur-sm flex items-center justify-center">
                             <div className="bg-neutral-900 text-white px-6 py-3 rounded-full flex items-center gap-2 font-bold">
@@ -268,34 +330,174 @@ export const Control: React.FC = () => {
                     )}
                     <CardContent className="p-6 flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <Activity className={`size-10 ${pumpActive ? 'text-emerald-500 trigger-active' : 'text-slate-400'}`} />
+                            <div className={`p-3 rounded-xl ${pumpActive ? 'bg-emerald-100 dark:bg-emerald-900/50' : 'bg-slate-100 dark:bg-slate-800'}`}>
+                                <Droplets className={`size-6 ${pumpActive ? 'text-emerald-500 animate-pulse' : 'text-slate-400'}`} />
+                            </div>
                             <div>
                                 <p className="text-xl font-black">{pumpActive ? 'Pump Running' : 'Pump Idle'}</p>
-                                <p className="text-sm text-slate-500">Relay #1 · GPIO 17</p>
+                                <p className="text-sm text-slate-500">Relay · GPIO 27 · {settings.maxDuration}s cycle</p>
                             </div>
                         </div>
-                        <div className="flex gap-3">
-                            <Button
-                                size="lg"
-                                onClick={() => handlePump('ON')}
-                                disabled={loading || pumpActive || isLocked}
-                                className="bg-emerald-600 hover:bg-emerald-700 font-bold gap-2"
-                            >
-                                <Power className="size-5" /> ON
-                            </Button>
-                            <Button
-                                size="lg"
-                                variant="outline"
-                                onClick={() => handlePump('OFF')}
-                                disabled={loading || !pumpActive}
-                                className="font-bold gap-2 border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400"
-                            >
-                                <Power className="size-5" /> OFF
-                            </Button>
+                        <div className="flex items-center gap-3">
+                            <span className={`text-xs font-bold ${pumpActive ? 'text-emerald-600' : 'text-slate-400'}`}>
+                                {pumpActive ? 'ON' : 'OFF'}
+                            </span>
+                            <Switch
+                                checked={pumpActive}
+                                onCheckedChange={(checked) => handlePump(checked ? 'ON' : 'OFF')}
+                                disabled={loading || isLocked}
+                            />
                         </div>
                     </CardContent>
                 </Card>
             </div>
+
+            {/* ============================================================ */}
+            {/* MANUAL MODE: Configuration Panel                             */}
+            {/* ============================================================ */}
+            {systemMode === 'MANUAL' && (
+                <Card className="shadow-none border border-orange-200 dark:border-orange-800 overflow-hidden animate-in slide-in-from-top-4 fade-in duration-500">
+
+                    {/* Collapsible Header */}
+                    <button onClick={() => setShowSettings(!showSettings)} className="w-full text-left">
+                        <CardContent className="p-5 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/50">
+                                    <Settings2 className="size-5 text-orange-500" />
+                                </div>
+                                <div>
+                                    <p className="font-bold">System Configuration</p>
+                                    <p className="text-xs text-slate-500">Thresholds, limits, and location settings</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-[10px] font-bold text-orange-600 border-orange-300 dark:border-orange-700">
+                                    MANUAL
+                                </Badge>
+                                {showSettings ? <ChevronUp className="size-4 text-slate-400" /> : <ChevronDown className="size-4 text-slate-400" />}
+                            </div>
+                        </CardContent>
+                    </button>
+
+                    {showSettings && (
+                        <div className="animate-in slide-in-from-top-2 fade-in duration-300">
+                            <div className="border-t border-orange-200 dark:border-orange-800" />
+                            <CardContent className="p-5 space-y-6">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    {/* Soil Moisture Thresholds */}
+                                    <div className="space-y-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <div className="flex items-center gap-2">
+                                            <Droplets className="size-4 text-blue-500" />
+                                            <h3 className="text-sm font-bold">Soil Moisture Thresholds</h3>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Min (Trigger)</label>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="number" min="0" max="100"
+                                                        value={settings.moistureMin}
+                                                        onChange={e => setSettings(s => ({ ...s, moistureMin: Number(e.target.value) }))}
+                                                        className="w-full h-10 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-bold text-center"
+                                                    />
+                                                    <span className="text-sm text-slate-400 font-bold">%</span>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Max (Target)</label>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="number" min="0" max="100"
+                                                        value={settings.moistureMax}
+                                                        onChange={e => setSettings(s => ({ ...s, moistureMax: Number(e.target.value) }))}
+                                                        className="w-full h-10 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-bold text-center"
+                                                    />
+                                                    <span className="text-sm text-slate-400 font-bold">%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-slate-500">
+                                            Waters below {settings.moistureMin}%, stops at {settings.moistureMax}%.
+                                        </p>
+                                    </div>
+
+                                    {/* Temperature Limits */}
+                                    <div className="space-y-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <div className="flex items-center gap-2">
+                                            <Thermometer className="size-4 text-orange-500" />
+                                            <h3 className="text-sm font-bold">Temperature Limits</h3>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Min °C</label>
+                                                <input
+                                                    type="number"
+                                                    value={settings.tempMin}
+                                                    onChange={e => setSettings(s => ({ ...s, tempMin: Number(e.target.value) }))}
+                                                    className="w-full h-10 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-bold text-center"
+                                                />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Max °C</label>
+                                                <input
+                                                    type="number"
+                                                    value={settings.tempMax}
+                                                    onChange={e => setSettings(s => ({ ...s, tempMax: Number(e.target.value) }))}
+                                                    className="w-full h-10 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-bold text-center"
+                                                />
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-slate-500">
+                                            High temps stall watering to minimize evaporation.
+                                        </p>
+                                    </div>
+
+                                    {/* Pump Configuration */}
+                                    <div className="space-y-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <div className="flex items-center gap-2">
+                                            <Timer className="size-4 text-emerald-500" />
+                                            <h3 className="text-sm font-bold">Pump Cycle Duration</h3>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs text-slate-500">5s</span>
+                                                <span className="font-mono font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1 rounded-lg text-sm">
+                                                    {settings.maxDuration}s
+                                                </span>
+                                                <span className="text-xs text-slate-500">120s</span>
+                                            </div>
+                                            <input
+                                                type="range" min="5" max="120" step="5"
+                                                value={settings.maxDuration}
+                                                onChange={e => setSettings(s => ({ ...s, maxDuration: Number(e.target.value) }))}
+                                                className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-slate-500">
+                                            Safety limit for continuous pump operation.
+                                        </p>
+                                    </div>
+
+
+                                </div>
+
+                                {/* Save Footer */}
+                                <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
+                                    <p className="text-xs text-slate-500">Changes are applied after saving</p>
+                                    <Button
+                                        onClick={handleSaveSettings}
+                                        disabled={savingSettings}
+                                        className="bg-orange-500 hover:bg-orange-600 text-white font-bold gap-2"
+                                    >
+                                        <Save className="size-4" />
+                                        {savingSettings ? 'Saving...' : 'Save Settings'}
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </div>
+                    )}
+                </Card>
+            )}
 
             {/* Emergency Stop */}
             <Card className="border-red-500/30 bg-red-50/50 dark:bg-red-950/20 shadow-none">
