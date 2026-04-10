@@ -175,7 +175,9 @@ export const Control: React.FC = () => {
         }
     };
 
-    const isOnline = sensors.device_id !== null;
+    const isOnline = sensors.device_id !== null && sensors.timestamp
+        ? (Date.now() - new Date(sensors.timestamp).getTime() < 30000)
+        : false;
     const isLocked = systemMode === 'AUTO';
 
     return (

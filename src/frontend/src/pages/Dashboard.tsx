@@ -10,7 +10,6 @@ import {
     Droplets,
     Thermometer,
     CheckCircle2,
-    Zap,
     Brain,
 } from 'lucide-react';
 import { LoadChart } from '../components/LoadChart';
@@ -213,6 +212,10 @@ export const Dashboard: React.FC = () => {
     // Auto mode is NOT a blocker — handlePumpToggle auto-switches to Manual
     const isMoistureSaturated = moisture >= MOISTURE_SAFETY_THRESHOLD;
 
+    const isDeviceOnline = sensors?.device_id && sensors?.timestamp
+        ? (Date.now() - new Date(sensors.timestamp).getTime() < 30000)
+        : false;
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header Section */}
@@ -303,16 +306,10 @@ export const Dashboard: React.FC = () => {
                                     color: error ? 'text-red-500' : 'text-emerald-500'
                                 },
                                 {
-                                    label: 'ESP Device (Sim)',
-                                    status: (sensors?.device_id) ? 'Online' : 'Offline',
-                                    icon: Activity,
-                                    color: (sensors?.device_id) ? 'text-emerald-500' : 'text-red-500'
-                                },
-                                {
                                     label: 'Sensor Hub',
-                                    status: (sensors && (new Date().getTime() - new Date(sensors.timestamp).getTime() < 120000)) ? 'Online' : 'Offline',
-                                    icon: Zap,
-                                    color: (sensors && (new Date().getTime() - new Date(sensors.timestamp).getTime() < 120000)) ? 'text-emerald-500' : 'text-red-500'
+                                    status: isDeviceOnline ? 'Online' : 'Offline',
+                                    icon: Activity,
+                                    color: isDeviceOnline ? 'text-emerald-500' : 'text-red-500'
                                 },
                                 {
                                     label: 'ML Engine',
