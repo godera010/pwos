@@ -11,5 +11,12 @@
 <hr>
 <!-- NAV_END -->
 
+Specifications, standards, and protocol references for P-WOS.
 
-This directory is part of the P-WOS project structure.
+| Reference | Description |
+|-----------|-------------|
+| [API Reference](api_reference.md) | REST endpoints, payloads, WebSocket events |
+| [MQTT Topics](mqtt_topics.md) | Topic catalog, payload schemas, QoS, routing |
+| [Project Structure](project_structure.md) | Directory layout, file index, tech stack |
+| [Coding Guidelines](coding_guidelines.md) | Code standards and conventions |
+| [VPD Scenarios](vpd_scenarios.md) | Vapor Pressure Deficit test cases |

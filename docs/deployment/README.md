@@ -11,5 +11,10 @@
 <hr>
 <!-- NAV_END -->
 
+Cloud deployment and ML implementation planning for P-WOS.
 
-This directory is part of the P-WOS project structure.
+| Document | Description |
+|----------|-------------|
+| [Cloud ML Deployment](cloud_ml_deployment.md) | Deploy ML API to cloud (Railway/Render) |
+| [Local Implementation](local_implementation.md) | Full local setup guide |
+| [ML Implementation Roadmap](ml_implementation_roadmap.md) | ML feature roadmap |

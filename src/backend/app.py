@@ -79,7 +79,9 @@ def on_connect(client, userdata, flags, rc, properties=None):
         app.logger.info("API Connected to MQTT Broker")
         client.subscribe("pwos/sensor/data")
         client.subscribe("pwos/weather/current")
-        app.logger.info("API Subscribed to sensor & weather topics")
+        client.subscribe("pwos/system/mode")
+        client.subscribe("pwos/system/hardware")
+        app.logger.info("API Subscribed to sensor, weather, mode, & hardware topics")
     else:
         app.logger.error(f"API MQTT Connection failed with code {rc}")
 
@@ -88,8 +90,25 @@ from src.backend.weather_api import weather_api
 
 def on_message(client, userdata, msg):
     try:
-        payload = json.loads(msg.payload.decode())
         topic = msg.topic
+        raw = msg.payload.decode('utf-8', 'ignore')
+        
+        # ── Plain-text topics (no JSON) ──────────────────────────────
+        if topic == "pwos/system/mode":
+            mode = raw.upper().strip().strip('"')
+            if mode in ["AUTO", "MANUAL"]:
+                system_state['mode'] = mode
+                app.logger.info(f"[MQTT] System mode synchronized to {mode}")
+            return
+                
+        if topic == "pwos/system/hardware":
+            status = raw.upper().strip().strip('"')
+            system_state['hardware_status'] = status
+            app.logger.info(f"[MQTT] Hardware status: {status}")
+            return
+            
+        # ── JSON topics ──────────────────────────────────────────────
+        payload = json.loads(raw)
         
         if topic == "pwos/sensor/data":
             # Update sensor values (use server time — ESP32 sends millis())
@@ -446,6 +465,23 @@ def predict_next_watering():
     Logic is now centralized in MLPredictor class.
     """
     try:
+        # 1. HARDWARE ALIVE CHECK
+        if system_state.get('hardware_status', 'OFFLINE') == 'OFFLINE':
+            return jsonify({
+                'timestamp': datetime.now().isoformat(),
+                'current_moisture': latest_sensor_data.get('soil_moisture', 0.0) if latest_sensor_data else 0.0,
+                'forecast_minutes': latest_sensor_data.get('forecast_minutes', 0) if latest_sensor_data else 0,
+                'sensor_snapshot': {
+                    'moisture': float(latest_sensor_data.get('soil_moisture', 0.0) if latest_sensor_data else 0.0),
+                    'temperature': float(latest_sensor_data.get('temperature', 0.0) if latest_sensor_data else 0.0),
+                    'humidity': float(latest_sensor_data.get('humidity', 0.0) if latest_sensor_data else 0.0)
+                },
+                'recommended_action': 'STOP',
+                'recommended_duration': 0,
+                'system_status': 'HARDWARE_OFFLINE',
+                'ml_analysis': {'reason': 'Hardware disconnected. Safety interlock engaged.'}
+            })
+
         # Use real data if available, otherwise return error
         if latest_sensor_data and 'soil_moisture' in latest_sensor_data:
             sensor_data = latest_sensor_data
@@ -506,6 +542,7 @@ def predict_next_watering():
 system_state = {
     'mode': 'AUTO',
     'pump_active': False,
+    'hardware_status': 'OFFLINE',
 }
 
 @app.route('/api/system/state', methods=['GET', 'POST'])
@@ -519,6 +556,7 @@ def get_system_state():
             new_mode = data['mode'].upper()
             if new_mode in ('AUTO', 'MANUAL'):
                 system_state['mode'] = new_mode
+                mqtt_client.publish('pwos/system/mode', new_mode, retain=True)
                 add_log(f"System mode changed to {new_mode}", category='ACTION')
         if 'pump_active' in data:
             system_state['pump_active'] = bool(data['pump_active'])

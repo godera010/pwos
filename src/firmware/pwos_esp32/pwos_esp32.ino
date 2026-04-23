@@ -44,6 +44,7 @@
 #define TOPIC_CONTROL_PUMP  "pwos/control/pump"
 #define TOPIC_DEVICE_STATUS "pwos/device/status"
 #define TOPIC_WEATHER       "pwos/weather/current"
+#define TOPIC_HARDWARE      "pwos/system/hardware"
 
 // ============================================================================
 // Hardware Objects
@@ -320,15 +321,25 @@ void connectMQTT() {
 
     Serial.printf("[MQTT] Connecting to %s:%d...\n", MQTT_BROKER, MQTT_PORT);
 
+    // Set Last Will and Testament (LWT) — broker publishes OFFLINE if ESP32
+    // disconnects unexpectedly (power loss, WiFi drop, crash).
+    // willRetain=true ensures new subscribers see the last status.
     bool connected;
     if (strlen(MQTT_USER) > 0) {
-        connected = mqttClient.connect(DEVICE_ID, MQTT_USER, MQTT_PASS);
+        connected = mqttClient.connect(DEVICE_ID, MQTT_USER, MQTT_PASS,
+                                       TOPIC_HARDWARE, 1, true, "OFFLINE");
     } else {
-        connected = mqttClient.connect(DEVICE_ID);
+        connected = mqttClient.connect(DEVICE_ID,
+                                       NULL, NULL,
+                                       TOPIC_HARDWARE, 1, true, "OFFLINE");
     }
 
     if (connected) {
         Serial.println("[MQTT] Connected!");
+
+        // Publish ONLINE status (retained so backend knows immediately)
+        mqttClient.publish(TOPIC_HARDWARE, "ONLINE", true);
+        Serial.printf("[MQTT] Published ONLINE to %s\n", TOPIC_HARDWARE);
 
         // Subscribe to pump control
         bool sub1 = mqttClient.subscribe(TOPIC_CONTROL_PUMP);

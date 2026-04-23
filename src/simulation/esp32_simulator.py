@@ -37,6 +37,7 @@ class SimulatedESP32:
         self.logger = logging.getLogger("ESP32_Sim")
         
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "SimulatedESP32")
+        self.client.will_set("pwos/system/hardware", "OFFLINE", retain=True)
         
         # Simulation state
         self.soil_moisture = 60.0  # Starting at 60%
@@ -70,6 +71,7 @@ class SimulatedESP32:
     
     def on_connect(self, client, userdata, flags, rc, properties):
         self.logger.info(f"Connected to MQTT Broker: {self.broker}")
+        client.publish("pwos/system/hardware", "ONLINE", retain=True)
         # Subscribe to topics
         client.subscribe("pwos/control/pump")
         client.subscribe("pwos/weather/current")
@@ -103,9 +105,10 @@ class SimulatedESP32:
     
     def activate_pump(self, duration):
         """Simulate pump activation (Non-blocking)"""
-        # Duration 0 = indefinite manual mode (keeps running until explicit OFF)
-        if duration <= 0:
-            duration = 999999  # ~11.5 days — effectively indefinite
+        # HARDWARE SAFETY FAILSAFE: Max duration is 60s
+        if duration <= 0 or duration > 60:
+            self.logger.warning(f"Pump duration capped to 60s for safety (requested: {duration})")
+            duration = 60
 
         # START Command
         if not self.pump_active:

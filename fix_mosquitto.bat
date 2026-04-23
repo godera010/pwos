@@ -25,6 +25,8 @@ echo. >> "C:\Program Files\mosquitto\mosquitto.conf"
 echo # --- PWOS Network Fix --- >> "C:\Program Files\mosquitto\mosquitto.conf"
 echo listener 1883 0.0.0.0 >> "C:\Program Files\mosquitto\mosquitto.conf"
 echo allow_anonymous true >> "C:\Program Files\mosquitto\mosquitto.conf"
+echo listener 9001 >> "C:\Program Files\mosquitto\mosquitto.conf"
+echo protocol websockets >> "C:\Program Files\mosquitto\mosquitto.conf"
 
 echo.
 echo 3. Starting the Mosquitto Service...

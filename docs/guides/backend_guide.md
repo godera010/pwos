@@ -7,9 +7,9 @@
 ## System Architecture
 
 ```
-ESP32 Simulator
-      │
-      ▼ MQTT
+ESP32 Hardware / Simulator
+       │
+       ▼ MQTT
 ┌─────────────┐
 │ Mosquitto   │
 │ Broker      │
@@ -17,19 +17,18 @@ ESP32 Simulator
       │
       ▼
 ┌─────────────┐     ┌─────────────┐
-│ MQTT        │────▶│ SQLite DB   │
-│ Subscriber  │     └─────────────┘
-└─────────────┘           │
-                          ▼
-                  ┌─────────────┐
-                  │ Flask API   │◀──── React Dashboard
-                  └─────┬───────┘
-                        │
-                        ▼
-                  ┌─────────────┐
-                  │ ML Predictor│
-                  │ (17 feat)   │
-                  └─────────────┘
+│ Flask API   │────▶│ PostgreSQL  │
+│ (app.py)    │     │ Database    │
+│ + MQTT Sub  │     └─────────────┘
+└─────┬───────┘           │
+      │                   ▼
+      ├──── React Dashboard (REST + WebSocket)
+      │
+      ▼
+┌─────────────┐
+│ ML Predictor│
+│ (17 feat)   │
+└─────────────┘
 ```
 
 ---
@@ -38,13 +37,34 @@ ESP32 Simulator
 
 | File | Purpose |
 |------|---------|
-| `app.py` | Flask API — single entry point for all HTTP endpoints |
-| `database.py` | SQLite persistence with parameterized queries |
-| `mqtt_subscriber.py` | MQTT bridge — subscribes to sensor data, writes to DB |
-| `automation_controller.py` | Autopilot loop — polls `/api/predict-next-watering` |
-| `weather_api.py` | OpenWeatherMap integration with caching |
+| `app.py` | Flask API — single entry point for all HTTP endpoints **and** integrated MQTT subscriber |
+| `database.py` | PostgreSQL persistence via psycopg2 with parameterized queries |
+| `automation_controller.py` | Autopilot loop — polls `/api/predict-next-watering` and issues pump commands |
+| `weather_api.py` | OpenWeatherMap integration with caching and simulation fallback |
 | `scheduler.py` | Periodic task scheduling |
 | `log_config.py` | Centralized logging configuration |
+
+> **Note:** MQTT subscription is integrated directly into `app.py` — there is no separate `mqtt_subscriber.py` service. The `on_message` handler routes plain-text topics (mode, hardware) before JSON topics (sensor, weather).
+
+---
+
+## MQTT Message Handling
+
+The `on_message` handler in `app.py` processes topics in two phases:
+
+### Phase 1: Plain-Text Topics (no JSON parsing)
+| Topic | Payload | Action |
+|-------|---------|--------|
+| `pwos/system/mode` | `AUTO` / `MANUAL` | Updates `system_state['mode']` |
+| `pwos/system/hardware` | `ONLINE` / `OFFLINE` | Updates `system_state['hardware_status']` |
+
+### Phase 2: JSON Topics (parsed via `json.loads`)
+| Topic | Payload | Action |
+|-------|---------|--------|
+| `pwos/sensor/data` | `{"soil_moisture": ..., "temperature": ..., "humidity": ...}` | Updates `latest_sensor_data`, logs to PostgreSQL |
+| `pwos/weather/current` | `{"forecast_minutes": ..., "condition": ..., ...}` | Updates weather data (simulation or fallback mode) |
+
+This two-phase structure prevents `json.loads()` from crashing on plain-text payloads like `ONLINE`.
 
 ---
 
@@ -69,7 +89,9 @@ ESP32 Simulator
 
 ### Decision States
 
-`WATER_NOW` · `STALL` · `STOP` · `MONITOR` · Safety rails for rain, wind (>20km/h), saturation (>85%)
+`WATER_NOW` · `STALL` · `STOP` · `MONITOR` · `HARDWARE_OFFLINE` · Safety rails for rain, wind (>20km/h), saturation (>85%)
+
+When the ESP32 hardware status is `OFFLINE`, the predict endpoint returns `HARDWARE_OFFLINE` / `STOP` as a safety interlock.
 
 ---
 
@@ -85,17 +107,17 @@ ESP32 Simulator
 ## Weather System Flow
 
 ```
-live_weather_dashboard.py  →  weather_api.py  →  OpenWeatherMap (or simulated)
-        │                                               │
-        ▼                                               ▼
-  MQTT broadcast  ────────────────────────────▶  esp32_simulator.py reacts
-  (pwos/weather/current)                         (adjusts soil moisture)
+weather_api.py  →  OpenWeatherMap API (real) or Simulation (fallback)
+       │
+       ▼
+ MQTT broadcast  ─────────────────────▶  ESP32 reacts
+ (pwos/weather/current)                  (adjusts soil moisture in sim)
 ```
 
-1. `live_weather_dashboard.py` fetches forecast via `weather_api.py` every 60s
-2. If API key present → real OpenWeatherMap data; otherwise → simulated
-3. Broadcasts weather to MQTT (`pwos/weather/current`)
-4. `esp32_simulator.py` listens and adjusts soil moisture accordingly
+1. `weather_api.py` fetches forecast data from OpenWeatherMap (if API key configured)
+2. Falls back to simulation weather if API is unavailable
+3. The backend broadcasts weather to MQTT (`pwos/weather/current`) for the ESP32/simulator
+4. In the `on_message` handler, weather data updates `latest_sensor_data` for ML features
 
 ---
 
@@ -105,8 +127,9 @@ live_weather_dashboard.py  →  weather_api.py  →  OpenWeatherMap (or simulate
 |----------|-----------|
 | **Flask** (not FastAPI) | Simpler, better docs, sufficient throughput |
 | **Single-file API** (not blueprints) | Project size doesn't warrant splitting |
-| **Polling** (not WebSockets) | Dashboard updates every 5s; simpler implementation |
-| **SQLite** | Zero config, portable; easy PostgreSQL migration later |
+| **Integrated MQTT** (in `app.py`) | Eliminates need for separate subscriber process |
+| **PostgreSQL** (migrated from SQLite) | Production-grade, supports aggregation queries (`DATE_TRUNC`), concurrent access |
+| **WebSocket for Dashboard** | Live sensor data via `useMqtt` hook; REST for historical/analytics |
 | **Random Forest** | Works with tabular data, no scaling needed, <10ms inference |
 
 ---
@@ -114,24 +137,29 @@ live_weather_dashboard.py  →  weather_api.py  →  OpenWeatherMap (or simulate
 ## API Endpoints
 
 ```
-GET  /api/status                  System status + latest reading
-GET  /api/sensor-data?limit=100   Historical sensor readings
-GET  /api/predict                 ML prediction with confidence
-POST /api/control/pump            Manual pump control
-POST /api/auto-control            Automated ML decision
-GET  /api/predict-next-watering   Next watering prediction
+GET  /api/health                      System health check
+GET  /api/system/state                System mode + hardware status
+POST /api/system/state                Set mode (AUTO/MANUAL)
+GET  /api/sensor-data/latest          Latest sensor reading + weather
+GET  /api/sensor-data/history         Historical sensor readings
+GET  /api/predict-next-watering       ML prediction with confidence
+POST /api/control/pump                Manual pump control
+GET  /api/watering-events             Pump activation history
+GET  /api/analytics/aggregated        Time-bucketed analytics data
+GET  /api/weather/forecast            Current weather forecast
+GET  /api/statistics                  System-wide statistics
+GET  /api/logs                        Recent system log entries
 ```
 
 ---
 
 ## Logging
 
-All backend services log to `logs/app/`. See [`logs/LOG_STRUCTURE.md`](../logs/LOG_STRUCTURE.md).
+All backend services log to `logs/app/`. See [`logs/LOG_STRUCTURE.md`](../../logs/LOG_STRUCTURE.md).
 
 | Service | Log File |
 |---------|----------|
 | `app.py` | `app.log` |
-| `mqtt_subscriber.py` | `db_subscriber.log` |
 | `automation_controller.py` | `autopilot.log` |
 | `weather_api.py` | `weather_api.log` |
 | `scheduler.py` | `scheduler.log` |
@@ -146,23 +174,24 @@ All backend services log to `logs/app/`. See [`logs/LOG_STRUCTURE.md`](../logs/L
 
 ## Environment Variables
 
-| Variable | Purpose |
-|----------|---------|
-| `MQTT_BROKER` | MQTT broker host (default: `localhost`) |
-| `MQTT_PORT` | MQTT broker port (default: `1883`) |
-| `OPENWEATHER_API_KEY` | OpenWeatherMap API key |
-| `DB_HOST` / `DB_PORT` / `DB_NAME` | PostgreSQL connection (future) |
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `DB_HOST` | PostgreSQL host | `localhost` |
+| `DB_PORT` | PostgreSQL port | `5432` |
+| `DB_NAME` | Database name | `pwos` |
+| `DB_USER` | Database user | `postgres` |
+| `DB_PASSWORD` | Database password | (empty) |
+| `MQTT_BROKER` | MQTT broker host | `localhost` |
+| `MQTT_PORT` | MQTT broker port | `1883` |
+| `OPENWEATHER_API_KEY` | OpenWeatherMap API key | (none — uses simulation) |
 
 ---
 
 ## Run Commands
 
 ```bash
-# Start backend API
+# Start backend API (includes MQTT subscriber)
 python src/backend/app.py
-
-# Start MQTT subscriber
-python src/backend/mqtt_subscriber.py
 
 # Start automation controller
 python src/backend/automation_controller.py

@@ -1,0 +1,16 @@
+[wokwi]
+version = 1
+elf = "build/esp32.esp32.esp32/pwos_wokwi.ino.elf"
+firmware = "build/esp32.esp32.esp32/pwos_wokwi.ino.bin"
+
+[[lib]]
+name = "DHT sensor library"
+
+[[lib]]
+name = "ArduinoJson"
+
+[[lib]]
+name = "PubSubClient"
+
+[[lib]]
+name = "Adafruit Unified Sensor"

@@ -108,7 +108,7 @@ export const api = {
         return res.json();
     },
     getAggregatedAnalytics: async (hours = 24, interval = '15 minutes'): Promise<any[]> => {
-        const res = await fetch(`${API_BASE_URL}/analytics/aggregated?hours=${hours}&interval=${interval}`);
+        const res = await fetch(`${API_BASE_URL}/analytics/aggregated?hours=${hours}&interval=${encodeURIComponent(interval)}`);
         return res.json();
     },
     getStatistics: async (): Promise<SystemStats> => {

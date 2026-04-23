@@ -89,27 +89,26 @@ export const SystemHealth: React.FC = () => {
         } catch { /* stats endpoint may fail */ }
 
         try {
-            // 3. Check sensor data to see if ESP32 is online
-            // ESP32 publishes every 5s — if last reading > 30s old, it's offline
+            // 3. Check authoritative hardware status from the backend state (driven by MQTT LWT)
+            const systemState = await api.getSystemState();
+            const isOnline = systemState?.hardware_status === 'ONLINE';
+            setDeviceOnline(isOnline);
+            
+            if (isOnline) {
+                // If it's online, MQTT broker is also confirmed handling device traffic
+                serviceUpdates[2] = { ...serviceUpdates[2], status: 'online' };
+            }
+
+            // Also fetch the last sensor reading just to display the "Last seen" timestamp
             const sensors = await api.getLatestSensors();
-            if (sensors?.device_id && sensors.timestamp) {
-                const lastReadingTime = new Date(sensors.timestamp).getTime();
-                const ageSeconds = (Date.now() - lastReadingTime) / 1000;
-                const isRecent = ageSeconds < 30;
-
-                setDeviceOnline(isRecent);
+            if (sensors?.timestamp) {
                 setDeviceLastSeen(new Date(sensors.timestamp).toLocaleTimeString());
-
-                if (isRecent) {
-                    // Fresh data means MQTT broker is working
-                    serviceUpdates[2] = { ...serviceUpdates[2], status: 'online' };
-                }
             } else {
-                setDeviceOnline(false);
                 setDeviceLastSeen('No data');
             }
         } catch {
             setDeviceOnline(false);
+            setDeviceLastSeen('--');
         }
 
         try {

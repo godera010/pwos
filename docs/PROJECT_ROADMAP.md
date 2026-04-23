@@ -1,7 +1,7 @@
 # P-WOS Project Roadmap
 
 **Predictive Water Optimization System**  
-**Total Phases:** 12 | **Completed:** 9 | **In Progress:** 1 | **Remaining:** 2
+**Total Phases:** 12 | **Completed:** 10 | **In Progress:** 1 | **Remaining:** 1
 
 ---
 
@@ -9,9 +9,9 @@
 
 ```
 Phase 1-8: SIMULATION (Software) ████████████████████████ 100%
-Phase 9:   CLOUD MIGRATION       ████░░░░░░░░░░░░░░░░░░░░  20%
+Phase 9:   CLOUD MIGRATION       ██████░░░░░░░░░░░░░░░░░░  25%
 Phase 10:  WEATHER API           ████████████████████████ 100%
-Phase 11:  HARDWARE              ██████████████░░░░░░░░░░  60%
+Phase 11:  HARDWARE              ██████████████████████░░  90%
 Phase 12:  PRODUCTION            ░░░░░░░░░░░░░░░░░░░░░░░░   0%
 ```
 
@@ -135,40 +135,8 @@ Phase 12:  PRODUCTION            ░░░░░░░░░░░░░░░�
 
 ## 🔄 IN PROGRESS
 
-### Phase 9: Cloud Migration
-**Status:** 🔄 IN PROGRESS (20%)
-
-| Task | Status | Notes |
-|------|--------|-------|
-| Choose cloud platform | ⬜ Pending | Railway/Render/Heroku |
-| Setup PostgreSQL database | ⬜ Pending | Replace SQLite |
-| Deploy Flask API to cloud | ⬜ Pending | |
-| Configure cloud MQTT broker | ⬜ Pending | HiveMQ/CloudMQTT |
-| Deploy frontend to cloud | ⬜ Pending | Vercel/Netlify |
-| Setup CI/CD pipeline | ⬜ Pending | GitHub Actions |
-| Configure environment variables | ⬜ Pending | |
-| Test cloud deployment | ⬜ Pending | |
-
----
-
-## ⬜ REMAINING PHASES
-
-### Phase 10: Weather API Integration
-**Status:** ⬜ NOT STARTED
-
-| Task | Status | Priority |
-|------|--------|----------|
-| Get OpenWeatherMap API key | ✅ Done | High |
-| Replace weather simulator with API | ✅ Done | High |
-| Implement API rate limiting | ✅ Done | Medium |
-| Add caching layer | ✅ Done | Medium |
-| Handle API failures gracefully | ✅ Done | High |
-| Update frontend for real weather | ✅ Done | Low |
-
----
-
 ### Phase 11: Hardware Integration
-**Status:** 🔄 IN PROGRESS (60%)
+**Status:** 🔄 IN PROGRESS (90%)
 
 | Task | Status | Priority |
 |------|--------|----------|
@@ -176,20 +144,39 @@ Phase 12:  PRODUCTION            ░░░░░░░░░░░░░░░�
 | ESP32-WROOM-32 module | ✅ Done | Critical |
 | DHT11 temperature/humidity sensor | ✅ Done | Critical |
 | Resistive soil moisture (water) sensor | ✅ Done | Critical |
-| 5V relay module | ⬜ Pending | Critical |
+| 5V relay module | ✅ Done | Critical |
 | 5V Mini DC submersible pump | ✅ Done | Critical |
 | Power supply (East Dragon AC/DC + USB) | ✅ Done | Critical |
 | | | |
 | **Firmware Development** | | |
 | Write C++/Arduino hardware pin tests | ✅ Done | High |
-| Implement MQTT client on ESP32 | ⬜ Pending | High |
-| Calibrate soil sensor | ⬜ Pending | High |
+| Implement MQTT client on ESP32 | ✅ Done | High |
+| Calibrate soil sensor | ✅ Done | High |
 | Test isolated component logic (Relay, DHT, ADC)| ✅ Done | High |
+| Implement LWT and Mode Sync | ✅ Done | High |
 | | | |
 | **Physical Setup** | | |
 | Wire sensors to ESP32 on breadboard | ✅ Done | High |
-| Setup water tank + pump | ⬜ Pending | Medium |
+| Setup water tank + pump | ✅ Done | Medium |
 | Install in target location | ⬜ Pending | Medium |
+
+---
+
+## ⬜ REMAINING PHASES
+
+### Phase 9: Cloud Migration
+**Status:** 🔄 IN PROGRESS (25%)
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Choose cloud platform | ⬜ Pending | Railway/Render/Heroku |
+| Setup PostgreSQL database | ✅ Done | Migrated from SQLite — psycopg2, DATE_TRUNC |
+| Deploy Flask API to cloud | ⬜ Pending | |
+| Configure cloud MQTT broker | ⬜ Pending | HiveMQ/CloudMQTT |
+| Deploy frontend to cloud | ⬜ Pending | Vercel/Netlify |
+| Setup CI/CD pipeline | ⬜ Pending | GitHub Actions |
+| Configure environment variables | ⬜ Pending | |
+| Test cloud deployment | ⬜ Pending | |
 
 ---
 
@@ -218,10 +205,10 @@ Phase 12:  PRODUCTION            ░░░░░░░░░░░░░░░�
 | Frontend | 7/7 | 7 | 100% |
 | Testing | 5/5 | 5 | 100% |
 | Documentation | 6/6 | 6 | 100% |
-| Cloud | 0/8 | 8 | 0% |
-| Hardware | 8/14 | 14 | 57% |
+| Cloud | 1/8 | 8 | 13% |
+| Hardware | 13/14 | 14 | 93% |
 | Production | 0/8 | 8 | 0% |
-| **TOTAL** | **34** | **64** | **53%** |
+| **TOTAL** | **48** | **64** | **75%** |
 
 ---
 
@@ -233,7 +220,7 @@ Phase 12:  PRODUCTION            ░░░░░░░░░░░░░░░�
 | ML Validation (15% savings) | Feb 2026 | ✅ ACHIEVED (16.7%) |
 | Frontend Complete | Feb 2026 | ✅ ACHIEVED |
 | Cloud Deployment | Mar 2026 | ⬜ Pending |
-| Hardware Integration | Apr 2026 | 🔄 In Progress |
+| Hardware Integration | Apr 2026 | ✅ ACHIEVED (Decoupled Sync) |
 | Production Launch | May 2026 | ⬜ Pending |
 | Thesis Submission | Jun 2026 | ⬜ Pending |
 
@@ -256,8 +243,8 @@ Phase 12:  PRODUCTION            ░░░░░░░░░░░░░░░�
 | Layer | Technology | Status |
 |-------|------------|--------|
 | Simulation | Python, MQTT | ✅ Ready |
-| Backend | Flask, SQLite | ✅ Ready |
+| Backend | Flask, **PostgreSQL** | ✅ Ready |
 | ML | Scikit-Learn, Random Forest | ✅ Ready |
-| Frontend | React 19, Vite, TypeScript | ✅ Ready |
-| Cloud | Railway/Render, PostgreSQL | ⬜ Pending |
-| Hardware | ESP32, C++/Arduino | 🔄 In Progress |
+| Frontend | React 19, Vite, TypeScript | ✅ Ready (Independent Mode) |
+| Cloud | Railway/Render, PostgreSQL | 🔄 Partial (DB migrated) |
+| Hardware | ESP32, C++/Arduino | ✅ Ready (LWT + Mode Sync) |

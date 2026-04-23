@@ -277,13 +277,10 @@ mosquitto -v
 # Terminal 2: Serial Bridge (reads ESP32 USB, publishes to MQTT)
 python src\hardware\serial_bridge.py
 
-# Terminal 3: Database Subscriber
-cd src\backend && python mqtt_subscriber.py
-
-# Terminal 4: API Server
+# Terminal 3: Backend API (includes MQTT subscriber)
 cd src\backend && python app.py
 
-# Terminal 5: React
+# Terminal 4: React
 cd src\frontend && npm run dev
 ```
 
@@ -293,13 +290,10 @@ cd src\frontend && npm run dev
 # Terminal 1: MQTT Broker
 mosquitto -v
 
-# Terminal 2: Database Subscriber
-cd src\backend && python mqtt_subscriber.py
-
-# Terminal 3: API Server
+# Terminal 2: Backend API (includes MQTT subscriber)
 cd src\backend && python app.py
 
-# Terminal 4: React
+# Terminal 3: React
 cd src\frontend && npm run dev
 
 # ESP32 publishes directly to Mosquitto — no bridge needed

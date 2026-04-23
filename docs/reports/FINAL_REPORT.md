@@ -39,7 +39,7 @@ The Predictive Water Optimization System (P-WOS) is an intelligent, automated ir
           ┌────────┴────────┐
           ▼                 ▼
 ┌─────────────────┐ ┌─────────────────┐
-│  ML Predictor   │ │  SQLite DB      │
+│  ML Predictor   │ │  PostgreSQL     │
 │  (17 features)  │ │  (Time-series)  │
 └─────────────────┘ └─────────────────┘
           │
@@ -127,22 +127,22 @@ The predictive system successfully stalled watering before a heavy rain event, a
 
 | Layer | Technology | Status |
 |-------|------------|--------|
-| Frontend | React 19, Vite, TypeScript, Tailwind CSS | ✅ Ready |
-| Backend | Python 3.13, Flask, SQLite | ✅ Ready |
+| Frontend | React 19, Vite, TypeScript, Vanilla CSS | ✅ Ready |
+| Backend | Python 3.13, Flask, PostgreSQL | ✅ Ready |
 | ML | Scikit-Learn, Random Forest (17 features) | ✅ Ready |
 | Messaging | MQTT (Mosquitto) | ✅ Ready |
-| Cloud | Railway/Render, PostgreSQL | ⬜ Pending |
-| Hardware | ESP32, MicroPython | ⬜ Pending |
+| Cloud | Railway/Render | 🔄 Partial |
+| Hardware | ESP32, C++/Arduino | ✅ Ready (LWT + Mode Sync) |
 
 ---
 
 ## 8. Future Recommendations
 
-1. **Hardware Deployment** — Flash ESP32 with MicroPython firmware
-2. **Cloud Migration** — Deploy Flask API to Railway/Render
-3. **OpenWeatherMap** — Replace weather simulator with live API
-4. **Mobile App** — React Native wrapper for dashboard
-5. **Multi-zone** — Support multiple plant zones with individual sensors
+1. **Cloud Deployment** — Deploy Flask API to Railway/Render
+2. **Multi-zone** — Support multiple plant zones with individual sensors
+3. **Mobile App** — React Native wrapper for dashboard
+4. **Model Retraining** — Retrain with real hardware sensor data
+5. **Historical Trends** — Long-term water savings analysis dashboard
 
 ---
 
