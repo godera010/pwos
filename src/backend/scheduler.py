@@ -60,7 +60,10 @@ class BackgroundScheduler:
 
     def _run_loop(self):
         while self.running:
-            schedule.run_pending()
+            try:
+                schedule.run_pending()
+            except Exception as e:
+                logger.error(f"Scheduler error: {e}")
             time.sleep(60) # Check every minute
 
     def stop(self):

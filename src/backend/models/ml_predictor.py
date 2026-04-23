@@ -160,6 +160,16 @@ class MLPredictor:
         # High wind flag (False Dry: > 20 km/h)
         features['is_high_wind'] = 1 if features['wind_speed'] > 20 else 0
         
+        # P4: Weather staleness guard — zero out weather features if source is stale
+        weather_source = current_data.get('weather_source', 'none')
+        if weather_source in ('stale', 'fallback', 'none'):
+            logger.warning(f"Weather source is '{weather_source}' — zeroing weather features for safety")
+            features['forecast_minutes'] = 0
+            features['wind_speed'] = 0.0
+            features['rain_intensity'] = 0.0
+            features['is_raining'] = 0
+            features['is_high_wind'] = 0
+        
         if history_df is not None and not history_df.empty:
             # Calculate real rolling/rate if history provided
             pass

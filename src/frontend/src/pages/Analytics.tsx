@@ -11,24 +11,20 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    BarChart,
-    Bar,
     Legend,
     LineChart,
     Line,
-    PieChart,
-    Pie,
-    Cell
+    BarChart,
+    Bar,
+    Cell,
 } from 'recharts';
 import {
     Download,
-    TrendingUp,
     Droplets,
     Leaf,
     BarChart3,
-    Zap,
-    Timer,
-    Brain
+    Thermometer,
+    Droplet
 } from 'lucide-react';
 import { api } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -98,10 +94,6 @@ const RANGE_LABELS: Record<string, string> = {
     '30d': 'Last 30 Days'
 };
 
-// Pie chart colours
-const PIE_COLORS = ['#6366f1', '#94a3b8']; // AI = indigo, Manual = slate
-
-// Distribution bar colours
 const DIST_COLORS: Record<string, string> = {
     'Critical': '#ef4444',
     'Low': '#f59e0b',
@@ -121,7 +113,9 @@ export const Analytics: React.FC = () => {
         total_water_seconds: 0,
         ai_water_seconds: 0,
         manual_water_seconds: 0,
-        manual_event_count: 0
+        manual_event_count: 0,
+        water_saved_seconds: 0,
+        efficiency_pct: 0
     });
 
     // ─── Data Fetching ───────────────────────────────────────────────────────
@@ -177,6 +171,11 @@ export const Analytics: React.FC = () => {
                     const manualWaterSec = totalWaterSec - aiWaterSec;
                     const manualEvents = totalWaterings - totalAIDecisions;
 
+                    // Calculate water saved (AI typically uses less than manual)
+                    const standardUsage = manualEvents * 45; // Assume 45s avg manual
+                    const waterSavedSec = Math.max(0, standardUsage - aiWaterSec);
+                    const efficiencyPct = totalWaterSec > 0 ? Math.round((aiWaterSec / totalWaterSec) * 100) : 0;
+
                     const finalData = fillMissingBuckets(mergedData, interval);
 
                     setStats({
@@ -186,7 +185,9 @@ export const Analytics: React.FC = () => {
                         total_water_seconds: totalWaterSec,
                         ai_water_seconds: aiWaterSec,
                         manual_water_seconds: Math.max(0, manualWaterSec),
-                        manual_event_count: Math.max(0, manualEvents)
+                        manual_event_count: Math.max(0, manualEvents),
+                        water_saved_seconds: waterSavedSec,
+                        efficiency_pct: efficiencyPct
                     });
 
                     setData(finalData);
@@ -201,13 +202,6 @@ export const Analytics: React.FC = () => {
 
     // ─── Derived Data ────────────────────────────────────────────────────────
 
-    /** Pie chart data — AI vs Manual decisions */
-    const pieData = useMemo(() => [
-        { name: 'AI', value: stats.total_ml_decisions },
-        { name: 'Manual', value: Math.max(0, stats.manual_event_count) }
-    ], [stats]);
-
-    /** Soil moisture distribution histogram */
     const distributionData = useMemo(() => {
         const buckets = { Critical: 0, Low: 0, Optimal: 0, High: 0 };
         data.forEach(d => {
@@ -226,28 +220,9 @@ export const Analytics: React.FC = () => {
         ];
     }, [data]);
 
-    /** Cumulative water usage over time */
-    const cumulativeData = useMemo(() => {
-        let cumTotal = 0, cumAI = 0, cumManual = 0;
-        return data.map(d => {
-            cumTotal += d.total_duration_raw || 0;
-            cumAI += d.water_usage_ai || 0;
-            cumManual += d.water_usage_standard || 0;
-            return {
-                timestamp: d.timestamp,
-                cumulative_total: cumTotal,
-                cumulative_ai: cumAI,
-                cumulative_manual: cumManual
-            };
-        });
-    }, [data]);
-
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     const rangeLabel = RANGE_LABELS[timeRange] || timeRange;
-    const aiPct = stats.total_water_seconds > 0
-        ? Math.round((stats.ai_water_seconds / stats.total_water_seconds) * 100)
-        : 0;
 
     const exportToCSV = () => {
         if (!data || data.length === 0) return;
@@ -302,24 +277,10 @@ export const Analytics: React.FC = () => {
         return null;
     };
 
-    const PieTooltip = ({ active, payload }: any) => {
-        if (active && payload && payload.length) {
-            const total = pieData.reduce((s, d) => s + d.value, 0);
-            const pct = total > 0 ? ((payload[0].value / total) * 100).toFixed(1) : '0';
-            return (
-                <div className="bg-slate-900/95 border border-slate-700 p-3 rounded-lg shadow-xl text-white text-xs">
-                    <p className="font-bold">{payload[0].name}</p>
-                    <p>{payload[0].value} events ({pct}%)</p>
-                </div>
-            );
-        }
-        return null;
-    };
-
     const DistTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
-            const totalBuckets = distributionData.reduce((s, d) => s + d.count, 0);
-            const pct = totalBuckets > 0 ? ((payload[0].value / totalBuckets) * 100).toFixed(1) : '0';
+            const total = distributionData.reduce((s, d) => s + d.count, 0);
+            const pct = total > 0 ? ((payload[0].value / total) * 100).toFixed(1) : '0';
             return (
                 <div className="bg-slate-900/95 border border-slate-700 p-3 rounded-lg shadow-xl text-white text-xs">
                     <p className="font-bold">{payload[0].payload.range} ({payload[0].payload.label})</p>
@@ -339,7 +300,7 @@ export const Analytics: React.FC = () => {
                 <div>
                     <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
                         System Analytics
-                        <Badge variant="outline" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20 gap-1 font-bold">
+                        <Badge variant="outline" className="text-indigo-600 dark:text-indigo-400 border-indigo-500/20 gap-1 font-bold">
                             <BarChart3 className="size-3" />
                             Data Insights
                         </Badge>
@@ -372,60 +333,52 @@ export const Analytics: React.FC = () => {
             </div>
 
             {/* ── Row 1 — KPI Cards ────────────────────────────────────────── */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Total Waterings */}
-                <Card className="shadow-sm dark:bg-card">
-                    <CardContent className="p-6">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-emerald-500/10 rounded-xl">
-                                <Droplets className="size-6 text-emerald-500" />
-                            </div>
-                            <div>
-                                <p className="text-xs font-bold dark:text-neutral-400 uppercase tracking-wider">Total Waterings</p>
-                                <div className="flex items-baseline gap-2">
-                                    <h3 className="text-3xl font-black text-slate-900 dark:text-white">{stats.total_waterings}</h3>
-                                    <span className="text-[10px] font-bold text-emerald-500 flex items-center">
-                                        {rangeLabel} <TrendingUp className="size-3 ml-1" />
-                                    </span>
-                                </div>
-                            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Avg Moisture */}
+                <Card className="shadow-none border border-slate-200 dark:border-slate-800">
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-3 mb-2">
+                            <Leaf className="size-5 text-emerald-500" />
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Avg Moisture</span>
                         </div>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white">{stats.avg_moisture}%</p>
+                        <p className="text-[10px] text-slate-400 mt-1">{rangeLabel}</p>
                     </CardContent>
                 </Card>
 
-                {/* Avg Soil Health */}
-                <Card className="shadow-sm dark:bg-card">
-                    <CardContent className="p-6">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-indigo-500/10 rounded-xl">
-                                <Leaf className="size-6 text-indigo-500" />
-                            </div>
-                            <div>
-                                <p className="text-xs font-bold dark:text-neutral-400 uppercase tracking-wider">Avg Soil Health</p>
-                                <div className="flex items-baseline gap-2">
-                                    <h3 className="text-3xl font-black text-slate-900 dark:text-white">{stats.avg_moisture}%</h3>
-                                    <span className="text-[10px] font-bold dark:text-neutral-500">{rangeLabel}</span>
-                                </div>
-                            </div>
+                {/* Avg Temperature */}
+                <Card className="shadow-none border border-slate-200 dark:border-slate-800">
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-3 mb-2">
+                            <Thermometer className="size-5 text-orange-500" />
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Avg Temp</span>
                         </div>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white">{data.length > 0 ? (data.reduce((s, d) => s + d.temperature, 0) / data.length).toFixed(1) : 0}°C</p>
+                        <p className="text-[10px] text-slate-400 mt-1">{rangeLabel}</p>
                     </CardContent>
                 </Card>
 
-                {/* AI Decisions */}
-                <Card className="shadow-sm dark:bg-card">
-                    <CardContent className="p-6">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-sky-500/10 rounded-xl">
-                                <Brain className="size-6 text-sky-500" />
-                            </div>
-                            <div>
-                                <p className="text-xs font-bold dark:text-neutral-400 uppercase tracking-wider">AI Decisions</p>
-                                <div className="flex items-baseline gap-2">
-                                    <h3 className="text-3xl font-black text-slate-900 dark:text-white">{stats.total_ml_decisions}</h3>
-                                    <span className="text-[10px] font-bold text-sky-500">{rangeLabel}</span>
-                                </div>
-                            </div>
+                {/* Avg Humidity */}
+                <Card className="shadow-none border border-slate-200 dark:border-slate-800">
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-3 mb-2">
+                            <Droplet className="size-5 text-sky-500" />
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Avg Humidity</span>
                         </div>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white">{data.length > 0 ? (data.reduce((s, d) => s + d.humidity, 0) / data.length).toFixed(1) : 0}%</p>
+                        <p className="text-[10px] text-slate-400 mt-1">{rangeLabel}</p>
+                    </CardContent>
+                </Card>
+
+                {/* Data Points */}
+                <Card className="shadow-none border border-slate-200 dark:border-slate-800">
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-3 mb-2">
+                            <BarChart3 className="size-5 text-indigo-500" />
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Readings</span>
+                        </div>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white">{data.length}</p>
+                        <p className="text-[10px] text-slate-400 mt-1">{rangeLabel}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -440,217 +393,57 @@ export const Analytics: React.FC = () => {
                     transition={{ duration: 0.3 }}
                     className="space-y-6"
                 >
-                    {/* ── Row 2 — Main Soil Moisture & Irrigation (full-width) ── */}
+                    {/* ── Row 2 — Weather Historical Trends (full-width) ── */}
                     <Card className="shadow-sm dark:bg-card">
                         <CardHeader>
-                            <CardTitle className="text-base font-bold uppercase tracking-wide dark:text-neutral-500">Soil Moisture & Irrigation Duration</CardTitle>
-                            <CardDescription>Correlation between moisture levels and automated watering cycles (duration in seconds)</CardDescription>
+                            <CardTitle className="text-base font-bold uppercase tracking-wide dark:text-neutral-500">Weather & Soil Trends</CardTitle>
+                            <CardDescription>Historical comparison of soil moisture, temperature, and humidity over time</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="h-[350px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                        <defs>
-                                            <linearGradient id="colorMoisture" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
+                                    <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="rgba(128,128,128,0.1)" />
                                         <XAxis dataKey="timestamp" type="number" scale="time" domain={['auto', 'auto']} padding={{ left: 0, right: 0 }} tick={{ fontSize: 12 }} stroke="#a3a3a3" axisLine={false} tickLine={false} interval="preserveStartEnd" tickFormatter={formatXAxis} />
-                                        <YAxis yAxisId="left" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} unit="%" />
-                                        <YAxis yAxisId="right" orientation="right" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} unit="s" />
+                                        <YAxis yAxisId="left" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                                        <YAxis yAxisId="right" orientation="right" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
                                         <Tooltip content={<CustomTooltip />} />
                                         <Legend />
-                                        <Area yAxisId="left" type="monotone" dataKey="soil_moisture" name="Soil Moisture" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorMoisture)" connectNulls={true} />
-                                        <Bar yAxisId="right" dataKey="water_usage_ai" name="Irrigation (s)" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={20} />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* ── Row 3 — Water Usage + Pie + Distribution (3 cols) ──── */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Water Usage Summary Card */}
-                        <Card className="shadow-sm dark:bg-card">
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-base font-bold uppercase tracking-wide dark:text-neutral-500 flex items-center gap-2">
-                                    <Timer className="size-4" /> Water Usage
-                                </CardTitle>
-                                <CardDescription>{rangeLabel}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-5">
-                                <div className="space-y-1">
-                                    <div className="flex justify-between text-xs font-bold dark:text-neutral-400 uppercase">
-                                        <span>Total Duration</span>
-                                        <span className="text-slate-900 dark:text-white text-sm">{stats.total_water_seconds}s</span>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-3 bg-indigo-500/5 rounded-xl space-y-1">
-                                        <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider flex items-center gap-1"><Zap className="size-3" /> AI</p>
-                                        <p className="text-lg font-black text-slate-900 dark:text-white">{stats.ai_water_seconds}s</p>
-                                    </div>
-                                    <div className="p-3 bg-slate-500/5 rounded-xl space-y-1">
-                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Manual</p>
-                                        <p className="text-lg font-black text-slate-900 dark:text-white">{stats.manual_water_seconds}s</p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <div className="flex justify-between text-xs font-bold">
-                                        <span className="dark:text-neutral-400">AI Share</span>
-                                        <span className="text-indigo-500">{aiPct}%</span>
-                                    </div>
-                                    <Progress value={aiPct} className="h-2" />
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* AI vs Manual Pie Chart */}
-                        <Card className="shadow-sm dark:bg-card">
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-base font-bold uppercase tracking-wide dark:text-neutral-500 flex items-center gap-2">
-                                    <Brain className="size-4" /> AI vs Manual
-                                </CardTitle>
-                                <CardDescription>Watering decision breakdown</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="h-[220px] w-full">
-                                    {(pieData[0].value > 0 || pieData[1].value > 0) ? (
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <PieChart>
-                                                <Pie
-                                                    data={pieData}
-                                                    cx="50%"
-                                                    cy="50%"
-                                                    innerRadius={55}
-                                                    outerRadius={85}
-                                                    paddingAngle={3}
-                                                    dataKey="value"
-                                                    stroke="none"
-                                                >
-                                                    {pieData.map((_entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index]} />
-                                                    ))}
-                                                </Pie>
-                                                <Tooltip content={<PieTooltip />} />
-                                                <Legend iconType="circle" formatter={(value: string) => <span className="text-xs font-bold dark:text-neutral-300">{value}</span>} />
-                                            </PieChart>
-                                        </ResponsiveContainer>
-                                    ) : (
-                                        <div className="flex items-center justify-center h-full opacity-40">
-                                            <p className="text-xs font-bold uppercase tracking-widest">No events in range</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Soil Moisture Distribution */}
-                        <Card className="shadow-sm dark:bg-card">
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-base font-bold uppercase tracking-wide dark:text-neutral-500 flex items-center gap-2">
-                                    <BarChart3 className="size-4" /> Moisture Distribution
-                                </CardTitle>
-                                <CardDescription>Readings by health zone</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="h-[220px] w-full">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={distributionData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(128,128,128,0.1)" />
-                                            <XAxis dataKey="range" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 600 }} />
-                                            <YAxis stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} allowDecimals={false} />
-                                            <Tooltip content={<DistTooltip />} />
-                                            <Bar dataKey="count" name="Readings" radius={[6, 6, 0, 0]} maxBarSize={40}>
-                                                {distributionData.map((entry, index) => (
-                                                    <Cell key={`dist-${index}`} fill={entry.fill} />
-                                                ))}
-                                            </Bar>
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* ── Row 4 — Cumulative Water Usage (full-width) ────────── */}
-                    <Card className="shadow-sm dark:bg-card">
-                        <CardHeader>
-                            <CardTitle className="text-base font-bold uppercase tracking-wide dark:text-neutral-500">Cumulative Water Usage</CardTitle>
-                            <CardDescription>Running total of irrigation duration over time (seconds)</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="h-[300px] w-full">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={cumulativeData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(128,128,128,0.1)" />
-                                        <XAxis dataKey="timestamp" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} interval={Math.max(0, Math.floor(cumulativeData.length / 6))} tickFormatter={formatXAxis} />
-                                        <YAxis stroke="#a3a3a3" axisLine={false} tickLine={false} unit="s" />
-                                        <Tooltip content={<CustomTooltip />} />
-                                        <Legend />
-                                        <Line type="monotone" dataKey="cumulative_total" name="Total" stroke="#10b981" strokeWidth={2.5} dot={false} />
-                                        <Line type="monotone" dataKey="cumulative_ai" name="AI" stroke="#6366f1" strokeWidth={2} dot={false} strokeDasharray="5 3" />
-                                        <Line type="monotone" dataKey="cumulative_manual" name="Manual" stroke="#94a3b8" strokeWidth={2} dot={false} strokeDasharray="3 3" />
+                                        <Line yAxisId="left" type="monotone" dataKey="soil_moisture" name="Soil Moisture (%)" stroke="#10b981" strokeWidth={2.5} dot={false} connectNulls={true} />
+                                        <Line yAxisId="left" type="monotone" dataKey="temperature" name="Temperature (°C)" stroke="#f97316" strokeWidth={2} dot={false} connectNulls={true} />
+                                        <Line yAxisId="right" type="monotone" dataKey="humidity" name="Humidity (%)" stroke="#3b82f6" strokeWidth={2} dot={false} connectNulls={true} />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* ── Row 5 — Resource Efficiency + VPD/Temperature ─────── */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Efficiency Comparison */}
-                        <Card className="shadow-sm dark:bg-card">
-                            <CardHeader>
-                                <CardTitle className="text-base font-bold uppercase tracking-wide dark:text-neutral-500">Resource Efficiency</CardTitle>
-                                <CardDescription>Comparison of AI-Optimized usage vs Standard Schedules</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="h-[300px] w-full">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={data.filter(d => d.water_usage_ai > 0 || d.water_usage_standard > 0)} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(128,128,128,0.1)" />
-                                            <XAxis dataKey="timestamp" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} interval={Math.max(0, Math.floor(data.filter(d => d.water_usage_ai > 0 || d.water_usage_standard > 0).length / 6))} tickFormatter={formatXAxis} />
-                                            <YAxis stroke="#a3a3a3" axisLine={false} tickLine={false} unit="s" />
-                                            <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', border: 'none', borderRadius: '8px', color: 'white' }} />
-                                            <Legend />
-                                            <Bar dataKey="water_usage_standard" name="Standard Usage" fill="#94a3b8" stackId="a" radius={[0, 0, 4, 4]} />
-                                            <Bar dataKey="water_usage_ai" name="AI Optimized Usage" fill="#3b82f6" stackId="b" radius={[4, 4, 0, 0]} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </CardContent>
-                        </Card>
+                    {/* ── Row 3 — Moisture Distribution ──── */}
+                    <Card className="shadow-sm dark:bg-card">
+                        <CardHeader>
+                            <CardTitle className="text-base font-bold uppercase tracking-wide dark:text-neutral-500">Moisture Distribution</CardTitle>
+                            <CardDescription>Readings by health zone over {rangeLabel.toLowerCase()}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="h-[250px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={distributionData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(128,128,128,0.1)" />
+                                        <XAxis dataKey="range" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 600 }} />
+                                        <YAxis stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} allowDecimals={false} />
+                                        <Tooltip content={<DistTooltip />} />
+                                        <Bar dataKey="count" name="Readings" radius={[6, 6, 0, 0]} maxBarSize={60}>
+                                            {distributionData.map((entry, index) => (
+                                                <Cell key={`dist-${index}`} fill={entry.fill} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                        {/* Environmental Factors */}
-                        <Card className="shadow-sm dark:bg-card">
-                            <CardHeader>
-                                <CardTitle className="text-base font-bold uppercase tracking-wide dark:text-neutral-500">VPD & Temperature Trends</CardTitle>
-                                <CardDescription>Vapor Pressure Deficit analysis for plant transpiration</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="h-[300px] w-full">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(128,128,128,0.1)" />
-                                            <XAxis dataKey="timestamp" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} interval={Math.max(0, Math.floor(data.length / 6))} tickFormatter={formatXAxis} />
-                                            <YAxis yAxisId="left" stroke="#a3a3a3" axisLine={false} tickLine={false} unit="°C" padding={{ top: 20, bottom: 20 }} />
-                                            <YAxis yAxisId="right" orientation="right" stroke="#a3a3a3" axisLine={false} tickLine={false} />
-                                            <Tooltip contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', border: 'none', borderRadius: '8px', color: 'white' }} />
-                                            <Legend />
-                                            <Line yAxisId="left" type="monotone" dataKey="temperature" name="Temp (°C)" stroke="#f97316" strokeWidth={2} dot={false} connectNulls={true} />
-                                            <Line yAxisId="right" type="monotone" dataKey="vpd" name="VPD (kPa)" stroke="#8b5cf6" strokeWidth={2} dot={false} connectNulls={true} />
-                                        </LineChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </motion.div>
+                    </motion.div>
             </AnimatePresence>
         </div>
     );

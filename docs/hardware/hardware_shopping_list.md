@@ -248,14 +248,14 @@ Pump Circuit (Separate):
 ## PIN CONNECTIONS
 
 ```
-ESP32 Pin     →  Component
-─────────────────────────────────────────
-GPIO 34 (ADC) →  Soil Moisture Sensor (A0)
-GPIO 25       →  DHT22 Data Pin
-GPIO 26       →  Relay IN (Pump Control)
-3.3V          →  DHT22 VCC, Relay VCC
-GND           →  All component GNDs
-5V            →  (not used, USB powered)
+ESP32 Pin     →  Component             →  Notes
+──────────────────────────────────────────────────────
+GPIO 34 (ADC) →  Soil Moisture (A0)    →  Analog input
+GPIO 25       →  DHT22 Data Pin        →  Digital input
+GPIO 26       →  Relay IN (Pump)       →  Digital output
+GPIO 2        →  Onboard LED           →  Status indicator
+3.3V          →  DHT22 VCC, Sensors    →  Power
+GND           →  All component GNDs    →  Ground
 ```
 
 ---
@@ -278,11 +278,12 @@ GND           →  All component GNDs
 6. Connect pump to relay output
 
 ### Step 3: Software Upload
-1. Install Arduino IDE
-2. Add ESP32 board support
-3. Install libraries (DHT, WiFi, PubSubClient)
-4. Upload test code
-5. Verify serial monitor output
+1. Install Arduino IDE 2.x (see [hardware_setup.md](hardware_setup.md))
+2. Add ESP32 board support (Espressif)
+3. Install libraries: PubSubClient, DHT, ArduinoJson, Adafruit Unified Sensor
+4. Copy `config.h.example` → `config.h`, fill in WiFi + MQTT credentials
+5. Upload `src/firmware/pwos_esp32/pwos_esp32.ino` to ESP32
+6. Open Serial Monitor (115200 baud) and verify output
 
 ### Step 4: Integration Test
 1. Power on system

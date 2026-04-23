@@ -1,5 +1,10 @@
 @echo off
 REM P-WOS Simulation Startup Script for Windows
+REM =============================================
+REM Set DEBUG=1 to open each service in its own window (8 terminals)
+REM Set DEBUG=0 to run all services silently in the background (1 terminal)
+REM =============================================
+set "DEBUG=0"
 
 REM Check if .venv exists
 if not exist ".venv" (
@@ -38,70 +43,136 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo Starting P-WOS Simulation...
+if "%DEBUG%"=="1" (
+    echo [MODE] DEBUG = ON  (8 separate terminal windows)
+) else (
+    echo [MODE] DEBUG = OFF (all services run in background)
+)
 echo.
 
 echo Starting P-WOS Simulation...
 echo.
-echo This will open 8 command windows:
 echo   1. MQTT Broker (Mosquitto)
 echo   2. Database Subscriber  
-echo   3. Simulated ESP32
-echo   4. Live Weather Dashboard (Real-Time API)
-echo   5. API Server (Flask)
-echo   6. P-WOS Autopilot
-echo   7. ML Brain Monitor
-echo   8. React Dev Server (Vite)
-echo.
-echo Press Ctrl+C in each window to stop
+echo   3. Weather Simulator
+echo   4. Simulated ESP32
+echo   5. Live Weather Dashboard
+echo   6. API Server (Flask)
+echo   7. P-WOS Autopilot
+echo   8. ML Brain Monitor
+echo   9. React Dev Server (Vite)
 echo.
 pause
 
-REM Start MQTT Broker
-start "MQTT Broker" cmd /k "echo Starting MQTT Broker... && mosquitto -v"
+REM === 1. MQTT Broker ===
+if "%DEBUG%"=="1" (
+    start "MQTT Broker" cmd /k "echo Starting MQTT Broker... && mosquitto -v"
+) else (
+    echo [1/9] Starting MQTT Broker...
+    start /B "" mosquitto -v >nul 2>&1
+)
 timeout /t 3 >nul
 
-REM Start Database Subscriber
-start "Database Subscriber" cmd /k "echo Starting Database Subscriber... && cd src\backend && python mqtt_subscriber.py"
+REM === 2. Database Subscriber ===
+if "%DEBUG%"=="1" (
+    start "Database Subscriber" cmd /k "echo Starting Database Subscriber... && cd src\backend && python mqtt_subscriber.py"
+) else (
+    echo [2/9] Starting Database Subscriber...
+    start /B "" cmd /c "cd src\backend && python mqtt_subscriber.py" >nul 2>&1
+)
 timeout /t 2 >nul
 
-REM Start Weather Simulator (Source of Truth for Offline Weather)
-start "Weather Simulator" cmd /k "echo Starting Weather Simulator... && cd src\simulation && python weather_simulator.py"
+REM === 3. Weather Simulator ===
+if "%DEBUG%"=="1" (
+    start "Weather Simulator" cmd /k "echo Starting Weather Simulator... && cd src\simulation && python weather_simulator.py"
+) else (
+    echo [3/9] Starting Weather Simulator...
+    start /B "" cmd /c "cd src\simulation && python weather_simulator.py" >nul 2>&1
+)
 timeout /t 2 >nul
 
-REM Start Simulated ESP32
-start "Simulated ESP32" cmd /k "echo Starting Simulated ESP32... && cd src\simulation && python esp32_simulator.py 5"
+REM === 4. Simulated ESP32 ===
+if "%DEBUG%"=="1" (
+    start "Simulated ESP32" cmd /k "echo Starting Simulated ESP32... && cd src\simulation && python esp32_simulator.py 5"
+) else (
+    echo [4/9] Starting Simulated ESP32...
+    start /B "" cmd /c "cd src\simulation && python esp32_simulator.py 5" >nul 2>&1
+)
 timeout /t 2 >nul
 
-REM Start Live Weather Dashboard
-start "Live Weather Dashboard" cmd /k "echo Starting Live Weather Dashboard... && python scripts/monitors/live_weather_dashboard.py"
+REM === 5. Live Weather Dashboard ===
+if "%DEBUG%"=="1" (
+    start "Live Weather Dashboard" cmd /k "echo Starting Live Weather Dashboard... && python scripts/monitors/live_weather_dashboard.py"
+) else (
+    echo [5/9] Starting Live Weather Dashboard...
+    start /B "" cmd /c "python scripts/monitors/live_weather_dashboard.py" >nul 2>&1
+)
 timeout /t 2 >nul
 
-
-REM Start API Server
-start "API Server" cmd /k "echo Starting API Server... && cd src\backend && python app.py"
+REM === 6. API Server ===
+if "%DEBUG%"=="1" (
+    start "API Server" cmd /k "echo Starting API Server... && cd src\backend && python app.py"
+) else (
+    echo [6/9] Starting API Server...
+    start /B "" cmd /c "cd src\backend && python app.py" >nul 2>&1
+)
 timeout /t 3 >nul
 
-REM Start Automation Controller
-start "P-WOS Autopilot" cmd /k "echo Starting Automation Controller... && cd src\backend && python automation_controller.py"
+REM === 7. Automation Controller ===
+if "%DEBUG%"=="1" (
+    start "P-WOS Autopilot" cmd /k "echo Starting Automation Controller... && cd src\backend && python automation_controller.py"
+) else (
+    echo [7/9] Starting P-WOS Autopilot...
+    start /B "" cmd /c "cd src\backend && python automation_controller.py" >nul 2>&1
+)
 timeout /t 2 >nul
 
-REM Start ML Monitor
-start "Brain Monitor" cmd /k "echo Starting ML Monitor... && python scripts/monitors/ml_monitor.py"
+REM === 8. ML Monitor ===
+if "%DEBUG%"=="1" (
+    start "Brain Monitor" cmd /k "echo Starting ML Monitor... && python scripts/monitors/ml_monitor.py"
+) else (
+    echo [8/9] Starting ML Brain Monitor...
+    start /B "" cmd /c "python scripts/monitors/ml_monitor.py" >nul 2>&1
+)
 timeout /t 2 >nul
 
-REM Start React Dev Server
-start "React Dev Server" cmd /k "echo Starting React Dev Server... && cd src\frontend && npm run dev"
+REM === 9. React Dev Server ===
+if "%DEBUG%"=="1" (
+    start "React Dev Server" cmd /k "echo Starting React Dev Server... && cd src\frontend && npm run dev"
+) else (
+    echo [9/9] Starting React Dev Server...
+    start /B "" cmd /c "cd src\frontend && npm run dev" >nul 2>&1
+)
 timeout /t 3 >nul
 
 echo.
-echo ========================================
 echo ========================================
 echo All components started!
 echo ========================================
 echo.
-echo 🚀 Production App (Flask Served): http://localhost:5000
-echo ⚡ Development App (Hot Reload):   http://localhost:5173
+echo   Production App (Flask):    http://localhost:5000
+echo   Development App (Vite):    http://localhost:5173
 echo.
-echo Press any key to exit this window...
-pause >nul
+if "%DEBUG%"=="0" (
+    echo [INFO] All services running in background.
+    echo [INFO] Check logs\ folder for output.
+    echo.
+    echo Press any key to STOP all services and exit...
+    pause >nul
+    echo.
+    echo [STOP] Shutting down all P-WOS services...
+    taskkill /F /IM mosquitto.exe >nul 2>&1
+    taskkill /F /IM python.exe /FI "WINDOWTITLE eq *" >nul 2>&1
+    taskkill /F /FI "WINDOWTITLE eq Database Subscriber" >nul 2>&1
+    taskkill /F /FI "WINDOWTITLE eq Weather Simulator" >nul 2>&1
+    taskkill /F /FI "WINDOWTITLE eq Simulated ESP32" >nul 2>&1
+    taskkill /F /FI "WINDOWTITLE eq Live Weather Dashboard" >nul 2>&1
+    taskkill /F /FI "WINDOWTITLE eq API Server" >nul 2>&1
+    taskkill /F /FI "WINDOWTITLE eq P-WOS Autopilot" >nul 2>&1
+    taskkill /F /FI "WINDOWTITLE eq Brain Monitor" >nul 2>&1
+    taskkill /F /FI "WINDOWTITLE eq React Dev Server" >nul 2>&1
+    echo [DONE] All services stopped.
+) else (
+    echo Press any key to exit this launcher...
+    pause >nul
+)

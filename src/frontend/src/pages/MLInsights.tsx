@@ -75,11 +75,11 @@ export const MLInsights: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="h-8 px-3 gap-2 bg-slate-100 dark:bg-card border-slate-200 dark:border-border">
+                    <Badge variant="outline" className="h-8 px-3 gap-2 border-slate-200 dark:border-border">
                         <GitBranch className="size-3" />
                         v2.4.0-stable
                     </Badge>
-                    <Badge variant="outline" className="h-8 px-3 gap-2 bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                    <Badge variant="outline" className="h-8 px-3 gap-2 text-emerald-600 border-emerald-500/20">
                         <Activity className="size-3" />
                         Online
                     </Badge>
@@ -127,15 +127,15 @@ export const MLInsights: React.FC = () => {
                     </CardHeader>
                     <CardContent className="space-y-6 relative z-10">
                         <div className="flex items-center gap-4">
-                            <div className="size-12 rounded-2xl bg-slate-100 dark:bg-secondary border border-border text-slate-950 dark:text-white dark:text-white">
+                            <div className="size-12 rounded-2xl text-slate-950 dark:text-white font-black text-xl">
                                 1
                             </div>
                             <div>
-                                <h3 className="font-bold text-lg text-slate-950 dark:text-white dark:text-white">Input Analysis</h3>
-                                <p className="text-slate-800 dark:text-neutral-400 dark:text-neutral-400 text-sm">Processing 5 real-time sensor streams + Forecast API</p>
+                                <h3 className="font-bold text-lg text-slate-950 dark:text-white">Input Analysis</h3>
+                                <p className="text-slate-800 dark:text-neutral-400 text-sm">Processing 5 real-time sensor streams + Forecast API</p>
                             </div>
                             <div className="ml-auto">
-                                <Badge className="bg-emerald-500 text-white ">Success</Badge>
+                                <Badge variant="outline" className="text-emerald-600 border-emerald-500/20">Success</Badge>
                             </div>
                         </div>
 

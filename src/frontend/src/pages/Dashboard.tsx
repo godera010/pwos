@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { api } from '../services/api';
 import type { SensorData, PredictionData, SystemLog, WeatherForecast, SystemState } from '../services/api';
 import { CircularGauge } from '../components/CircularGauge';
+import { WeatherCard } from '../components/WeatherCard';
 import {
     Activity,
     AlertTriangle,
@@ -11,10 +12,6 @@ import {
     CheckCircle2,
     Zap,
     Brain,
-    Cloud,
-    CloudRain,
-    Wind,
-    Umbrella
 } from 'lucide-react';
 import { LoadChart } from '../components/LoadChart';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +21,9 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
+
+const MOISTURE_SAFETY_THRESHOLD = 95;
 
 export const Dashboard: React.FC = () => {
     const [sensors, setSensors] = useState<SensorData | null>(null);
@@ -36,14 +36,18 @@ export const Dashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchData = async () => {
+    // Ref to track if the pump was manually turned ON by the user.
+    // This prevents the 10s polling from resetting the switch.
+    const pumpManuallyOn = useRef(false);
+
+    const fetchData = useCallback(async () => {
         try {
             const [s, w, p, l, h, state] = await Promise.all([
                 api.getLatestSensors(),
                 api.getWeatherForecast(),
                 api.getPrediction(),
                 api.getLogs(),
-                api.getHistory(1), // Fetch 1 hour, filter down to 30 min in UI
+                api.getHistory(1),
                 api.getSystemState()
             ]);
             setSensors(s);
@@ -52,7 +56,13 @@ export const Dashboard: React.FC = () => {
             setLogs(l);
             setHistory(h.reverse());
             setIsAuto(state.mode === 'AUTO');
-            setSystemState(state);
+
+            // Only update pump state from backend if the user did NOT manually turn it on
+            if (pumpManuallyOn.current) {
+                setSystemState({ ...state, pump_active: true });
+            } else {
+                setSystemState(state);
+            }
 
             setError(null);
         } catch (e) {
@@ -61,18 +71,119 @@ export const Dashboard: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchData();
-        const interval = setInterval(fetchData, 10000); // 10s as per brief
+        const interval = setInterval(fetchData, 10000);
         return () => clearInterval(interval);
-    }, []);
+    }, [fetchData]);
 
+    // =================================================================
+    // CRITICAL MOISTURE SAFETY OVERRIDES
+    // If moisture < 15% → system takes over (AUTO) to water immediately
+    // If moisture >= 95% → system takes over (AUTO) to prevent overwatering
+    // =================================================================
+    const MOISTURE_CRITICAL_LOW = 15;
+
+    useEffect(() => {
+        const moisture = sensors?.soil_moisture ?? 50; // default safe value
+
+        // --- OVERRIDE 1: Critically DRY (< 15%) while in Manual ---
+        if (!isAuto && moisture < MOISTURE_CRITICAL_LOW) {
+            // Force switch to AUTO so autopilot can water immediately
+            pumpManuallyOn.current = false;
+            api.toggleMode('AUTO').then(() => {
+                setIsAuto(true);
+                setSystemState(prev => prev ? { ...prev, pump_active: false } : prev);
+                toast.error('🚨 Critical Override: Soil Too Dry', {
+                    description: `Moisture dropped to ${moisture.toFixed(0)}% (< ${MOISTURE_CRITICAL_LOW}%). System switched to AUTO to prevent plant damage.`,
+                    duration: 10000,
+                });
+            });
+            return; // Skip the 95% check since we already acted
+        }
+
+        // --- OVERRIDE 2: Saturated (>= 95%) while pump is manually ON ---
+        if (pumpManuallyOn.current && moisture >= MOISTURE_SAFETY_THRESHOLD) {
+            pumpManuallyOn.current = false;
+            Promise.all([
+                api.controlPump('OFF'),
+                api.toggleMode('AUTO'),
+            ]).then(() => {
+                setIsAuto(true);
+                setSystemState(prev => prev ? { ...prev, pump_active: false } : prev);
+                toast.error('🚨 Critical Override: Soil Saturated', {
+                    description: `Moisture reached ${moisture.toFixed(0)}% (≥ ${MOISTURE_SAFETY_THRESHOLD}%). Pump stopped and system switched to AUTO.`,
+                    duration: 10000,
+                });
+            });
+        }
+    }, [sensors?.soil_moisture]);
+
+    // =================================================================
+    // MODE TOGGLE (Auto ↔ Manual)
+    // =================================================================
     const toggleMode = async () => {
         const newMode = isAuto ? 'MANUAL' : 'AUTO';
         await api.toggleMode(newMode);
         setIsAuto(!isAuto);
+
+        if (newMode === 'AUTO' && pumpManuallyOn.current) {
+            pumpManuallyOn.current = false;
+            await api.controlPump('OFF');
+            setSystemState(prev => prev ? { ...prev, pump_active: false } : prev);
+        }
+
+        toast.info(`Mode: ${newMode}`, {
+            description: newMode === 'AUTO'
+                ? 'AI Autopilot is now managing the pump.'
+                : 'Manual mode enabled. Use Pump Override to control the pump.',
+        });
+    };
+
+    // =================================================================
+    // PUMP TOGGLE (Manual Mode Only, with 95% Safety Override)
+    // =================================================================
+    const handlePumpToggle = async (checked: boolean) => {
+        const moisture = sensors?.soil_moisture ?? 0;
+
+        if (checked) {
+            // SAFETY: Prevent ON if moisture >= 95%
+            if (moisture >= MOISTURE_SAFETY_THRESHOLD) {
+                toast.error('Cannot Turn On Pump', {
+                    description: `Soil is already saturated at ${moisture.toFixed(0)}%. Pump blocked to prevent overwatering.`,
+                });
+                return;
+            }
+
+            // Switch to manual if in auto
+            if (isAuto) {
+                await api.toggleMode('MANUAL');
+                setIsAuto(false);
+                toast.info('Mode: MANUAL', {
+                    description: 'Switched to Manual mode for pump override.',
+                });
+            }
+
+            // Turn pump ON (indefinite — duration 0)
+            pumpManuallyOn.current = true;
+            await api.controlPump('ON', 0);
+            if (systemState) setSystemState({ ...systemState, pump_active: true });
+
+            toast.success('Pump ON', {
+                description: 'Pump is now running. It will stay on until you turn it off or moisture reaches 95%.',
+            });
+        } else {
+            // Turn pump OFF
+            pumpManuallyOn.current = false;
+            await api.controlPump('OFF');
+            if (systemState) setSystemState({ ...systemState, pump_active: false });
+
+            toast.success('Pump OFF', {
+                description: 'Pump has been turned off.',
+            });
+        }
     };
 
     if (loading && !sensors) {
@@ -97,6 +208,11 @@ export const Dashboard: React.FC = () => {
         );
     }
 
+    const moisture = sensors?.soil_moisture ?? 0;
+    // Only block the pump switch when soil is saturated (95%+)
+    // Auto mode is NOT a blocker — handlePumpToggle auto-switches to Manual
+    const isMoistureSaturated = moisture >= MOISTURE_SAFETY_THRESHOLD;
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header Section */}
@@ -114,7 +230,7 @@ export const Dashboard: React.FC = () => {
             {/* Key Metrics Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Soil Moisture */}
-                <Card className="overflow-hidden  shadow-none border border-slate-200 dark:border-slate-800">
+                <Card className="overflow-hidden shadow-none border border-slate-200 dark:border-slate-800">
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">Soil Moisture</CardTitle>
@@ -143,7 +259,7 @@ export const Dashboard: React.FC = () => {
                 </Card>
 
                 {/* Ambient Conditions */}
-                <Card className=" shadow-none border border-slate-200 dark:border-slate-800">
+                <Card className="shadow-none border border-slate-200 dark:border-slate-800">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">Ambient Conditions</CardTitle>
                     </CardHeader>
@@ -173,7 +289,7 @@ export const Dashboard: React.FC = () => {
                 </Card>
 
                 {/* System Health */}
-                <Card className=" shadow-none border border-slate-200 dark:border-slate-800">
+                <Card className="shadow-none border border-slate-200 dark:border-slate-800">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">System Health</CardTitle>
                     </CardHeader>
@@ -228,70 +344,8 @@ export const Dashboard: React.FC = () => {
 
             {/* Weather Forecast + Quick Actions Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Weather Forecast Card */}
-                <Card className="shadow-none border border-slate-200 dark:border-slate-800 overflow-hidden">
-                    <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                                <Cloud className="size-4 text-sky-500" /> Weather Forecast
-                            </CardTitle>
-                            <Badge variant="outline" className="text-[10px] font-black uppercase text-sky-500 border-sky-500/20">
-                                {weather?.source || 'OpenWeather'}
-                            </Badge>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        {weather ? (
-                            <div className="bg-gradient-to-br from-sky-400 to-indigo-500 rounded-b-xl p-6 text-white flex items-center justify-between">
-                                <div className="flex items-center gap-6">
-                                    <div className="size-20 bg-yellow-400 rounded-full shadow-[0_0_40px_rgba(250,204,21,0.6)] flex items-center justify-center">
-                                        {weather.condition?.toLowerCase().includes('cloud') || weather.cloud_cover > 50 ? (
-                                            <Cloud className="size-10 text-white" />
-                                        ) : weather.rain_forecast_minutes > 0 || weather.condition?.toLowerCase().includes('rain') ? (
-                                            <CloudRain className="size-10 text-white" />
-                                        ) : (
-                                            <div className="size-10 rounded-full bg-yellow-300"></div>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <h2 className="text-5xl font-black tracking-tighter shadow-black/10 drop-shadow-md">
-                                            {weather.temperature.toFixed(1)}°
-                                        </h2>
-                                        <p className="text-xl font-medium tracking-wide opacity-90 capitalize mt-1">
-                                            {weather.condition || 'Clear'}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4 text-right">
-                                    <div className="flex items-center justify-end gap-3">
-                                        <span className="text-xl font-bold">{weather.wind_speed_kmh.toFixed(1)} <span className="text-sm opacity-70">km/h</span></span>
-                                        <Wind className="size-5 opacity-80" />
-                                    </div>
-                                    <div className="flex items-center justify-end gap-3">
-                                        <span className="text-xl font-bold">{weather.humidity.toFixed(0)} <span className="text-sm opacity-70">%</span></span>
-                                        <Droplets className="size-5 opacity-80" />
-                                    </div>
-                                    <div className="flex items-center justify-end gap-3">
-                                        <span className="text-xl font-bold">
-                                            {weather.rain_forecast_minutes > 0 ? (
-                                                <span className="text-yellow-300">{(weather.rain_forecast_minutes / 60).toFixed(1)}h</span>
-                                            ) : (
-                                                <span className="opacity-90">{weather.precipitation_chance}%</span>
-                                            )}
-                                        </span>
-                                        {weather.rain_forecast_minutes > 0 ? <Umbrella className="size-5 text-yellow-300" /> : <CloudRain className="size-5 opacity-80" />}
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center py-12 text-center opacity-40">
-                                <Cloud className="size-12 mb-2" />
-                                <p className="text-xs font-bold uppercase tracking-widest">Loading Weather Data...</p>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                {/* Dynamic Weather Card */}
+                <WeatherCard weather={weather} />
 
                 {/* Quick Actions Card */}
                 <Card className="shadow-none border border-slate-200 dark:border-slate-800">
@@ -313,25 +367,21 @@ export const Dashboard: React.FC = () => {
                             <div>
                                 <h4 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
                                     Pump Override
-                                    {isAuto && <Badge variant="outline" className="text-[8px] uppercase font-black bg-slate-100 text-slate-400 border-none px-1 py-0 h-4">Blocked</Badge>}
+                                    {isAuto && <Badge variant="outline" className="text-[8px] uppercase font-black text-emerald-500 border-emerald-500/20 px-1 py-0 h-4">Auto</Badge>}
+                                    {!isAuto && moisture >= MOISTURE_SAFETY_THRESHOLD && (
+                                        <Badge variant="outline" className="text-[8px] uppercase font-black text-red-500 border-red-500/20 px-1 py-0 h-4">Saturated</Badge>
+                                    )}
                                 </h4>
-                                <p className="text-xs text-slate-500 dark:text-neutral-400">Force water ON/OFF</p>
+                                <p className="text-xs text-slate-500 dark:text-neutral-400">
+                                    {moisture >= MOISTURE_SAFETY_THRESHOLD
+                                        ? `Blocked: Moisture at ${moisture.toFixed(0)}%`
+                                        : 'Force water ON/OFF'}
+                                </p>
                             </div>
                             <Switch
                                 checked={systemState?.pump_active || false}
-                                onCheckedChange={(checked) => {
-                                    if (checked) {
-                                        if (isAuto) toggleMode(); // Disable AI if they manually trigger
-                                        api.controlPump('ON', 30); // Default to 30s override
-
-                                        // Optioanlly update local state optimistically
-                                        if (systemState) setSystemState({ ...systemState, pump_active: true });
-                                    } else {
-                                        api.controlPump('OFF');
-                                        if (systemState) setSystemState({ ...systemState, pump_active: false });
-                                    }
-                                }}
-                                disabled={isAuto}
+                                onCheckedChange={handlePumpToggle}
+                                disabled={isMoistureSaturated && !(systemState?.pump_active)}
                             />
                         </div>
 

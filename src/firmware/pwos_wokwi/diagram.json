@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "author": "P-WOS",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-v1",
+      "id": "esp32",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht22",
+      "top": -120,
+      "left": 200,
+      "attrs": { "temperature": "24.5", "humidity": "60" }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "soilPot",
+      "top": -60,
+      "left": 330,
+      "attrs": { "value": "128" }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay",
+      "top": 100,
+      "left": 330,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-led",
+      "id": "pumpLed",
+      "top": 80,
+      "left": 490,
+      "attrs": { "color": "blue" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "pullup",
+      "top": -200,
+      "left": 160,
+      "attrs": { "value": "10000" }
+    }
+  ],
+  "connections": [
+    ["esp32:3V3",  "dht22:VCC",   "red",    []],
+    ["esp32:GND",  "dht22:GND",   "black",  []],
+    ["esp32:25",   "dht22:SDA",   "green",  []],
+
+    ["dht22:VCC",  "pullup:1",    "red",    []],
+    ["dht22:SDA",  "pullup:2",    "green",  []],
+
+    ["esp32:34",   "soilPot:OUT", "blue",   []],
+    ["esp32:3V3",  "soilPot:VCC", "red",    []],
+    ["esp32:GND",  "soilPot:GND", "black",  []],
+
+    ["esp32:VIN",  "relay:VCC",   "red",    []],
+    ["esp32:GND",  "relay:GND",   "black",  []],
+    ["esp32:26",   "relay:IN",    "orange", []],
+
+    ["relay:NO",   "pumpLed:A",   "blue",   []],
+    ["esp32:GND",  "pumpLed:C",   "black",  []]
+  ],
+  "serialMonitor": {
+    "display": "always",
+    "newline": "lf"
+  }
+}

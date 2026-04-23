@@ -126,7 +126,7 @@ export const api = {
             body: JSON.stringify({ mode })
         });
     },
-    controlPump: async (action: 'ON' | 'OFF', duration = 30) => {
+    controlPump: async (action: 'ON' | 'OFF', duration = 0) => {
         const res = await fetch(`${API_BASE_URL}/control/pump`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -148,7 +148,15 @@ export const api = {
         const res = await fetch(`${API_BASE_URL}/settings`);
         return res.json();
     },
-    saveSettings: async (settings: { moisture_threshold: number; max_duration: number }) => {
+    saveSettings: async (settings: {
+        moisture_threshold?: number;
+        moisture_max?: number;
+        temp_min?: number;
+        temp_max?: number;
+        max_duration?: number;
+        latitude?: number;
+        longitude?: number;
+    }) => {
         const res = await fetch(`${API_BASE_URL}/settings`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

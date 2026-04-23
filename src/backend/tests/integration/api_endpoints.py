@@ -31,6 +31,13 @@ class TestAPIEndpoints:
         }
         mock_predict.return_value = mock_response
         
+        # Seed latest_sensor_data so the endpoint doesn't return 503
+        import app as app_module
+        app_module.latest_sensor_data.update({
+            'soil_moisture': 45.0, 'temperature': 25.0, 'humidity': 60.0,
+            'weather_source': 'openweathermap'
+        })
+        
         response = client.get('/api/predict-next-watering')
         assert response.status_code == 200
         assert response.json['recommended_action'] == "MONITOR"

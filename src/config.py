@@ -76,6 +76,20 @@ FLASK_PORT = int(os.getenv("FLASK_PORT", "5000"))
 FLASK_DEBUG = os.getenv("FLASK_DEBUG", "true").lower() == "true"
 
 # ============================================================================
+# Hardware / Data Source Configuration
+# ============================================================================
+# "simulation" = Use esp32_simulator.py (no hardware needed)
+# "hardware"   = Expect real ESP32 data via MQTT or serial
+# "hybrid"     = Use hardware when available, fall back to simulator
+DATA_SOURCE_MODE = os.getenv("DATA_SOURCE_MODE", "simulation")
+
+# Serial port for USB-connected ESP32 ("auto" = auto-detect)
+HARDWARE_SERIAL_PORT = os.getenv("HARDWARE_SERIAL_PORT", "auto")
+
+# Expected device ID from real ESP32 (for validation)
+HARDWARE_DEVICE_ID = os.getenv("HARDWARE_DEVICE_ID", "ESP32_PWOS_001")
+
+# ============================================================================
 # Frontend Configuration
 # ============================================================================
 FRONTEND_DIST_PATH = os.getenv("FRONTEND_DIST_PATH", "../frontend/dist")
@@ -88,11 +102,15 @@ def print_config():
     print("=" * 60)
     print("P-WOS Configuration")
     print("=" * 60)
+    print(f"Data Source:   {DATA_SOURCE_MODE}")
     print(f"MQTT Mode:     {MQTT_MODE}")
     print(f"MQTT Broker:   {MQTT_BROKER}:{MQTT_PORT}")
     print(f"MQTT TLS:      {MQTT_USE_TLS}")
     print(f"Weather Mode:  {WEATHER_API_MODE}")
     print(f"Database Mode: {DATABASE_MODE}")
+    if DATA_SOURCE_MODE != "simulation":
+        print(f"Serial Port:   {HARDWARE_SERIAL_PORT}")
+        print(f"Device ID:     {HARDWARE_DEVICE_ID}")
     print("=" * 60)
 
 
