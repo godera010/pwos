@@ -38,7 +38,6 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             clearInterval(statePoller);
         };
     }, []);
-    // We already have ThemeToggle in Sidebar which manages the .dark class
 
     return (
         <div className="flex h-screen overflow-hidden bg-background text-foreground transition-colors duration-300">

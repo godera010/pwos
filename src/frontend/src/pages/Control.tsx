@@ -11,349 +11,375 @@ import {
     Activity,
     AlertTriangle,
     Lock,
-    Wifi,
-    WifiOff,
     RefreshCw,
     Gauge,
     Zap,
-    X
+    X,
+    Settings2,
+    Timer,
+    Save,
+    ChevronDown,
+    ChevronUp,
+    Database,
+    Wifi,
+    WifiOff
 } from 'lucide-react';
 import { api } from '../services/api';
 import { toast } from 'sonner';
+import { useMqtt } from '../hooks/useMqtt';
 
 export const Control: React.FC = () => {
-    const [systemMode, setSystemMode] = useState<'AUTO' | 'MANUAL'>('AUTO');
-    const [loading, setLoading] = useState(false);
-    const [pumpActive, setPumpActive] = useState(false);
-    const [emergencyStop, setEmergencyStop] = useState(false);
-    const [showEmergencyModal, setShowEmergencyModal] = useState(false);
+    const { connected, hardwareStatus, sensorData: mqttSensorData, systemMode: mqttSystemMode, publishPumpControl, publishSystemMode } = useMqtt();
 
-    const [sensors, setSensors] = useState({
+    // Fallbacks if sensorData is null
+    const sensors = mqttSensorData || {
         soil_moisture: 0,
         temperature: 0,
         humidity: 0,
         timestamp: '--',
-        device_id: null
+        pump_active: false
+    };
+
+    const pumpActive = sensors.pump_active;
+    const systemMode = mqttSystemMode || 'AUTO';
+    const isHardwareOnline = hardwareStatus === 'ONLINE';
+
+    const [isBackendOffline, setIsBackendOffline] = useState(false);
+    const [emergencyStop, setEmergencyStop] = useState(false);
+    const [showEmergencyModal, setShowEmergencyModal] = useState(false);
+    const [savingSettings, setSavingSettings] = useState(false);
+
+    const [settings, setSettings] = useState({
+        moistureMin: 25,
+        moistureMax: 75,
+        tempMin: 5,
+        tempMax: 32,
+        maxDuration: 45,
+        latitude: -20.1492,
+        longitude: 28.5833
     });
 
     const fetchState = useCallback(async () => {
         try {
-            const [stateRes, sensorRes] = await Promise.all([
-                api.getSystemState(),
-                api.getLatestSensors(),
-            ]);
-            if (stateRes?.mode) setSystemMode(stateRes.mode);
-            if (sensorRes) {
-                setSensors(sensorRes);
-                setPumpActive(stateRes.pump_active || false);
+            const settingsRes = await api.getSettings();
+            if (settingsRes) {
+                setSettings(prev => ({
+                    ...prev,
+                    moistureMin: settingsRes.moisture_threshold ?? prev.moistureMin,
+                    moistureMax: settingsRes.moisture_max ?? prev.moistureMax,
+                    tempMin: settingsRes.temp_min ?? prev.tempMin,
+                    tempMax: settingsRes.temp_max ?? prev.tempMax,
+                    maxDuration: settingsRes.max_duration ?? prev.maxDuration,
+                    latitude: settingsRes.latitude ?? prev.latitude,
+                    longitude: settingsRes.longitude ?? prev.longitude,
+                }));
             }
+            setIsBackendOffline(false);
         } catch (error) {
-            console.error('Fetch error:', error);
+            setIsBackendOffline(true);
         }
     }, []);
 
     useEffect(() => {
         fetchState();
-        const interval = setInterval(fetchState, 5000);
+        const interval = setInterval(fetchState, 10000);
         return () => clearInterval(interval);
     }, [fetchState]);
 
-    const handleModeToggle = async () => {
+    const handleModeToggle = () => {
         const newMode = systemMode === 'AUTO' ? 'MANUAL' : 'AUTO';
-        setLoading(true);
-        try {
-            await api.toggleMode(newMode);
-            setSystemMode(newMode);
-            toast.success(`Mode: ${newMode}`, {
-                description: newMode === 'AUTO' ? 'AI controlling irrigation.' : 'Manual mode enabled.',
-            });
-        } catch {
-            toast.error('Mode switch failed');
-        } finally {
-            setLoading(false);
+        if (newMode === 'AUTO' && isBackendOffline) {
+            toast.error('Cannot enable AI Autopilot while backend is offline.');
+            return;
         }
+        publishSystemMode(newMode);
+        toast.info(`System set to ${newMode}`);
     };
 
-    const handlePump = async (action: 'ON' | 'OFF') => {
-        setLoading(true);
-        try {
-            await api.controlPump(action, action === 'ON' ? 0 : undefined);
-            setPumpActive(action === 'ON');
-            toast.success(`Pump ${action === 'ON' ? 'Activated' : 'Stopped'}`);
-        } catch {
-            toast.error('Pump command failed');
-        } finally {
-            setLoading(false);
-        }
+    const handlePump = (action: 'ON' | 'OFF') => {
+        publishPumpControl(action, settings.maxDuration);
+        toast.info(`Pump ${action} command sent`);
     };
 
-    const confirmEmergencyStop = () => {
-        setShowEmergencyModal(true);
-    };
-
-    const handleEmergencyStop = async () => {
+    const handleEmergencyStop = () => {
         setShowEmergencyModal(false);
         setEmergencyStop(true);
-        setLoading(true);
+        publishPumpControl('OFF', 0);
+        publishSystemMode('MANUAL');
+        toast.error('EMERGENCY STOP ACTIVATED');
+    };
+
+    const handleSaveSettings = async () => {
+        if (isBackendOffline) {
+            toast.error("Database offline. Cannot save settings.");
+            return;
+        }
+
+        setSavingSettings(true);
         try {
-            await api.controlPump('OFF', 0);
-            await api.toggleMode('MANUAL');
-            setSystemMode('MANUAL');
-            setPumpActive(false);
-            toast.error('EMERGENCY STOP', {
-                description: 'All outputs halted. System forced to Manual.',
+            await api.saveSettings({
+                moisture_threshold: settings.moistureMin,
+                moisture_max: settings.moistureMax,
+                temp_min: settings.tempMin,
+                temp_max: settings.tempMax,
+                max_duration: settings.maxDuration,
+                latitude: settings.latitude,
+                longitude: settings.longitude,
             });
+            toast.success('Settings Saved');
         } catch {
-            toast.error('Emergency stop failed');
+            toast.error('Save Failed');
         } finally {
-            setLoading(false);
+            setSavingSettings(false);
         }
     };
 
-    const isOnline = sensors.device_id !== null;
-    const isLocked = systemMode === 'AUTO';
+    const isAuto = systemMode === 'AUTO';
+    const isSystemDown = !connected || !isHardwareOnline;
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Emergency Stop Confirmation Modal */}
-            {showEmergencyModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <Card className="w-full max-w-md mx-4 border-red-500 shadow-xl shadow-red-500/20">
-                        <div className="bg-red-500 text-white p-4 flex items-center justify-between rounded-t-lg">
-                            <div className="flex items-center gap-3">
-                                <AlertTriangle className="size-6" />
-                                <h2 className="font-black text-lg">EMERGENCY STOP</h2>
-                            </div>
-                            <button onClick={() => setShowEmergencyModal(false)} className="hover:bg-red-600 p-1 rounded">
-                                <X className="size-5" />
-                            </button>
+        <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500 pb-12">
+            
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
+                <div>
+                    <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+                        Control <span className="text-emerald-500">Center</span>
+                    </h1>
+                    <p className="text-slate-500 font-medium mt-1 uppercase text-[10px] tracking-widest">Hardware Node: {sensors.timestamp}</p>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline" className={`gap-1.5 py-1 px-3 ${connected ? 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5' : 'text-red-500 border-red-500/20 bg-red-500/5'}`}>
+                        <Wifi className="size-3" /> {connected ? 'Broker Online' : 'Broker Offline'}
+                    </Badge>
+                    <Badge variant="outline" className={`gap-1.5 py-1 px-3 ${isHardwareOnline ? 'text-blue-500 border-blue-500/20 bg-blue-500/5' : 'text-red-500 border-red-500/20 bg-red-500/5 animate-pulse'}`}>
+                        <Zap className="size-3" /> {isHardwareOnline ? 'ESP32 Active' : 'ESP32 Offline'}
+                    </Badge>
+                    <Badge variant="outline" className={`gap-1.5 py-1 px-3 ${isBackendOffline ? 'text-amber-500 border-amber-500/30 bg-amber-500/5' : 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5'}`}>
+                        <Database className="size-3" /> {isBackendOffline ? 'Local API Offline' : 'AI Engine Ready'}
+                    </Badge>
+                </div>
+            </div>
+
+            {/* Sensor Quick Glance */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <MiniSensorCard label="Moisture" value={`${sensors.soil_moisture.toFixed(0)}%`} icon={<Droplets className="size-4 text-blue-500" />} active={isHardwareOnline} />
+                <MiniSensorCard label="Temp" value={`${sensors.temperature.toFixed(1)}°C`} icon={<Thermometer className="size-4 text-orange-500" />} active={isHardwareOnline} />
+                <MiniSensorCard label="Humidity" value={`${sensors.humidity.toFixed(0)}%`} icon={<Wind className="size-4 text-teal-500" />} active={isHardwareOnline} />
+                <MiniSensorCard label="Pump Status" value={pumpActive ? 'ACTIVE' : 'IDLE'} icon={<Activity className={`size-4 ${pumpActive ? 'text-emerald-500' : 'text-slate-300'}`} />} active={isHardwareOnline} />
+            </div>
+
+            {/* Main Controls Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* System Operation Switcher */}
+                <Card className={`relative overflow-hidden border-2 transition-all duration-500 rounded-[2rem] ${isAuto ? 'border-blue-500/20 bg-blue-50/5' : 'border-orange-500/20 bg-orange-50/5'}`}>
+                    <CardContent className="p-10 h-full flex flex-col items-center justify-center text-center space-y-8">
+                        <div className={`p-5 rounded-[2rem] shadow-sm border ${isAuto ? 'bg-blue-500/10 border-blue-500/20' : 'bg-orange-500/10 border-orange-500/20'}`}>
+                            {isAuto ? <Gauge className="size-12 text-blue-500" /> : <Settings2 className="size-12 text-orange-500" />}
                         </div>
-                        <CardContent className="p-6 space-y-4">
-                            <p className="text-sm">
-                                This will immediately halt all outputs and force the system to Manual mode.
+                        <div>
+                            <h2 className="text-2xl font-black uppercase tracking-tight">System Operation</h2>
+                            <p className="text-slate-500 text-[11px] font-bold uppercase tracking-wider mt-2">
+                                {isAuto ? 'AI Predictive Autopilot' : 'Manual Hardware Override'}
                             </p>
-                            <div className="bg-red-50 dark:bg-red-950/30 p-3 rounded-lg border border-red-200 dark:border-red-800">
-                                <p className="text-sm font-bold text-red-700 dark:text-red-400 mb-2">This action will:</p>
-                                <ul className="text-xs text-red-600 dark:text-red-300 space-y-1 list-disc list-inside">
-                                    <li>Turn OFF the pump immediately</li>
-                                    <li>Disable AI autopilot</li>
-                                    <li>Switch to Manual mode</li>
-                                </ul>
+                        </div>
+                        <div className="flex items-center gap-4 bg-white dark:bg-slate-800 p-2.5 rounded-2xl shadow-md border border-slate-100 dark:border-slate-700">
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${isAuto ? 'text-blue-600' : 'text-slate-400'}`}>AUTO</span>
+                            <Switch 
+                                checked={!isAuto} 
+                                onCheckedChange={handleModeToggle}
+                                className="data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-blue-600"
+                            />
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${!isAuto ? 'text-orange-600' : 'text-slate-400'}`}>MANUAL</span>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Physical Pump Actuator */}
+                <Card className={`relative overflow-hidden border-2 transition-all duration-500 rounded-[2rem] ${pumpActive ? 'border-emerald-500 bg-emerald-50/10 shadow-xl shadow-emerald-500/5' : 'border-slate-100 dark:border-slate-800'}`}>
+                    {isAuto && isHardwareOnline && (
+                        <div className="absolute inset-0 bg-white/60 dark:bg-slate-950/80 backdrop-blur-[2px] z-10 flex items-center justify-center p-6 text-center transition-all duration-500">
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="p-3 bg-slate-900 text-white rounded-2xl shadow-xl">
+                                    <Lock className="size-6" />
+                                </div>
+                                <p className="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-[0.2em] leading-relaxed">
+                                    Switch to Manual Mode<br/>to control hardware
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {!isHardwareOnline && (
+                        <div className="absolute inset-0 bg-red-50/60 dark:bg-slate-950/90 backdrop-blur-[4px] z-20 flex items-center justify-center transition-all duration-500">
+                            <div className="flex flex-col items-center gap-3">
+                                <WifiOff className="size-10 text-red-500 animate-pulse" />
+                                <p className="text-[11px] font-black text-red-600 dark:text-red-500 uppercase tracking-[0.3em]">
+                                    Node Offline
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    <CardContent className="p-10 h-full flex flex-col items-center justify-center">
+                        <button
+                            disabled={isAuto || isSystemDown}
+                            onClick={() => handlePump(pumpActive ? 'OFF' : 'ON')}
+                            className={`w-40 aspect-square rounded-full flex flex-col items-center justify-center transition-all duration-500 border-8 active:scale-95 ${
+                                pumpActive 
+                                ? 'bg-emerald-500 border-emerald-600 text-white shadow-2xl shadow-emerald-500/40' 
+                                : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-300'
+                            } ${isAuto || isSystemDown ? 'opacity-20 cursor-not-allowed' : 'cursor-pointer hover:shadow-lg'}`}
+                        >
+                            <Power className={`size-16 transition-transform duration-700 ${pumpActive ? 'rotate-0' : 'rotate-12'}`} />
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] mt-2">{pumpActive ? 'Running' : 'Idle'}</span>
+                        </button>
+                        <div className="mt-8 text-center">
+                            <h3 className={`text-xl font-black uppercase tracking-tight ${pumpActive ? 'text-emerald-600' : 'text-slate-400'}`}>
+                                Pump Control
+                            </h3>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Direct Relay Actuator</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Emergency & Settings Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* Emergency Stop */}
+                <Card className="lg:col-span-1 border-2 border-red-500/20 bg-red-50/5 dark:bg-red-950/10 rounded-[2rem]">
+                    <CardContent className="p-8 flex flex-col items-center justify-center text-center space-y-6">
+                        <div className="p-4 bg-red-500 rounded-[1.5rem] text-white shadow-lg shadow-red-500/20">
+                            <AlertTriangle className="size-10" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-black uppercase text-red-600 tracking-tight">Emergency Halt</h3>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">Instant Physical Cutoff</p>
+                        </div>
+                        <Button 
+                            variant="destructive" 
+                            size="lg" 
+                            className="w-full font-black tracking-widest rounded-2xl h-16 shadow-lg shadow-red-500/10 border-b-4 border-red-700 active:border-b-0 active:translate-y-1 transition-all"
+                            disabled={!connected || !isHardwareOnline}
+                            onClick={() => setShowEmergencyModal(true)}
+                        >
+                            STOP SYSTEM
+                        </Button>
+                    </CardContent>
+                </Card>
+
+                {/* Configuration Panel */}
+                <Card className={`lg:col-span-2 relative overflow-hidden border-2 transition-all duration-500 rounded-[2rem] ${isBackendOffline ? 'border-slate-100 dark:border-slate-800' : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm'}`}>
+                    
+                    {/* Consistent Lock Overlay for Database Card */}
+                    {isAuto && (
+                        <div className="absolute inset-0 bg-white/60 dark:bg-slate-950/80 backdrop-blur-[2px] z-10 flex items-center justify-center p-6 text-center transition-all duration-500">
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="p-3 bg-slate-900 text-white rounded-2xl shadow-xl">
+                                    <Lock className="size-6" />
+                                </div>
+                                <p className="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-[0.2em] leading-relaxed">
+                                    Switch to Manual Mode<br/>to update parameters
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    <CardContent className="p-8">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+                                    <Settings2 className="size-6 text-slate-600 dark:text-slate-400" />
+                                </div>
+                                <div>
+                                    <h3 className="font-black uppercase tracking-tight text-lg">Database Parameters</h3>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">ML Thresholds & Fail-safes</p>
+                                </div>
+                            </div>
+                            {isBackendOffline && <Badge variant="outline" className="text-[10px] font-black text-amber-600 border-amber-200 bg-amber-50">READ-ONLY</Badge>}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Moisture Trigger (%)</label>
+                                    <div className="relative group">
+                                        <Droplets className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-blue-500 opacity-50 group-focus-within:opacity-100 transition-opacity" />
+                                        <input 
+                                            type="number" 
+                                            value={settings.moistureMin} 
+                                            disabled={isBackendOffline || isAuto}
+                                            onChange={e => setSettings(s => ({...s, moistureMin: Number(e.target.value)}))}
+                                            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 h-14 pl-12 pr-4 rounded-2xl font-black text-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Pump Duration (S)</label>
+                                    <div className="relative group">
+                                        <Timer className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-emerald-500 opacity-50 group-focus-within:opacity-100 transition-opacity" />
+                                        <input 
+                                            type="number" 
+                                            value={settings.maxDuration} 
+                                            disabled={isBackendOffline || isAuto}
+                                            onChange={e => setSettings(s => ({...s, maxDuration: Number(e.target.value)}))}
+                                            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 h-14 pl-12 pr-4 rounded-2xl font-black text-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex flex-col justify-end space-y-4">
+                                <Button 
+                                    className={`w-full h-14 rounded-2xl font-black tracking-widest transition-all shadow-lg ${isBackendOffline || isAuto ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-black text-white dark:bg-white dark:text-black dark:hover:bg-slate-100 shadow-slate-900/10'}`}
+                                    disabled={isBackendOffline || isAuto || savingSettings}
+                                    onClick={handleSaveSettings}
+                                >
+                                    {savingSettings ? 'SYNCING...' : 'UPDATE SETTINGS'}
+                                </Button>
+                                <p className="text-[9px] text-slate-400 font-bold uppercase text-center tracking-tighter italic">
+                                    {isBackendOffline ? 'Requires active API connection' : 'Live update to PostgreSQL Database'}
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Emergency Modal */}
+            {showEmergencyModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+                    <Card className="w-full max-w-md border-none rounded-[2rem] shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
+                        <div className="p-8 text-center space-y-6 bg-white dark:bg-slate-900">
+                            <div className="size-24 bg-red-100 dark:bg-red-900/20 text-red-600 rounded-full flex items-center justify-center mx-auto border-4 border-red-50 dark:border-red-900/10">
+                                <AlertTriangle className="size-12" />
+                            </div>
+                            <div>
+                                <h2 className="text-3xl font-black uppercase tracking-tight">System Halt</h2>
+                                <p className="text-slate-500 text-sm mt-3 font-medium">This forces the pump OFF and locks the system into MANUAL mode for safety.</p>
                             </div>
                             <div className="flex gap-3 pt-2">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setShowEmergencyModal(false)}
-                                    className="flex-1"
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    variant="destructive"
-                                    onClick={handleEmergencyStop}
-                                    className="flex-1 font-bold"
-                                >
-                                    CONFIRM STOP
-                                </Button>
+                                <Button variant="outline" className="flex-1 h-14 rounded-2xl font-bold border-2" onClick={() => setShowEmergencyModal(false)}>CANCEL</Button>
+                                <Button variant="destructive" className="flex-1 h-14 rounded-2xl font-black tracking-widest shadow-lg shadow-red-500/20" onClick={handleEmergencyStop}>HALT NOW</Button>
                             </div>
-                        </CardContent>
+                        </div>
                     </Card>
                 </div>
             )}
-
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
-                        Hardware Control
-                        <Badge variant="outline" className={`${systemMode === 'AUTO' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-orange-500/10 text-orange-600'} border-current gap-1 font-bold`}>
-                            {systemMode}
-                        </Badge>
-                    </h1>
-                    <p className="text-slate-500 text-sm font-medium">
-                        Monitor sensors, control pump, and manage hardware status.
-                    </p>
-                </div>
-                <div className="flex items-center gap-3">
-                    {emergencyStop && (
-                        <Badge variant="destructive" className="animate-pulse gap-1">
-                            <AlertTriangle className="size-3" /> ESTOP
-                        </Badge>
-                    )}
-                    <Button variant="outline" size="sm" onClick={fetchState} className="gap-1.5">
-                        <RefreshCw className="size-3.5" /> Refresh
-                    </Button>
-                </div>
-            </div>
-
-            {/* Sensor Readings */}
-            <Card className="shadow-none border border-slate-200 dark:border-slate-800">
-                <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-4">
-                        <Activity className="size-4 text-indigo-500" />
-                        <h2 className="text-sm font-bold uppercase tracking-wider">Sensor Readings</h2>
-                        <Badge variant="outline" className="text-[10px] font-bold ml-auto">
-                            {sensors.timestamp}
-                        </Badge>
-                    </div>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <SensorCard
-                            icon={<Droplets className="size-5 text-blue-500" />}
-                            label="Soil Moisture"
-                            value={`${sensors.soil_moisture.toFixed(1)}%`}
-                            status={sensors.soil_moisture < 30 ? 'critical' : sensors.soil_moisture < 50 ? 'low' : 'normal'}
-                            sensor="Capacitive v1.2"
-                        />
-                        <SensorCard
-                            icon={<Thermometer className="size-5 text-orange-500" />}
-                            label="Temperature"
-                            value={`${sensors.temperature.toFixed(1)}°C`}
-                            status="normal"
-                            sensor="DHT22"
-                        />
-                        <SensorCard
-                            icon={<Wind className="size-5 text-teal-500" />}
-                            label="Humidity"
-                            value={`${sensors.humidity.toFixed(1)}%`}
-                            status="normal"
-                            sensor="DHT22"
-                        />
-                        <SensorCard
-                            icon={<Zap className="size-5 text-yellow-500" />}
-                            label="Relay Module"
-                            value={isOnline ? 'Active' : 'Offline'}
-                            status={isOnline ? 'normal' : 'critical'}
-                            sensor="4-Channel"
-                        />
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Mode Toggle & Pump Control - Side by Side */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Mode Toggle */}
-                <Card className={`border transition-colors ${systemMode === 'MANUAL' ? 'border-orange-500/50 bg-orange-50/50 dark:bg-orange-950/20' : 'border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20'}`}>
-                    <CardContent className="p-6 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            {systemMode === 'AUTO' ? (
-                                <Gauge className="size-8 text-emerald-500 trigger-success" />
-                            ) : (
-                                <Lock className="size-8 text-orange-500 trigger-active" />
-                            )}
-                            <div>
-                                <p className="font-bold">
-                                    {systemMode === 'AUTO' ? 'Auto Mode' : 'Manual Mode'}
-                                </p>
-                                <p className="text-xs text-slate-500">
-                                    {systemMode === 'AUTO' ? 'AI controls irrigation automatically' : 'Manual pump control enabled'}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <span className="text-xs font-bold text-slate-400">AUTO</span>
-                            <Switch checked={systemMode === 'MANUAL'} onCheckedChange={handleModeToggle} disabled={loading} />
-                            <span className="text-xs font-bold text-slate-400">MANUAL</span>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Pump Control */}
-                <Card className="shadow-none border border-slate-200 dark:border-slate-800 relative overflow-hidden">
-                    {isLocked && (
-                        <div className="absolute inset-0 bg-slate-100/80 dark:bg-black/80 z-10 backdrop-blur-sm flex items-center justify-center">
-                            <div className="bg-neutral-900 text-white px-6 py-3 rounded-full flex items-center gap-2 font-bold">
-                                <Lock className="size-4" /> Switch to Manual to control pump
-                            </div>
-                        </div>
-                    )}
-                    <CardContent className="p-6 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <Activity className={`size-10 ${pumpActive ? 'text-emerald-500 trigger-active' : 'text-slate-400'}`} />
-                            <div>
-                                <p className="text-xl font-black">{pumpActive ? 'Pump Running' : 'Pump Idle'}</p>
-                                <p className="text-sm text-slate-500">Relay #1 · GPIO 17</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-3">
-                            <Button
-                                size="lg"
-                                onClick={() => handlePump('ON')}
-                                disabled={loading || pumpActive || isLocked}
-                                className="bg-emerald-600 hover:bg-emerald-700 font-bold gap-2"
-                            >
-                                <Power className="size-5" /> ON
-                            </Button>
-                            <Button
-                                size="lg"
-                                variant="outline"
-                                onClick={() => handlePump('OFF')}
-                                disabled={loading || !pumpActive}
-                                className="font-bold gap-2 border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400"
-                            >
-                                <Power className="size-5" /> OFF
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Emergency Stop */}
-            <Card className="border-red-500/30 bg-red-50/50 dark:bg-red-950/20 shadow-none">
-                <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <AlertTriangle className="size-6 text-red-500" />
-                        <div>
-                            <p className="font-bold">Emergency Stop</p>
-                            <p className="text-xs text-slate-500">Immediately halts all outputs</p>
-                        </div>
-                    </div>
-                    <Button
-                        variant="destructive"
-                        size="lg"
-                        onClick={confirmEmergencyStop}
-                        className="font-black gap-2"
-                    >
-                        <Power className="size-5" /> STOP
-                    </Button>
-                </CardContent>
-            </Card>
         </div>
     );
 };
 
-const SensorCard: React.FC<{
-    icon: React.ReactNode;
-    label: string;
-    value: string;
-    status: 'normal' | 'low' | 'critical';
-    sensor: string;
-}> = ({ icon, label, value, status, sensor }) => {
-    const statusColors = {
-        normal: 'text-emerald-500',
-        low: 'text-orange-500',
-        critical: 'text-red-500'
-    };
-    const statusDot = {
-        normal: 'bg-emerald-500',
-        low: 'bg-orange-500',
-        critical: 'bg-red-500'
-    };
-
-    return (
-        <Card className="shadow-none border border-slate-200 dark:border-slate-800">
-            <CardContent className="p-4">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className={statusColors[status]}>
-                        {icon}
-                    </div>
-                    <div className="flex-1">
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">{label}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">{sensor}</span>
-                    </div>
-                    <span className={`size-2 rounded-full ${statusDot[status]}`} />
-                </div>
-                <span className={`text-2xl font-black ${statusColors[status]}`}>{value}</span>
-            </CardContent>
-        </Card>
-    );
-};
+const MiniSensorCard: React.FC<{label: string, value: string, icon: React.ReactNode, active: boolean}> = ({label, value, icon, active}) => (
+    <Card className={`border-2 rounded-[1.5rem] shadow-sm transition-all duration-500 ${!active ? 'opacity-20 grayscale' : 'border-slate-100 dark:border-slate-800'}`}>
+        <CardContent className="p-5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+                <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl">{icon}</div>
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{label}</span>
+            </div>
+            <span className="text-xl font-black text-slate-900 dark:text-white">{value}</span>
+        </CardContent>
+    </Card>
+);

@@ -1,0 +1,26 @@
+# Task Checklist: Direct MQTT Integration
+
+- `[x]` **1. Infrastructure & Startup Changes**
+  - `[x]` Update `fix_mosquitto.bat` (Add WebSocket port 9001).
+  - `[x]` Update `start_pwos.bat` (Remove simulation selection, add normal/silent start).
+- `[x]` **2. Backend MQTT Synchronization**
+  - `[x]` Modify `src/backend/app.py` and `mqtt_subscriber.py` or `automation_controller.py` to sync with `pwos/system/mode`.
+- `[x]` **3. ESP32 Simulation Logic**
+  - `[x]` Update `src/simulation/esp32_simulator.py` to add LWT, `pump_active` telemetry lock, and internal hardware shutoff timer based on payload.
+- `[x]` **4. Frontend Dependencies**
+  - `[x]` Run `npm install mqtt` in `src/frontend`.
+- `[x]` **5. Frontend Services & Hooks**
+  - `[x]` Create `mqttClient.ts` for WS connection.
+  - `[x]` Create `useMqtt.ts` custom hook for component state synchronization.
+  - `[x]` Implement **Optimistic UI Updates** for instant button feedback.
+- `[x]` **6. Frontend Component Integration**
+  - `[x]` Update `Control.tsx` (Redesigned UI, Fallback badges, mode publishing, settings lock).
+  - `[x]` Update `Dashboard.tsx` (Integrated new `QuickActions.tsx` component).
+  - `[x]` Standardize status topics across all components to `pwos/system/hardware`.
+- `[x]` **7. ESP32 Firmware Unification**
+  - `[x]` Standardized `pwos_esp32.ino` on `pwos/system/hardware`.
+  - `[x]` Implemented **Last Will and Testament (LWT)** for real-time offline detection.
+  - `[x]` Added `pwos/system/mode` subscription for hardware-level mode sync.
+- `[x]` **8. Verification**
+  - `[x]` Verified "Frontend Independent" mode (React works with ESP32 while Backend is OFF).
+  - `[x]` Fixed "Blind Dashboard" bug via Mosquitto config cleanup.

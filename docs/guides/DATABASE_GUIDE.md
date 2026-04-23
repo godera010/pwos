@@ -6,28 +6,20 @@
 
 ## Quick Start
 
-### Option 1: Use Existing Database (Recommended)
-Copy the database file directly:
+### Option 1: Fresh Database (Recommended)
 ```bash
-# The database is already included in the repository
-data/pwos_simulation.db
-```
+# 1. Ensure PostgreSQL is running
+# 2. Create the database
+psql -U postgres -c "CREATE DATABASE pwos;"
 
-### Option 2: Import from SQL Exports
-```bash
-# Create empty database
-python -c "import sqlite3; sqlite3.connect('data/pwos_simulation.db').close()"
-
-# Import schema
-sqlite3 data/pwos_simulation.db < data/exports/schema.sql
-
-# Import sample data
-sqlite3 data/pwos_simulation.db < data/exports/sample_data.sql
-```
-
-### Option 3: Create Fresh Database
-```bash
+# 3. Initialize tables (auto-creates schema)
 python src/backend/database.py
+```
+
+### Option 2: Restore from Backup
+```bash
+# Restore a pg_dump backup
+psql -U postgres -d pwos < data/backups/pwos_backup.sql
 ```
 
 ---
@@ -36,30 +28,33 @@ python src/backend/database.py
 
 | Attribute | Value |
 |-----------|-------|
-| **Engine** | SQLite 3 |
-| **File** | `data/pwos_simulation.db` |
-| **Size** | ~565 KB |
-| **Tables** | 5 |
+| **Engine** | PostgreSQL 15+ |
+| **Connection** | Configured in `src/config.py` |
+| **Default Host** | `localhost:5432` |
+| **Default Name** | `pwos` |
+| **Driver** | psycopg2 (Python) |
+| **Tables** | 4 |
 
-### Current Statistics
-| Table | Rows |
-|-------|------|
-| `sensor_readings` | 6,273 |
-| `watering_events` | 120 |
-| `predictions` | Varies |
-| `system_logs` | Varies |
+### Connection Configuration (`src/config.py`)
+```python
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_NAME = os.getenv("DB_NAME", "pwos")
+DB_USER = os.getenv("DB_USER", "postgres")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")
+```
 
 ---
 
 ## Schema Reference
 
 ### 1. sensor_readings (Core Data)
-Stores all sensor telemetry from ESP32.
+Stores all sensor telemetry from ESP32 hardware or simulator.
 
 ```sql
 CREATE TABLE sensor_readings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     soil_moisture REAL NOT NULL,
     temperature REAL NOT NULL,
     humidity REAL NOT NULL,
@@ -69,8 +64,8 @@ CREATE TABLE sensor_readings (
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `id` | INTEGER | Auto-increment primary key |
-| `timestamp` | DATETIME | When reading was recorded |
+| `id` | SERIAL | Auto-increment primary key |
+| `timestamp` | TIMESTAMP | When reading was recorded |
 | `soil_moisture` | REAL | Soil moisture 0-100% |
 | `temperature` | REAL | Temperature in Celsius |
 | `humidity` | REAL | Relative humidity 0-100% |
@@ -88,8 +83,8 @@ Records every pump activation.
 
 ```sql
 CREATE TABLE watering_events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     duration INTEGER NOT NULL,
     trigger TEXT NOT NULL,
     moisture_before REAL,
@@ -99,8 +94,8 @@ CREATE TABLE watering_events (
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `id` | INTEGER | Auto-increment primary key |
-| `timestamp` | DATETIME | When pump activated |
+| `id` | SERIAL | Auto-increment primary key |
+| `timestamp` | TIMESTAMP | When pump activated |
 | `duration` | INTEGER | Pump duration in seconds |
 | `trigger` | TEXT | 'AUTO', 'MANUAL', or 'ML' |
 | `moisture_before` | REAL | Moisture before watering |
@@ -113,8 +108,8 @@ Logs ML model predictions.
 
 ```sql
 CREATE TABLE predictions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action TEXT NOT NULL,
     confidence REAL,
     features TEXT
@@ -123,7 +118,7 @@ CREATE TABLE predictions (
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `action` | TEXT | 'WATER_NOW', 'STALL', 'WAIT' |
+| `action` | TEXT | 'WATER_NOW', 'STALL', 'WAIT', 'HARDWARE_OFFLINE' |
 | `confidence` | REAL | Prediction confidence 0-100 |
 | `features` | TEXT | JSON of 17 input features |
 
@@ -134,8 +129,8 @@ System events and messages.
 
 ```sql
 CREATE TABLE system_logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     message TEXT NOT NULL,
     type TEXT DEFAULT 'INFO'
 );
@@ -170,19 +165,35 @@ ORDER BY date DESC;
 ### Get Average Moisture by Hour
 ```sql
 SELECT 
-    strftime('%H', timestamp) as hour,
+    EXTRACT(HOUR FROM timestamp) as hour,
     AVG(soil_moisture) as avg_moisture
 FROM sensor_readings
 GROUP BY hour
 ORDER BY hour;
 ```
 
+### Get Aggregated Data (15-minute buckets)
+This is the query used by the Analytics dashboard:
+```sql
+SELECT 
+    DATE_TRUNC('minute', timestamp) 
+        - (EXTRACT(MINUTE FROM timestamp)::int % 15) * INTERVAL '1 minute' as bucket,
+    AVG(soil_moisture) as avg_moisture,
+    AVG(temperature) as avg_temp,
+    AVG(humidity) as avg_humidity,
+    COUNT(*) as reading_count
+FROM sensor_readings
+WHERE timestamp >= NOW() - INTERVAL '24 hours'
+GROUP BY bucket
+ORDER BY bucket;
+```
+
 ### Get Readings for Training Data
 ```sql
 SELECT 
     r.*,
-    strftime('%H', r.timestamp) as hour,
-    strftime('%w', r.timestamp) as day_of_week
+    EXTRACT(HOUR FROM r.timestamp) as hour,
+    EXTRACT(DOW FROM r.timestamp) as day_of_week
 FROM sensor_readings r
 ORDER BY r.timestamp DESC
 LIMIT 10000;
@@ -192,27 +203,11 @@ LIMIT 10000;
 
 ## Python Usage
 
-### Connect to Database
-```python
-import sqlite3
-
-conn = sqlite3.connect('data/pwos_simulation.db')
-cursor = conn.cursor()
-
-# Query example
-cursor.execute("SELECT * FROM sensor_readings ORDER BY id DESC LIMIT 10")
-rows = cursor.fetchall()
-for row in rows:
-    print(row)
-
-conn.close()
-```
-
 ### Using database.py Module
 ```python
-from src.backend.database import Database
+from src.backend.database import PWOSDatabase
 
-db = Database()
+db = PWOSDatabase()
 
 # Get latest reading
 latest = db.get_latest_reading()
@@ -223,36 +218,56 @@ history = db.get_readings(limit=100)
 
 # Log watering event
 db.log_watering_event(duration=30, trigger='AUTO')
+
+# Get aggregated analytics data
+aggregated = db.get_aggregated_data(hours=24, interval_seconds=900)
+```
+
+### Direct psycopg2 Connection
+```python
+import psycopg2
+from src.config import DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+
+conn = psycopg2.connect(
+    host=DB_HOST, port=DB_PORT,
+    database=DB_NAME, user=DB_USER,
+    password=DB_PASSWORD
+)
+cursor = conn.cursor()
+
+cursor.execute("SELECT * FROM sensor_readings ORDER BY id DESC LIMIT 10")
+rows = cursor.fetchall()
+for row in rows:
+    print(row)
+
+conn.close()
 ```
 
 ---
 
-## Export & Import
-
-### Export Current Database
-```bash
-python scripts/export_database.py
-```
-
-Creates:
-- `data/exports/schema.sql` - Table definitions
-- `data/exports/sample_data.sql` - Sample data
+## Backup & Restore
 
 ### Backup Database
 ```bash
-# Windows
-copy data\pwos_simulation.db data\backups\pwos_%DATE%.db
+# Full backup
+pg_dump -U postgres pwos > data/backups/pwos_$(date +%Y%m%d).sql
 
-# Linux/Mac
-cp data/pwos_simulation.db data/backups/pwos_$(date +%Y%m%d).db
+# Windows
+pg_dump -U postgres pwos > data\backups\pwos_backup.sql
 ```
 
-### Reset Database
+### Restore Database
 ```bash
-# Delete existing
-del data\pwos_simulation.db
+# Drop and recreate
+psql -U postgres -c "DROP DATABASE IF EXISTS pwos;"
+psql -U postgres -c "CREATE DATABASE pwos;"
+psql -U postgres -d pwos < data/backups/pwos_backup.sql
+```
 
-# Recreate
+### Reset Database (Fresh Start)
+```bash
+# Drop all tables and recreate schema
+psql -U postgres -d pwos -c "DROP TABLE IF EXISTS sensor_readings, watering_events, predictions, system_logs CASCADE;"
 python src/backend/database.py
 ```
 
@@ -260,13 +275,27 @@ python src/backend/database.py
 
 ## Troubleshooting
 
-### "Database is locked"
+### "Connection refused"
 ```bash
-# Find processes using the database
-tasklist | findstr python
+# Check PostgreSQL is running
+pg_isready -h localhost -p 5432
 
-# Kill if needed
-taskkill /F /PID <process_id>
+# Start PostgreSQL (Windows)
+net start postgresql-x64-15
+
+# Start PostgreSQL (Linux)
+sudo systemctl start postgresql
+```
+
+### "Database does not exist"
+```bash
+psql -U postgres -c "CREATE DATABASE pwos;"
+```
+
+### "Password authentication failed"
+Check your `DB_PASSWORD` in `src/config.py` or set the environment variable:
+```bash
+set DB_PASSWORD=your_password
 ```
 
 ### "No such table"
@@ -275,52 +304,41 @@ taskkill /F /PID <process_id>
 python src/backend/database.py
 ```
 
-### "Corrupt database"
-```bash
-# Restore from backup or regenerate
-del data\pwos_simulation.db
-python src/backend/database.py
-python src/simulation/data_generator.py
-```
-
 ---
 
 ## For Contributors
 
 ### Setting Up Your Development Database
 
-1. **Clone repository**
+1. **Install PostgreSQL 15+**
+   - Download from [postgresql.org](https://www.postgresql.org/download/)
+
+2. **Create the database:**
    ```bash
-   git clone <repo-url>
-   cd pwos
+   psql -U postgres -c "CREATE DATABASE pwos;"
    ```
 
-2. **Database is included** - `data/pwos_simulation.db` is in the repo
-
-3. **Or create fresh database with sample data:**
+3. **Initialize schema:**
    ```bash
    python src/backend/database.py
-   python src/simulation/esp32_simulator.py 100
    ```
 
-4. **Verify setup:**
+4. **Seed with simulation data (optional):**
    ```bash
-   python -c "from src.backend.database import Database; db = Database(); print(f'Readings: {db.get_readings_count()}')"
+   python src/simulation/esp32_simulator.py
+   # Let it run for a few minutes, then stop with Ctrl+C
+   ```
+
+5. **Verify setup:**
+   ```bash
+   psql -U postgres -d pwos -c "SELECT COUNT(*) FROM sensor_readings;"
    ```
 
 ---
 
-## Migration to PostgreSQL (Future)
+## Migration History
 
-For cloud deployment, migrate to PostgreSQL:
-
-```python
-# Connection string change
-# SQLite: sqlite:///data/pwos_simulation.db
-# PostgreSQL: postgresql://user:pass@host:5432/pwos
-
-# Schema changes:
-# AUTOINCREMENT → SERIAL
-# DATETIME → TIMESTAMP
-# TEXT → VARCHAR(255)
-```
+| Date | Migration | Notes |
+|------|-----------|-------|
+| Feb 2026 | SQLite (initial) | Prototype database, file-based |
+| Apr 2026 | **PostgreSQL** | Production migration — `DATE_TRUNC` aggregation, concurrent access, connection pooling |

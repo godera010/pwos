@@ -50,6 +50,11 @@ def on_message(client, userdata, msg):
               f"Temp={data['temperature']}C, "
               f"Humidity={data['humidity']}%")
         
+        # ESP32 sends millis() as timestamp (integer, not a datetime).
+        # Always use server's current time for database storage.
+        from datetime import datetime
+        data['timestamp'] = datetime.now().isoformat()
+        
         # Fetch weather from weather_api (respects WEATHER_API_MODE)
         try:
             forecast = weather_api.get_forecast()

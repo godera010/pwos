@@ -1,0 +1,838 @@
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.00V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.01V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.02V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.04V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.06V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.08V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.06V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.06V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.07V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.10V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.10V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.12V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.13V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.14V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.15V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.16V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.20V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.21V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.21V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.22V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.22V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.22V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.23V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.23V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.24V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.24V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.24V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.24V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.25V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.25V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.25V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.25V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.26V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.26V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.26V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.27V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.27V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.27V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.28V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.28V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.30V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.29V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.30V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.30V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.31V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.30V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.30V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.30V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.30V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.31V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.30V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.30V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.28V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.28V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.27V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.26V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.25V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.25V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.25V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.24V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.19V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.17V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.16V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.11V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.11V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.10V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.09V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.11V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+GPIO 34 | Voltage: 0.48V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.45V | State: LOW   --> ⚠️ FLOATING (Not connected to power or ground)
+GPIO 34 | Voltage: 0.13V | State: LOW   --> 🔵 ANCHORED TO GND (PERFECT!)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.29V) |  Col 15 (WATER): ⚠️ FLOATING (0.25V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.23V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.20V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.30V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.39V) |  Col 15 (WATER): ⚠️ FLOATING (0.27V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.49V) |  Col 15 (WATER): ⚠️ FLOATING (0.44V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.53V) |  Col 15 (WATER): ⚠️ FLOATING (0.52V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.55V) |  Col 15 (WATER): ⚠️ FLOATING (0.56V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.57V) |  Col 15 (WATER): ⚠️ FLOATING (0.62V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.56V) |  Col 15 (WATER): ⚠️ FLOATING (0.62V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.50V) |  Col 15 (WATER): ⚠️ FLOATING (0.54V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.41V) |  Col 15 (WATER): ⚠️ FLOATING (0.42V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.32V) |  Col 15 (WATER): ⚠️ FLOATING (0.30V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.25V) |  Col 15 (WATER): ⚠️ FLOATING (0.20V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.32V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.45V) |  Col 15 (WATER): ⚠️ FLOATING (0.36V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.53V) |  Col 15 (WATER): ⚠️ FLOATING (0.53V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.57V) |  Col 15 (WATER): ⚠️ FLOATING (0.60V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.60V) |  Col 15 (WATER): ⚠️ FLOATING (0.67V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.56V) |  Col 15 (WATER): ⚠️ FLOATING (0.62V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.45V) |  Col 15 (WATER): ⚠️ FLOATING (0.47V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.34V) |  Col 15 (WATER): ⚠️ FLOATING (0.32V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.24V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.35V) |  Col 15 (WATER): ⚠️ FLOATING (0.20V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.50V) |  Col 15 (WATER): ⚠️ FLOATING (0.46V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.56V) |  Col 15 (WATER): ⚠️ FLOATING (0.56V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.59V) |  Col 15 (WATER): ⚠️ FLOATING (0.64V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.56V) |  Col 15 (WATER): ⚠️ FLOATING (0.62V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.45V) |  Col 15 (WATER): ⚠️ FLOATING (0.46V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.33V) |  Col 15 (WATER): ⚠️ FLOATING (0.31V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.23V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.22V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.38V) |  Col 15 (WATER): ⚠️ FLOATING (0.26V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.51V) |  Col 15 (WATER): ⚠️ FLOATING (0.48V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.54V) |  Col 15 (WATER): ⚠️ FLOATING (0.55V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.56V) |  Col 15 (WATER): ⚠️ FLOATING (0.59V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.46V) |  Col 15 (WATER): ⚠️ FLOATING (0.45V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.35V) |  Col 15 (WATER): ⚠️ FLOATING (0.31V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.27V) |  Col 15 (WATER): ⚠️ FLOATING (0.20V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.27V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.38V) |  Col 15 (WATER): ⚠️ FLOATING (0.25V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.42V) |  Col 15 (WATER): ⚠️ FLOATING (0.32V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.45V) |  Col 15 (WATER): ⚠️ FLOATING (0.39V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.45V) |  Col 15 (WATER): ⚠️ FLOATING (0.42V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.40V) |  Col 15 (WATER): ⚠️ FLOATING (0.35V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.31V) |  Col 15 (WATER): ⚠️ FLOATING (0.24V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.24V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.30V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.39V) |  Col 15 (WATER): ⚠️ FLOATING (0.27V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.43V) |  Col 15 (WATER): ⚠️ FLOATING (0.34V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.46V) |  Col 15 (WATER): ⚠️ FLOATING (0.41V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.43V) |  Col 15 (WATER): ⚠️ FLOATING (0.40V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.34V) |  Col 15 (WATER): ⚠️ FLOATING (0.28V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.24V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.22V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.29V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.44V) |  Col 15 (WATER): ⚠️ FLOATING (0.35V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.47V) |  Col 15 (WATER): ⚠️ FLOATING (0.42V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.40V) |  Col 15 (WATER): ⚠️ FLOATING (0.33V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.33V) |  Col 15 (WATER): ⚠️ FLOATING (0.22V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.32V) |  Col 15 (WATER): ⚠️ FLOATING (0.25V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.24V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.26V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.30V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.32V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.41V) |  Col 15 (WATER): ⚠️ FLOATING (0.35V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.39V) |  Col 15 (WATER): ⚠️ FLOATING (0.34V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): ⚠️ FLOATING (0.33V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.28V) |  Col 15 (WATER): ⚠️ FLOATING (0.21V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.21V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.29V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.29V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (1.81V) |  Col 15 (WATER): ⚠️ FLOATING (1.79V)
+Col 11 (DHT): ⚠️ FLOATING (0.67V) |  Col 15 (WATER): ⚠️ FLOATING (0.69V)
+Col 11 (DHT): ⚠️ FLOATING (0.22V) |  Col 15 (WATER): ⚠️ FLOATING (1.51V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.34V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.48V) |  Col 15 (WATER): ⚠️ FLOATING (0.47V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.39V) |  Col 15 (WATER): ⚠️ FLOATING (0.35V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.31V) |  Col 15 (WATER): ⚠️ FLOATING (0.25V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.30V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.34V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.36V) |  Col 15 (WATER): ⚠️ FLOATING (0.24V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.36V) |  Col 15 (WATER): ⚠️ FLOATING (0.28V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.35V) |  Col 15 (WATER): ⚠️ FLOATING (0.30V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.28V) |  Col 15 (WATER): ⚠️ FLOATING (0.21V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.22V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.28V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.35V) |  Col 15 (WATER): ⚠️ FLOATING (0.21V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.39V) |  Col 15 (WATER): ⚠️ FLOATING (0.28V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.41V) |  Col 15 (WATER): ⚠️ FLOATING (0.35V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.40V) |  Col 15 (WATER): ⚠️ FLOATING (0.36V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.34V) |  Col 15 (WATER): ⚠️ FLOATING (0.27V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.27V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.22V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.34V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): ⚠️ FLOATING (0.24V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.40V) |  Col 15 (WATER): ⚠️ FLOATING (0.32V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.40V) |  Col 15 (WATER): ⚠️ FLOATING (0.35V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.34V) |  Col 15 (WATER): ⚠️ FLOATING (0.27V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.26V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.24V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.35V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.39V) |  Col 15 (WATER): ⚠️ FLOATING (0.27V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.43V) |  Col 15 (WATER): ⚠️ FLOATING (0.36V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): ⚠️ FLOATING (0.31V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.28V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.21V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.24V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.35V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.39V) |  Col 15 (WATER): ⚠️ FLOATING (0.28V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.41V) |  Col 15 (WATER): ⚠️ FLOATING (0.35V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.35V) |  Col 15 (WATER): ⚠️ FLOATING (0.29V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.27V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.29V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): ⚠️ FLOATING (0.23V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.41V) |  Col 15 (WATER): ⚠️ FLOATING (0.33V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.40V) |  Col 15 (WATER): ⚠️ FLOATING (0.35V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.31V) |  Col 15 (WATER): ⚠️ FLOATING (0.23V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.23V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.22V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.35V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.40V) |  Col 15 (WATER): ⚠️ FLOATING (0.29V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.44V) |  Col 15 (WATER): ⚠️ FLOATING (0.39V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.36V) |  Col 15 (WATER): ⚠️ FLOATING (0.29V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.23V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.35V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.40V) |  Col 15 (WATER): ⚠️ FLOATING (0.30V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.41V) |  Col 15 (WATER): ⚠️ FLOATING (0.35V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.32V) |  Col 15 (WATER): ⚠️ FLOATING (0.24V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.24V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): ⚠️ FLOATING (1.81V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): ⚠️ FLOATING (1.30V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): ⚠️ FLOATING (1.81V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.34V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (1.52V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.21V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.27V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): ⚠️ FLOATING (0.20V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.40V) |  Col 15 (WATER): ⚠️ FLOATING (0.28V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.43V) |  Col 15 (WATER): ⚠️ FLOATING (0.34V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): ⚠️ FLOATING (0.29V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.28V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.21V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.32V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.38V) |  Col 15 (WATER): ⚠️ FLOATING (0.23V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.40V) |  Col 15 (WATER): ⚠️ FLOATING (0.27V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.40V) |  Col 15 (WATER): ⚠️ FLOATING (0.29V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): ⚠️ FLOATING (0.27V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.29V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.22V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.30V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): ⚠️ FLOATING (0.21V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.38V) |  Col 15 (WATER): ⚠️ FLOATING (0.23V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.41V) |  Col 15 (WATER): ⚠️ FLOATING (0.30V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): ⚠️ FLOATING (0.27V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.29V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.23V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.27V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.36V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.39V) |  Col 15 (WATER): ⚠️ FLOATING (0.26V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.42V) |  Col 15 (WATER): ⚠️ FLOATING (0.32V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): ⚠️ FLOATING (0.28V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.29V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.22V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.31V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.39V) |  Col 15 (WATER): ⚠️ FLOATING (0.27V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.39V) |  Col 15 (WATER): ⚠️ FLOATING (0.29V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.31V) |  Col 15 (WATER): ⚠️ FLOATING (0.21V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.25V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.29V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.35V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.38V) |  Col 15 (WATER): ⚠️ FLOATING (0.24V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.40V) |  Col 15 (WATER): ⚠️ FLOATING (0.29V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.34V) |  Col 15 (WATER): ⚠️ FLOATING (0.23V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.26V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.24V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.35V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): ⚠️ FLOATING (0.22V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.39V) |  Col 15 (WATER): ⚠️ FLOATING (0.27V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): ⚠️ FLOATING (0.31V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.27V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.21V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.28V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.36V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.40V) |  Col 15 (WATER): ⚠️ FLOATING (0.27V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.40V) |  Col 15 (WATER): ⚠️ FLOATING (0.29V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): ⚠️ FLOATING (0.26V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.29V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.23V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.21V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.30V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.36V) |  Col 15 (WATER): ⚠️ FLOATING (0.20V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.38V) |  Col 15 (WATER): ⚠️ FLOATING (0.28V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.41V) |  Col 15 (WATER): ⚠️ FLOATING (0.32V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.39V) |  Col 15 (WATER): ⚠️ FLOATING (0.34V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.32V) |  Col 15 (WATER): ⚠️ FLOATING (0.22V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.26V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.24V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.34V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.39V) |  Col 15 (WATER): ⚠️ FLOATING (0.24V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.41V) |  Col 15 (WATER): ⚠️ FLOATING (0.29V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): ⚠️ FLOATING (0.26V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.31V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.24V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.26V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.33V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.35V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): ⚠️ FLOATING (0.21V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.38V) |  Col 15 (WATER): ⚠️ FLOATING (0.24V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.39V) |  Col 15 (WATER): ⚠️ FLOATING (0.27V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.35V) |  Col 15 (WATER): ⚠️ FLOATING (0.24V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.29V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.24V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.22V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.30V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.34V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): ⚠️ FLOATING (0.43V) |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): ⚠️ FLOATING (0.44V) |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): ⚠️ FLOATING (0.48V) |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): ⚠️ FLOATING (0.48V) |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): ⚠️ FLOATING (0.46V) |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): ⚠️ FLOATING (0.38V) |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): ⚠️ FLOATING (0.33V) |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): ⚠️ FLOATING (0.26V) |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.21V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.26V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.32V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.35V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.36V) |  Col 15 (WATER): ⚠️ FLOATING (0.20V)
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): ⚠️ FLOATING (0.27V)
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): ⚠️ FLOATING (0.30V)
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): ⚠️ FLOATING (0.29V)
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): ⚠️ FLOATING (0.24V)
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.50V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.25V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.31V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.35V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.37V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): ⚠️ FLOATING (0.24V)
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.26V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.23V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): ⚠️ FLOATING (0.26V) |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): ⚠️ FLOATING (0.34V) |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): ⚠️ FLOATING (0.38V) |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): ⚠️ FLOATING (0.40V) |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): ⚠️ FLOATING (0.43V) |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): ⚠️ FLOATING (0.44V) |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): ⚠️ FLOATING (0.43V) |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🟢 ANCHORED 3.3V
+Col 11 (DHT): ⚠️ FLOATING (0.38V) |  Col 15 (WATER): ⚠️ FLOATING (0.28V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.32V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.26V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.22V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): ⚠️ FLOATING (0.21V)
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): ⚠️ FLOATING (0.26V)
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🟢 ANCHORED 3.3V  |  Col 15 (WATER): ⚠️ FLOATING (0.29V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.40V) |  Col 15 (WATER): ⚠️ FLOATING (0.27V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.38V) |  Col 15 (WATER): ⚠️ FLOATING (0.27V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.32V) |  Col 15 (WATER): ⚠️ FLOATING (0.20V)
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.28V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): ⚠️ FLOATING (0.24V) |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND
+Col 11 (DHT): 🔵 ANCHORED GND   |  Col 15 (WATER): 🔵 ANCHORED GND

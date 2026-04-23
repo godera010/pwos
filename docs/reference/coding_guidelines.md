@@ -138,10 +138,14 @@ except Exception as e:
     raise
 
 # Use context managers for resources
-with sqlite3.connect(db_path) as conn:
-    cursor = conn.cursor()
-    # Do work
-# Automatically closes connection
+import psycopg2
+conn = psycopg2.connect(host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD)
+try:
+    with conn.cursor() as cur:
+        cur.execute("SELECT * FROM sensor_readings LIMIT 10")
+        rows = cur.fetchall()
+finally:
+    conn.close()
 
 # Fail fast - validate inputs early
 def set_moisture_threshold(value: float) -> None:
@@ -275,9 +279,12 @@ COMFORTABLE_MOISTURE = 40.0
 SENSOR_INTERVAL = 60  # seconds
 API_REFRESH_RATE = 10  # seconds
 
-# Database
-DB_PATH = "data/sensor_data.db"
-DB_BACKUP_INTERVAL = 86400  # 24 hours in seconds
+# Database (PostgreSQL)
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_PORT = os.getenv('DB_PORT', '5432')
+DB_NAME = os.getenv('DB_NAME', 'pwos')
+DB_USER = os.getenv('DB_USER', 'postgres')
+DB_PASSWORD = os.getenv('DB_PASSWORD', '')
 
 # ML Model
 MODEL_PATH = "data/trained_model.pkl"
@@ -413,46 +420,50 @@ def get_sensor_data():
 
 ## DATABASE GUIDELINES
 
-### Query Safety
+### Query Safety (PostgreSQL)
 
 ```python
 # GOOD - Parameterized queries (safe from SQL injection)
-cursor.execute(
-    "SELECT * FROM sensor_readings WHERE device_id = ?",
+cur.execute(
+    "SELECT * FROM sensor_readings WHERE device_id = %s",
     (device_id,)
 )
 
 # BAD - String formatting (vulnerable to SQL injection!)
-cursor.execute(
+cur.execute(
     f"SELECT * FROM sensor_readings WHERE device_id = '{device_id}'"
 )
 
 # GOOD - Multiple parameters
-cursor.execute(
+cur.execute(
     """INSERT INTO sensor_readings 
        (timestamp, moisture, temperature) 
-       VALUES (?, ?, ?)""",
+       VALUES (%s, %s, %s)""",
     (timestamp, moisture, temp)
 )
 ```
 
-### Connection Management
+### Connection Management (PostgreSQL)
 
 ```python
-# GOOD - Use context manager
-def get_readings():
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM sensor_readings LIMIT 10")
-        return cursor.fetchall()
-    # Connection auto-closes
+import psycopg2
 
-# BAD - Manual connection management
+# GOOD - Use try/finally
 def get_readings():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM sensor_readings LIMIT 10")
-    data = cursor.fetchall()
+    conn = psycopg2.connect(host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD)
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM sensor_readings ORDER BY timestamp DESC LIMIT 10")
+            return cur.fetchall()
+    finally:
+        conn.close()
+
+# BAD - No cleanup on error
+def get_readings():
+    conn = psycopg2.connect(host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD)
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM sensor_readings LIMIT 10")
+    data = cur.fetchall()
     # Forgot to close connection!
     return data
 ```
@@ -660,22 +671,27 @@ def on_message(client, userdata, msg):
 
 ## PERFORMANCE GUIDELINES
 
-### Database Optimization
+### Database Optimization (PostgreSQL)
 
 ```python
+import psycopg2
+
 # Batch inserts for better performance
 def insert_batch(readings: List[Dict]) -> None:
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        cursor.executemany(
-            """INSERT INTO sensor_readings 
-               (timestamp, moisture, temp, humidity)
-               VALUES (?, ?, ?, ?)""",
-            [(r['timestamp'], r['moisture'], 
-              r['temp'], r['humidity']) 
-             for r in readings]
-        )
+    conn = psycopg2.connect(host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD)
+    try:
+        with conn.cursor() as cur:
+            cur.executemany(
+                """INSERT INTO sensor_readings 
+                   (timestamp, moisture, temp, humidity)
+                   VALUES (%s, %s, %s, %s)""",
+                [(r['timestamp'], r['moisture'], 
+                  r['temp'], r['humidity']) 
+                 for r in readings]
+            )
         conn.commit()
+    finally:
+        conn.close()
 
 # Better than 1000 individual inserts!
 ```

@@ -50,13 +50,22 @@ function fillMissingBuckets(data: any[], intervalStr: string): any[] {
     };
 
     const intervalMs = intervalMsMap[intervalStr] || 15 * 60 * 1000;
-    data.sort((a, b) => a.timestamp - b.timestamp);
 
-    const startMs = data[0].timestamp;
-    const endMs = data[data.length - 1].timestamp;
+    // Snap each data point's timestamp to the nearest bucket boundary
+    // This ensures real data matches the generated grid even if there are
+    // millisecond-level differences from PostgreSQL's to_timestamp()
+    const snappedData = data.map(item => ({
+        ...item,
+        timestamp: Math.round(item.timestamp / intervalMs) * intervalMs
+    }));
+    snappedData.sort((a, b) => a.timestamp - b.timestamp);
 
-    const dataMap = new Map();
-    for (const item of data) {
+    const startMs = snappedData[0].timestamp;
+    const endMs = snappedData[snappedData.length - 1].timestamp;
+
+    // Build lookup by snapped timestamp
+    const dataMap = new Map<number, any>();
+    for (const item of snappedData) {
         dataMap.set(item.timestamp, item);
     }
 
@@ -65,15 +74,18 @@ function fillMissingBuckets(data: any[], intervalStr: string): any[] {
         if (dataMap.has(currentMs)) {
             filledData.push(dataMap.get(currentMs));
         } else {
+            // Gap entry: use null for sensor values so they are excluded
+            // from KPI averages and render as chart gaps instead of drops to 0
             const dateObj = new Date(currentMs);
             filledData.push({
                 timestamp: currentMs,
                 fullDate: dateObj.toLocaleString(),
+                _isGap: true,
                 _original_moisture: null,
-                soil_moisture: 0,
-                temperature: 0,
-                humidity: 0,
-                vpd: 0,
+                soil_moisture: null,
+                temperature: null,
+                humidity: null,
+                vpd: null,
                 water_usage_ai: 0,
                 water_usage_standard: 0,
                 total_duration_raw: 0,
@@ -227,13 +239,13 @@ export const Analytics: React.FC = () => {
     const exportToCSV = () => {
         if (!data || data.length === 0) return;
         const headers = ["Timestamp", "Full Date", "Soil Moisture (%)", "Temperature (°C)", "Humidity (%)", "VPD (kPa)", "AI Water Usage (s)", "Standard Water Usage (s)"];
-        const rows = data.map(d => [
+        const rows = data.filter(d => !d._isGap).map(d => [
             new Date(d.timestamp).toLocaleString(),
             d.fullDate,
-            d.soil_moisture.toFixed(2),
-            d.temperature.toFixed(2),
-            d.humidity.toFixed(2),
-            d.vpd.toFixed(3),
+            d.soil_moisture != null ? d.soil_moisture.toFixed(2) : '',
+            d.temperature != null ? d.temperature.toFixed(2) : '',
+            d.humidity != null ? d.humidity.toFixed(2) : '',
+            d.vpd != null ? d.vpd.toFixed(3) : '',
             d.water_usage_ai,
             d.water_usage_standard
         ]);
@@ -260,10 +272,13 @@ export const Analytics: React.FC = () => {
 
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
+            // Filter out entries with null values (gap-filled buckets)
+            const validEntries = payload.filter((entry: any) => entry.value !== null && entry.value !== undefined);
+            if (validEntries.length === 0) return null;
             return (
                 <div className="bg-slate-900/95 border border-slate-700 p-3 rounded-lg shadow-xl text-white text-xs">
                     <p className="font-bold text-slate-300 mb-2 border-b border-slate-700 pb-1">{new Date(label).toLocaleString()}</p>
-                    {payload.map((entry: any, index: number) => (
+                    {validEntries.map((entry: any, index: number) => (
                         <p key={`item-${index}`} style={{ color: entry.color }} className="flex justify-between gap-4 py-0.5">
                             <span>{entry.name}:</span>
                             <span className="font-bold">
@@ -353,7 +368,12 @@ export const Analytics: React.FC = () => {
                             <Thermometer className="size-5 text-orange-500" />
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Avg Temp</span>
                         </div>
-                        <p className="text-2xl font-black text-slate-900 dark:text-white">{data.length > 0 ? (data.reduce((s, d) => s + d.temperature, 0) / data.length).toFixed(1) : 0}°C</p>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white">
+                            {(() => {
+                                const valid = data.filter(d => !d._isGap && d.temperature !== null && d.temperature !== undefined);
+                                return valid.length > 0 ? (valid.reduce((s, d) => s + d.temperature, 0) / valid.length).toFixed(1) : '0';
+                            })()}°C
+                        </p>
                         <p className="text-[10px] text-slate-400 mt-1">{rangeLabel}</p>
                     </CardContent>
                 </Card>
@@ -365,7 +385,12 @@ export const Analytics: React.FC = () => {
                             <Droplet className="size-5 text-sky-500" />
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Avg Humidity</span>
                         </div>
-                        <p className="text-2xl font-black text-slate-900 dark:text-white">{data.length > 0 ? (data.reduce((s, d) => s + d.humidity, 0) / data.length).toFixed(1) : 0}%</p>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white">
+                            {(() => {
+                                const valid = data.filter(d => !d._isGap && d.humidity !== null && d.humidity !== undefined);
+                                return valid.length > 0 ? (valid.reduce((s, d) => s + d.humidity, 0) / valid.length).toFixed(1) : '0';
+                            })()}%
+                        </p>
                         <p className="text-[10px] text-slate-400 mt-1">{rangeLabel}</p>
                     </CardContent>
                 </Card>
@@ -377,7 +402,7 @@ export const Analytics: React.FC = () => {
                             <BarChart3 className="size-5 text-indigo-500" />
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Readings</span>
                         </div>
-                        <p className="text-2xl font-black text-slate-900 dark:text-white">{data.length}</p>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white">{data.filter(d => !d._isGap).length}</p>
                         <p className="text-[10px] text-slate-400 mt-1">{rangeLabel}</p>
                     </CardContent>
                 </Card>
@@ -405,13 +430,13 @@ export const Analytics: React.FC = () => {
                                     <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="rgba(128,128,128,0.1)" />
                                         <XAxis dataKey="timestamp" type="number" scale="time" domain={['auto', 'auto']} padding={{ left: 0, right: 0 }} tick={{ fontSize: 12 }} stroke="#a3a3a3" axisLine={false} tickLine={false} interval="preserveStartEnd" tickFormatter={formatXAxis} />
-                                        <YAxis yAxisId="left" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                                        <YAxis yAxisId="right" orientation="right" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                                        <YAxis yAxisId="left" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} domain={[0, 'auto']} />
+                                        <YAxis yAxisId="right" orientation="right" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} domain={[0, 100]} />
                                         <Tooltip content={<CustomTooltip />} />
                                         <Legend />
-                                        <Line yAxisId="left" type="monotone" dataKey="soil_moisture" name="Soil Moisture (%)" stroke="#10b981" strokeWidth={2.5} dot={false} connectNulls={true} />
-                                        <Line yAxisId="left" type="monotone" dataKey="temperature" name="Temperature (°C)" stroke="#f97316" strokeWidth={2} dot={false} connectNulls={true} />
-                                        <Line yAxisId="right" type="monotone" dataKey="humidity" name="Humidity (%)" stroke="#3b82f6" strokeWidth={2} dot={false} connectNulls={true} />
+                                        <Line yAxisId="left" type="monotone" dataKey="soil_moisture" name="Soil Moisture (%)" stroke="#10b981" strokeWidth={2.5} dot={false} connectNulls />
+                                        <Line yAxisId="left" type="monotone" dataKey="temperature" name="Temperature (°C)" stroke="#f97316" strokeWidth={2} dot={false} connectNulls />
+                                        <Line yAxisId="right" type="monotone" dataKey="humidity" name="Humidity (%)" stroke="#3b82f6" strokeWidth={2} dot={false} connectNulls />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>
