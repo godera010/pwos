@@ -10,11 +10,21 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from log_config import setup_logger
 logger = setup_logger("MLPredictor", "ml_predictor.log", "app")
+from utils.vpd_calculator import calculate_vpd
 
 # Paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 MODEL_PATH = os.path.join(BASE_DIR, 'src', 'backend', 'models', 'artifacts', 'rf_model.pkl')
 METADATA_PATH = os.path.join(BASE_DIR, 'src', 'backend', 'models', 'artifacts', 'model_metadata.json')
+
+# Standard Crop Parameters Dict based on FAO AquaCrop
+CROP_PARAMS = {
+    'maize': {'target': 60.0, 'critical': 30.0, 'low': 45.0, 'proactive': 55.0, 'high': 75.0, 'multiplier': 1.0},
+    'potato': {'target': 70.0, 'critical': 45.0, 'low': 55.0, 'proactive': 65.0, 'high': 85.0, 'multiplier': 1.4},
+    'tomato': {'target': 62.0, 'critical': 35.0, 'low': 48.0, 'proactive': 58.0, 'high': 75.0, 'multiplier': 1.2},
+    'onion': {'target': 65.0, 'critical': 40.0, 'low': 52.0, 'proactive': 60.0, 'high': 80.0, 'multiplier': 0.8},
+    'sorghum': {'target': 50.0, 'critical': 20.0, 'low': 30.0, 'proactive': 40.0, 'high': 65.0, 'multiplier': 0.6}
+}
 
 class MLPredictor:
     def __init__(self):
@@ -44,18 +54,39 @@ class MLPredictor:
                 self.metadata = json.load(f)
         else:
             logger.error(f"Model not found at {MODEL_PATH}")
-    def get_seasonal_thresholds(self, month):
+
+    def get_active_settings(self):
+        """Load persisted operational settings on the fly."""
+        settings_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'operational_settings.json')
+        defaults = {'active_crop': 'maize', 'active_region': 'matabeleland'}
+        if os.path.exists(settings_path):
+            try:
+                with open(settings_path, 'r') as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return defaults
+
+    def get_seasonal_thresholds(self, month, active_crop='maize'):
         """
         Adjust moisture thresholds based on season (Southern Hemisphere - Zimbabwe).
-        Summer (Nov-Mar): Hot, high evap -> Higher thresholds
-        Winter (May-Sep): Cool, low evap -> Lower thresholds
+        Summer (Nov-Mar): Shift thresholds up by 5% moisture
+        Winter (May-Sep): Shift thresholds down by 5% moisture
         """
+        base = CROP_PARAMS.get(active_crop, CROP_PARAMS['maize']).copy()
+        shift = 0
         if month in [11, 12, 1, 2, 3]:  # Summer
-            return {'critical': 15, 'low': 35, 'proactive': 50, 'high': 80}
+            shift = 5
         elif month in [5, 6, 7, 8, 9]:  # Winter
-            return {'critical': 10, 'low': 25, 'proactive': 40, 'high': 70}
-        else:  # Autumn/Spring
-            return {'critical': 12, 'low': 30, 'proactive': 45, 'high': 75}
+            shift = -5
+            
+        return {
+            'critical': max(5, base['critical'] + shift),
+            'low': max(10, base['low'] + shift),
+            'proactive': max(15, base['proactive'] + shift),
+            'high': max(20, base['high'] + shift),
+            'target': max(25, base['target'] + shift)
+        }
 
     def predict_decay_rate(self, temp, humidity, vpd, hour):
         """Predict moisture loss rate (%/hour)."""
@@ -99,7 +130,39 @@ class MLPredictor:
             return (True, "False dry suspected (High Wind/Low Hum).")
         return (False, "")
 
-    def predict_next_watering(self, current_data, history_df=None):
+    def check_sensor_validity(self, moisture, history_df=None):
+        """Check if moisture indicates sensor disconnection or error."""
+        # 1. Moisture below 1.0% (incorporating disconnection guard for analog-to-digital drift)
+        if moisture < 1.0:
+            return False
+            
+        # 2. Check for flatline standard deviation or low averages if history is available
+        if history_df is not None and not history_df.empty and 'soil_moisture' in history_df.columns:
+            recent_moistures = history_df['soil_moisture'].tolist()
+            recent_moistures.append(moisture)
+            
+            # Keep at most last 5 readings to check for flatline/low average
+            recent_moistures = recent_moistures[-5:]
+            
+            # If we have at least 4 readings, and their standard deviation is 0 (flatline)
+            if len(recent_moistures) >= 4:
+                import numpy as np
+                std = np.std(recent_moistures)
+                if std < 0.0001:  # flatline detected
+                    logger.warning(f"Sensor flatline detected! Recent moistures: {recent_moistures}")
+                    return False
+            
+            # If we have at least 3 readings, check if their average is below 1.0%
+            if len(recent_moistures) >= 3:
+                import numpy as np
+                avg = np.mean(recent_moistures)
+                if avg < 1.0:
+                    logger.warning(f"Sensor average moisture below 1.0% detected! Average: {avg:.2f}%")
+                    return False
+                    
+        return True
+
+    def predict_next_watering(self, current_data, history_df=None, active_settings=None):
         """
         Predict if watering is needed in next 24 hours.
         Returns: {
@@ -110,12 +173,35 @@ class MLPredictor:
         """
         if not self.model:
             return {'error': 'Model not loaded'}
+
+        # Check sensor validity first
+        current_moisture = current_data.get('soil_moisture', 50)
+        if not self.check_sensor_validity(current_moisture, history_df=history_df):
+            return self._build_response(
+                prediction=0,
+                confidence=1.0,
+                probs=None,
+                features={},
+                decision="STOP",
+                duration=0,
+                status="SENSOR_ERROR",
+                reason="Broken or disconnected sensor suspected."
+            )
             
         # 1. Prepare Features (match training columns)
         # Training cols: ['soil_moisture', 'temperature', 'humidity', 'forecast_minutes', 'hour', 'day_of_week', 'is_daytime', 'is_hot_hours', 'moisture_change_rate', 'moisture_rolling_6', 'temp_rolling_6']
         
         now = datetime.now()
         
+        # Load active settings (bypass disk I/O if provided in-memory)
+        settings = active_settings or self.get_active_settings()
+        active_crop = settings.get('active_crop', 'maize')
+        active_region = settings.get('active_region', 'matabeleland')
+        
+        crop_info = CROP_PARAMS.get(active_crop, CROP_PARAMS['maize'])
+        region_multipliers = {'matabeleland': 1.5, 'manicaland': 0.6, 'mashonaland': 1.0}
+        region_mult = region_multipliers.get(active_region, 1.0)
+
         # Base features
         features = {
             'soil_moisture': current_data.get('soil_moisture', 50),
@@ -125,7 +211,10 @@ class MLPredictor:
             'hour': now.hour,
             'day_of_week': now.weekday(),
             'is_daytime': 1 if 6 <= now.hour <= 18 else 0,
-            'is_hot_hours': 1 if 10 <= now.hour <= 16 else 0
+            'is_hot_hours': 1 if 10 <= now.hour <= 16 else 0,
+            'crop_target_moisture': crop_info['target'],
+            'crop_critical_moisture': crop_info['critical'],
+            'region_evap_multiplier': region_mult
         }
         
         # Calculate derived features (Rolling / Rate)
@@ -140,9 +229,7 @@ class MLPredictor:
         humidity = features['humidity']
         
         # VPD Calculation (Tetens formula)
-        es = 0.6108 * np.exp((17.27 * temp) / (temp + 237.3))
-        ea = es * (humidity / 100.0)
-        vpd = max(0, es - ea)
+        vpd = calculate_vpd(temp, humidity)
         features['vpd'] = vpd
         
         # Extreme VPD flag (Heatwave: VPD > 2.0 kPa)
@@ -172,7 +259,48 @@ class MLPredictor:
         
         if history_df is not None and not history_df.empty:
             # Calculate real rolling/rate if history provided
-            pass
+            df = history_df.copy()
+            # Ensure history_df timestamp is datetime
+            df['timestamp'] = pd.to_datetime(df['timestamp'], utc=True)
+            # Create a row dictionary representing the latest/current reading
+            latest_time = current_data.get('timestamp') or datetime.now()
+            latest_row = {
+                'timestamp': pd.to_datetime(latest_time, utc=True),
+                'soil_moisture': features['soil_moisture'],
+                'temperature': features['temperature'],
+                'humidity': features['humidity'],
+                'forecast_minutes': features['forecast_minutes'],
+                'wind_speed': features['wind_speed'],
+                'precipitation_chance': current_data.get('precipitation_chance', 0),
+                'vpd': features['vpd']
+            }
+            # Concat with history
+            latest_df = pd.DataFrame([latest_row])
+            full_df = pd.concat([df, latest_df], ignore_index=True)
+            
+            # Ensure we only keep the last 6 rows
+            full_df = full_df.tail(6)
+            
+            # Now calculate rolling averages
+            features['moisture_rolling_6'] = float(full_df['soil_moisture'].mean())
+            features['temp_rolling_6'] = float(full_df['temperature'].mean())
+            
+            # Calculate moisture_change_rate: (moisture_delta) / (time_delta_hours)
+            if len(full_df) >= 2:
+                last_row = full_df.iloc[-1]
+                prev_row = full_df.iloc[-2]
+                
+                moisture_delta = float(last_row['soil_moisture'] - prev_row['soil_moisture'])
+                
+                time_delta = (last_row['timestamp'] - prev_row['timestamp']).total_seconds()
+                time_delta_hours = time_delta / 3600.0
+                
+                if time_delta_hours > 0.0001:
+                    features['moisture_change_rate'] = moisture_delta / time_delta_hours
+                else:
+                    features['moisture_change_rate'] = 0.0
+            else:
+                features['moisture_change_rate'] = 0.0
             
         # Convert to DataFrame (ensure column order matches training)
         training_features = self.metadata.get('features', [])
@@ -200,18 +328,19 @@ class MLPredictor:
         # 1. SETUP & UTILS
         # =====================================================
         current_moisture = features['soil_moisture']
-        thresholds = self.get_seasonal_thresholds(now.month)
+        thresholds = self.get_seasonal_thresholds(now.month, active_crop)
         CRITICAL_THRESHOLD = thresholds['critical']
         LOW_THRESHOLD = thresholds['low']
         PROACTIVE_THRESHOLD = thresholds['proactive']
         HIGH_THRESHOLD = thresholds['high']
         
-        decay_rate = self.predict_decay_rate(features['temperature'], features['humidity'], vpd, now.hour)
+        # Apply regional evaporation scaling to decay prediction
+        decay_rate = self.predict_decay_rate(features['temperature'], features['humidity'], vpd, now.hour) * region_mult
         
         # Default State
         decision = "MONITOR"
         status = "STABLE"
-        reason = f"Moisture {current_moisture:.1f}%. Decay: {decay_rate:.2f}%/h."
+        reason = f"Moisture {current_moisture:.1f}%. Decay: {decay_rate:.2f}%/h. Crop: {active_crop.capitalize()}."
 
         # Environmental Checks
         is_raining_now = features.get('is_raining', 0) == 1
@@ -235,7 +364,7 @@ class MLPredictor:
             if current_moisture < CRITICAL_THRESHOLD:
                 decision = "NOW"
                 status = "EMERGENCY"
-                reason = "Water pump is turned ON (CRITICAL moisture despite rain)."
+                reason = f"Water pump is turned ON (CRITICAL moisture {current_moisture:.1f}% below limit {CRITICAL_THRESHOLD}% despite rain)."
             else:
                 decision = "STOP"
                 status = "RAINING"
@@ -250,7 +379,7 @@ class MLPredictor:
             if current_moisture < CRITICAL_THRESHOLD:
                 decision = "NOW"
                 status = "EMERGENCY"
-                reason = "Water pump is turned ON (CRITICAL moisture despite wind)."
+                reason = f"Water pump is turned ON (CRITICAL moisture {current_moisture:.1f}% below limit {CRITICAL_THRESHOLD}% despite wind)."
             else:
                 decision = "STALL"
                 status = "WIND_DELAY"
@@ -260,7 +389,7 @@ class MLPredictor:
             if current_moisture < CRITICAL_THRESHOLD:
                 decision = "NOW"
                 status = "EMERGENCY"
-                reason = "Water pump is turned ON (CRITICAL moisture, cannot wait for rain)."
+                reason = f"Water pump is turned ON (CRITICAL moisture {current_moisture:.1f}% below limit {CRITICAL_THRESHOLD}%, cannot wait for rain)."
             else:
                 decision = "STALL"
                 status = "RAIN_EXPECTED"
@@ -277,13 +406,13 @@ class MLPredictor:
             if current_moisture < CRITICAL_THRESHOLD:
                 decision = "NOW"
                 status = "CRITICAL"
-                reason = "Water pump is turned ON (Critically low moisture)."
+                reason = f"Critically low moisture detected: Water pump is turned ON (Moisture {current_moisture:.1f}% below critical limit {CRITICAL_THRESHOLD}%)."
                 
             # LOW (Action Needed)
             elif current_moisture < LOW_THRESHOLD:
                 # VPD / Time Checks
                 is_high_evap = 10 <= now.hour <= 16
-                is_extreme_vpd = vpd > 3.0
+                is_extreme_vpd = vpd > 2.0
                 
                 if is_extreme_vpd and is_high_evap:
                     decision = "STALL"
@@ -292,7 +421,7 @@ class MLPredictor:
                 else:
                     decision = "NOW"
                     status = "DRY_TRIGGER"
-                    reason = "Water pump is turned ON (Moisture below threshold)."
+                    reason = f"Water pump is turned ON (Moisture {current_moisture:.1f}% below target limit {LOW_THRESHOLD}%)."
 
             # PROACTIVE (Optimizations)
             elif current_moisture < PROACTIVE_THRESHOLD:
@@ -311,16 +440,15 @@ class MLPredictor:
             else:
                 decision = "MONITOR"
                 status = "OPTIMAL"
-                reason = "Soil moisture is optimal."
+                reason = f"Soil moisture is optimal for {active_crop.capitalize()}."
 
         # 3. DURATION CALCULATION
         recommended_duration = 0
-        target_moisture = 60.0
+        target_moisture = thresholds['target']
         if decision == "NOW":
             deficit = target_moisture - current_moisture
-            recommended_duration = max(5, min(60, int(deficit / 0.5)))
-            # If prompt says "Water pump is turned ON", let's append duration for logging
-            # But the UI message is strictly the reason
+            # Scale duration based on regional evap multiplier
+            recommended_duration = max(5, min(60, int((deficit / 0.5) * region_mult)))
             pass
 
             

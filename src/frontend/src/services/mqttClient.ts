@@ -1,6 +1,6 @@
 import mqtt from 'mqtt';
 
-const MQTT_BROKER = 'ws://localhost:9001';
+const MQTT_BROKER = `ws://${window.location.hostname}:9001`;
 
 class MqttService {
     client: mqtt.MqttClient | null = null;
@@ -58,11 +58,18 @@ class MqttService {
     }
 
     onConnectionChange(callback: (status: boolean) => void) {
-        this.connectionStatusListeners.push(callback);
+        // Prevent duplicate listeners
+        if (!this.connectionStatusListeners.includes(callback)) {
+            this.connectionStatusListeners.push(callback);
+        }
         // Immediately notify of current state
         if (this.client) {
             callback(this.client.connected);
         }
+    }
+
+    removeConnectionListener(callback: (status: boolean) => void) {
+        this.connectionStatusListeners = this.connectionStatusListeners.filter(cb => cb !== callback);
     }
 
     isConnected(): boolean {

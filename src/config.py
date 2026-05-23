@@ -57,9 +57,7 @@ WEATHER_LONGITUDE = float(os.getenv("WEATHER_LONGITUDE", "28.0473"))
 # ============================================================================
 # Database Configuration
 # ============================================================================
-DATABASE_MODE = os.getenv("DATABASE_MODE", "sqlite")  # "sqlite" or "postgresql"
-SQLITE_PATH = os.getenv("SQLITE_PATH", os.path.join("data", "database", "pwos_simulation.db"))
-POSTGRESQL_URL = os.getenv("DATABASE_URL", "")  # Railway provides this
+DATABASE_MODE = os.getenv("DATABASE_MODE", "postgresql")  # "postgresql" (SQLite legacy removed)
 
 # PostgreSQL Locals
 DB_HOST = os.getenv("DB_HOST", "localhost")

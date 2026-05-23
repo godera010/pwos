@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ml Model Deep Dive - P-WOS Documentation Portal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#16a34a', 600: '#15803d', 700: '#166534' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css" id="hljs-dark-theme" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .theme-light ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+        .theme-dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .prose table { width: 100%; margin: 1.5rem 0; border-collapse: collapse; font-size: 0.875rem; }
+        .prose th { background-color: rgba(0,0,0,0.02); font-weight: 600; padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); text-align: left; }
+        .dark .prose th { background-color: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); }
+        .prose td { padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); }
+        .dark .prose td { border-color: rgba(255,255,255,0.08); }
+        .prose blockquote { border-left: 3px solid #16a34a; padding-left: 1rem; font-style: italic; color: #4b5563; }
+        .dark .prose blockquote { color: #9ca3af; }
+        .prose img { border-radius: 8px; margin: 1.5rem auto; max-width: 100%; }
+        .prose pre { border-radius: 10px; background: #f8fafc !important; border: 1px solid #e2e8f0; }
+        .dark .prose pre { background: #0f171a !important; border-color: #1e2a2e; }
+
+        .theme-dark { background-color: #0b0f11; color: #f1f5f9; }
+        .theme-dark .sidebar-bg { background-color: #101618; border-color: #1a2225; }
+        .theme-dark .content-card { background-color: #12191b; border-color: #1c272a; }
+
+        .sidebar-group-enter { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-in-out; }
+        .sidebar-group-enter.active { max-height: 500px; }
+    </style>
+</head>
+<body class="theme-light bg-slate-50 text-slate-800 transition-colors duration-200 antialiased font-sans h-screen overflow-hidden flex flex-col">
+
+    <div class="fixed top-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-900/50 z-50">
+        <div id="readingProgress" class="h-full bg-brand-500 w-0 transition-all duration-75"></div>
+    </div>
+
+    <header class="h-14 md:h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/85 dark:bg-[#101618]/85 backdrop-blur-md flex items-center justify-between px-4 md:px-6 z-40 shrink-0">
+        <div class="flex items-center space-x-3">
+            <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-500">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                <div class="p-1.5 bg-gradient-to-tr from-emerald-500 to-green-600 rounded-lg text-white">
+                    <i data-lucide="droplet" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <span class="font-bold text-sm md:text-base tracking-tight text-slate-900 dark:text-white">P-WOS Docs</span>
+                    <span class="hidden md:inline-block ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 font-medium">Predictive Water Optimization</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300" title="Toggle Light/Dark Mode">
+                <i data-lucide="sun" id="themeIcon" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Theme</span>
+            </button>
+            <button onclick="window.print()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Print to PDF">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Export PDF</span>
+            </button>
+            <a href="index.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Home</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="navSidebar" class="w-64 border-r border-slate-200 dark:border-slate-800/80 overflow-y-auto shrink-0 bg-white dark:bg-[#101618] hidden lg:block z-30">
+            <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text" id="docSearch" placeholder="Search documentation..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                </div>
+            </div>
+            <div class="p-3 space-y-1" id="sidebarGroups"></div>
+        </aside>
+
+        <aside id="mobileSidebar" class="fixed inset-0 z-40 lg:hidden hidden">
+            <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" id="navOverlay"></div>
+            <div class="relative w-72 max-w-[85vw] h-full bg-white dark:bg-[#101618] shadow-2xl overflow-y-auto transform transition-transform duration-300 -translate-x-full">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">Navigation</span>
+                    <button id="closeMobileNav" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-400">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="mobileDocSearch" placeholder="Search..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                    </div>
+                </div>
+                <div class="p-3 space-y-1" id="mobileSidebarGroups"></div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto min-w-0">
+            <div class="px-4 md:px-8 py-6 md:py-10">
+                <div class="flex gap-6 lg:gap-10">
+                    <div class="flex-1 min-w-0 max-w-4xl">
+                        <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                            <span id="breadcrumbCategory">System Architecture</span>
+                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">ml_model_deep_dive.md</span>
+                        </div>
+
+                        <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
+                            <div class="absolute top-6 right-6 flex items-center space-x-2 print:hidden">
+                                <button id="copyDocBtn" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Copy content">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <div id="markdownOutput" class="prose max-w-none dark:prose-invert
+                                prose-headings:font-bold prose-headings:tracking-tight
+                                prose-h1:text-3xl prose-h1:mb-6 prose-h1:text-slate-900 dark:prose-h1:text-white
+                                prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:text-slate-900 dark:prose-h2:text-white
+                                prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-slate-800 dark:prose-h3:text-slate-200
+                                prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
+                                prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                                prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
+                                <h1>ML Model Deep Dive</h1>
+<blockquote>
+<p><strong>P-WOS Technical Reference</strong> | System Behaviour Layer<br />
+Document type: Definitive technical reference for the machine learning subsystem<br />
+Scope: Model architecture, feature engineering, decision logic, training pipeline, and operational guidance</p>
+</blockquote>
+<hr />
+<h2>1. What the Model Is Predicting</h2>
+<p>The P-WOS ML model solves a <strong>binary classification</strong> problem. Its sole output is a single integer:</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Label</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td><code>needs_watering_soon = True</code></td>
+<td>Conditions indicate the crop will require irrigation within the next ~2 hours</td>
+</tr>
+<tr>
+<td><code>0</code></td>
+<td><code>needs_watering_soon = False</code></td>
+<td>Current soil and environmental conditions do not indicate imminent water stress</td>
+</tr>
+</tbody>
+</table>
+<h3>Why "soon" and not "now"?</h3>
+<p>The target variable is intentionally predictive, not reactive. A reading of <code>1</code> means the system has detected the <strong>early-warning signature</strong> that precedes a watering event — not that the soil is already critically dry. This gives the Decision Engine time to schedule irrigation proactively, ahead of VPD peaks, before midday heat, or before forecast rain makes it unnecessary.</p>
+<p>A reading of <code>0</code> does not mean "never water." It means the current sensor + environmental snapshot does not meet the learned pattern for an imminent need.</p>
+<hr />
+<h2>2. The 12 Input Features</h2>
+<p>The model accepts exactly <strong>12 base features</strong> in the order listed below. Order matters — the feature vector is positional.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature Name</th>
+<th>Type</th>
+<th>Range / Units</th>
+<th>Source</th>
+<th>Role in Decision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>soil_moisture</code></td>
+<td><code>float</code></td>
+<td>0–100 %</td>
+<td>Soil sensor (live reading)</td>
+<td>Primary drought signal</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>temperature</code></td>
+<td><code>float</code></td>
+<td>°C</td>
+<td>Weather station</td>
+<td>Evapotranspiration proxy</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>humidity</code></td>
+<td><code>float</code></td>
+<td>0–100 %</td>
+<td>Weather station</td>
+<td>VPD component</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>wind_speed</code></td>
+<td><code>float</code></td>
+<td>km/h</td>
+<td>Weather station</td>
+<td>Evaporation accelerator</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>rain_intensity</code></td>
+<td><code>float</code></td>
+<td>0–100</td>
+<td>Weather station</td>
+<td>Suppresses watering need</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>vpd</code></td>
+<td><code>float</code></td>
+<td>kPa</td>
+<td>Calculated (Tetens formula)</td>
+<td>Atmospheric water demand</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>is_extreme_vpd</code></td>
+<td><code>binary</code></td>
+<td>0 or 1</td>
+<td>Derived: 1 if VPD &gt; 2.0 kPa</td>
+<td>Midday stress flag</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>is_raining</code></td>
+<td><code>binary</code></td>
+<td>0 or 1</td>
+<td>Derived: 1 if rain_intensity &gt; 0</td>
+<td>Natural watering event flag</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>is_high_wind</code></td>
+<td><code>binary</code></td>
+<td>0 or 1</td>
+<td>Derived: 1 if wind_speed &gt; 20 km/h</td>
+<td>Spray drift / loss flag</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>crop_target_moisture</code></td>
+<td><code>float</code></td>
+<td>% (crop-specific)</td>
+<td>Active crop settings</td>
+<td>Desired soil moisture ceiling</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>crop_critical_moisture</code></td>
+<td><code>float</code></td>
+<td>% (crop-specific)</td>
+<td>Active crop settings</td>
+<td>Emergency-trigger floor</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>region_evap_multiplier</code></td>
+<td><code>float</code></td>
+<td>dimensionless</td>
+<td>Region config</td>
+<td>Regional evaporation scaling</td>
+</tr>
+</tbody>
+</table>
+<h3>Region Evaporation Multipliers</h3>
+<p>The <code>region_evap_multiplier</code> encodes Zimbabwe's distinct agro-climatic zones directly into the feature vector:</p>
+<table>
+<thead>
+<tr>
+<th>Region</th>
+<th>Multiplier</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Matabeleland</td>
+<td><code>1.5</code></td>
+<td>Semi-arid lowveld; highest evaporation pressure</td>
+</tr>
+<tr>
+<td>Mashonaland</td>
+<td><code>1.0</code></td>
+<td>Baseline; central highveld benchmark</td>
+</tr>
+<tr>
+<td>Manicaland</td>
+<td><code>0.6</code></td>
+<td>Eastern highlands; high rainfall, lower ET</td>
+</tr>
+</tbody>
+</table>
+<h3>VPD Calculation — Tetens Formula</h3>
+<p>Vapour Pressure Deficit is computed from temperature (T, °C) and relative humidity (RH, %):</p>
+<pre><code>e_sat = 0.6108 × exp(17.27 × T / (T + 237.3))   [kPa]
+e_act = e_sat × (RH / 100)
+VPD   = e_sat − e_act                             [kPa]
+</code></pre>
+<p>VPD represents the atmosphere's "thirst" — how hard it is pulling moisture from leaves and soil. A VPD above 2.0 kPa triggers <code>is_extreme_vpd = 1</code>, which the Decision Engine uses to stall midday irrigation (water would mostly evaporate before reaching roots).</p>
+<hr />
+<h2>3. Rolling Features &amp; Trend Detection</h2>
+<p>Beyond the 12 base features, <strong>8 derived temporal features</strong> are appended to the feature vector at inference time. These are defined in <code>model_metadata.json</code> under <code>training_features</code> and computed from the sensor reading history buffer.</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Calculation</th>
+<th>Window</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>moisture_change_rate</code></td>
+<td><code>(latest_moisture − previous_moisture) / Δt</code></td>
+<td>Last 2 readings</td>
+<td>Detects rapid drainage; a fast-falling moisture curve is a stronger predictor than absolute moisture level</td>
+</tr>
+<tr>
+<td><code>moisture_rolling_6</code></td>
+<td><code>mean(last 6 soil_moisture readings)</code></td>
+<td>~30 min (at 5-sec cycles, sampled per reading)</td>
+<td>Smooths sensor noise; reveals genuine drying trend vs. transient spike</td>
+</tr>
+<tr>
+<td><code>temp_rolling_6</code></td>
+<td><code>mean(last 6 temperature readings)</code></td>
+<td>~30 min</td>
+<td>Tracks heat build-up; sustained high temp elevates water demand</td>
+</tr>
+<tr>
+<td><code>forecast_minutes</code></td>
+<td>Minutes until next forecast rain event</td>
+<td>Live forecast API</td>
+<td>Suppresses unnecessary irrigation when rain is imminent</td>
+</tr>
+<tr>
+<td><code>hour</code></td>
+<td><code>datetime.now().hour</code> (0–23)</td>
+<td>Point in time</td>
+<td>Encodes daily cycle; model learned that morning (5–7 am) needs are different from afternoon needs</td>
+</tr>
+<tr>
+<td><code>day_of_week</code></td>
+<td><code>datetime.now().weekday()</code> (0–6)</td>
+<td>Point in time</td>
+<td>Encodes weekly agricultural patterns</td>
+</tr>
+<tr>
+<td><code>is_daytime</code></td>
+<td><code>1</code> if <code>6 ≤ hour ≤ 18</code></td>
+<td>Point in time</td>
+<td>Broad day/night flag for evapotranspiration context</td>
+</tr>
+<tr>
+<td><code>is_hot_hours</code></td>
+<td><code>1</code> if <code>10 ≤ hour ≤ 16</code></td>
+<td>Point in time</td>
+<td>Peak VPD window; high-confidence stall trigger</td>
+</tr>
+</tbody>
+</table>
+<h3>Why Trend Matters More Than Absolute Level</h3>
+<p>Consider two readings, both showing <code>soil_moisture = 42%</code> against a crop target of <code>60%</code>:</p>
+<ul>
+<li><strong>Scenario A:</strong> <code>moisture_change_rate = −0.1 %/hour</code> → soil is barely moving; no immediate concern.</li>
+<li><strong>Scenario B:</strong> <code>moisture_change_rate = −4.8 %/hour</code> → soil is draining fast (recently heavy activity, sandy soil, high wind). At this rate, critical threshold will be breached in under 2 hours.</li>
+</ul>
+<p>The absolute value is identical. Only the trend feature distinguishes them. This is why <code>moisture_change_rate</code> typically ranks among the top-5 feature importances in the trained Random Forest.</p>
+<hr />
+<h2>4. The Labeling Strategy</h2>
+<h3>Dataset Scale</h3>
+<table>
+<thead>
+<tr>
+<th>Split</th>
+<th>Samples</th>
+<th>Percentage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Training set</td>
+<td>504,000</td>
+<td>80%</td>
+</tr>
+<tr>
+<td>Test set</td>
+<td>126,000</td>
+<td>20%</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>630,000</strong></td>
+<td>100%</td>
+</tr>
+</tbody>
+</table>
+<p>630,000 labeled records were produced by <code>data_extractor.py</code> querying the PostgreSQL historical readings table and matching sensor readings to logged watering events.</p>
+<h3>Production Labeling — 2-Hour Lookback (Current)</h3>
+<pre><code>For each watering event at time T:
+  Label all sensor readings in the window [T − 2h, T) as needs_watering_soon = 1
+  All other readings → 0
+</code></pre>
+<p><strong>Why this window?</strong> A 2-hour lookback captures the environmental signature that <em>immediately precedes</em> a watering decision. Soil moisture, VPD, temperature, and change rate at T−2h are genuinely predictive of the event at T. This creates tight, high-quality positive labels that the model can learn to recognise with high precision.</p>
+<h3>Legacy Labeling — 24-Hour Lookahead</h3>
+<pre><code>For each sensor reading at time T:
+  If a watering event occurred at any time in [T, T + 24h] → label = 1
+  Else → 0
+</code></pre>
+<p><strong>Why it was replaced:</strong> A 24-hour forward window creates extremely noisy positive labels. A reading at 3 am labelled <code>1</code> because irrigation ran at 11 pm the following night tells the model almost nothing useful about what 3 am sensor conditions look like. This inflated recall artificially while degrading precision. The 2-hour lookback is strictly superior for operational use.</p>
+<hr />
+<h2>5. Class Imbalance</h2>
+<p>In any continuous agricultural monitoring system, the overwhelming majority of sensor readings occur while the soil is adequately moist and no irrigation is needed. A typical P-WOS deployment might trigger watering 2–4 times per day, each lasting 20–45 minutes, against a background of thousands of 5-second sensor cycles. This means:</p>
+<ul>
+<li><strong>Class 0 (no watering needed):</strong> ~85–92% of all readings</li>
+<li><strong>Class 1 (needs watering soon):</strong> ~8–15% of all readings</li>
+</ul>
+<h3>The Problem Without Correction</h3>
+<p>A naïve classifier that always predicts <code>0</code> achieves ~88% accuracy while being completely useless. It would never trigger irrigation.</p>
+<h3>The Fix: <code>class_weight='balanced'</code></h3>
+<p>The <code>RandomForestClassifier</code> is initialised with <code>class_weight='balanced'</code>. Scikit-learn computes per-class weights as:</p>
+<pre><code>weight_c = n_samples / (n_classes × n_samples_c)
+</code></pre>
+<p>This makes each misclassification of the minority class (watering needed) count proportionally more in the loss function during training. The model is effectively penalised more heavily for missing an irrigation event than for a false alarm.</p>
+<p><strong>Result:</strong> The model learns to be appropriately sensitive to the minority class rather than defaulting to the majority. This is what enables the 72% recall on Class 1 despite the imbalance.</p>
+<hr />
+<h2>6. Reading the Confidence Score</h2>
+<h3>The Published Metrics</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+<th>What It Measures</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Overall Accuracy</td>
+<td><strong>83.43%</strong></td>
+<td>Fraction of all predictions (both classes) that are correct</td>
+</tr>
+<tr>
+<td>Precision (Class 1)</td>
+<td><strong>96%</strong></td>
+<td>Of all predictions of "watering needed", 96% were genuinely needed</td>
+</tr>
+<tr>
+<td>Recall (Class 1)</td>
+<td><strong>72%</strong></td>
+<td>Of all genuine watering-needed events, the model detected 72%</td>
+</tr>
+<tr>
+<td>F1 Score (Class 1)</td>
+<td><strong>82%</strong></td>
+<td>Harmonic mean of precision and recall</td>
+</tr>
+</tbody>
+</table>
+<h3>False Positives vs. False Negatives — Which Is Worse?</h3>
+<table>
+<thead>
+<tr>
+<th>Error Type</th>
+<th>Definition</th>
+<th>P-WOS Consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>False Positive</strong></td>
+<td>Model says "water needed", but it wasn't</td>
+<td>Irrigation runs unnecessarily; minor water waste, slight over-moistening</td>
+</tr>
+<tr>
+<td><strong>False Negative</strong></td>
+<td>Model says "no water needed", but it was</td>
+<td>Crop goes without water; wilting, stress, yield loss</td>
+</tr>
+</tbody>
+</table>
+<p><strong>False negatives are worse.</strong> A missed irrigation event has direct, compounding biological consequences for the crop. Unnecessary irrigation is wasteful but recoverable.</p>
+<p>This asymmetry is exactly why P-WOS uses <code>class_weight='balanced'</code> and a two-layer Decision Engine. The ML model's <strong>96% precision</strong> means nearly every irrigation recommendation it makes is valid. The <strong>72% recall</strong> means some genuine events are missed — but the Decision Engine's explicit rules (critical moisture floor, moisture change rate) act as a safety net for the cases the ML model doesn't catch.</p>
+<h3>Interpreting the Probability Output</h3>
+<p>The <code>RandomForestClassifier.predict_proba()</code> method returns a float in [0, 1]. The Decision Engine receives this probability and uses it alongside the rule-based checks. A high-confidence <code>1</code> prediction (probability ≥ 0.75) carries more weight in borderline cases than a low-confidence <code>1</code> (probability ≈ 0.52).</p>
+<hr />
+<h2>7. Sensor Validity Guard</h2>
+<p>Before any ML inference is performed, <code>ml_predictor.py</code> runs a validity gate on the raw sensor reading. If the reading fails any check, the prediction is short-circuited and the reading is marked as invalid — no ML call is made.</p>
+<pre><code class="language-python">def check_sensor_validity(self, moisture, history_df=None):
+    # Check 1: Below physical minimum
+    if moisture &lt; 1.0:
+        return False
+
+    # Check 2: Flatline detection (sensor stuck / disconnected)
+    if history_df has &gt;= 4 readings:
+        if std(recent_moistures) &lt; 0.0001:
+            return False
+
+    # Check 3: Persistent near-zero mean (chronic sensor fault)
+    if history_df has &gt;= 3 readings:
+        if mean(recent_moistures) &lt; 1.0:
+            return False
+
+    return True
+</code></pre>
+<h3>The Three Guards Explained</h3>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Condition</th>
+<th>What It Catches</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1. Physical minimum</strong></td>
+<td><code>moisture &lt; 1.0%</code></td>
+<td>Single wildly erroneous reading; impossible for most soil types under irrigation</td>
+</tr>
+<tr>
+<td><strong>2. Flatline detection</strong></td>
+<td><code>std(last 4) &lt; 0.0001</code></td>
+<td>Sensor outputting a constant value — cable fault, ADC failure, frozen firmware</td>
+</tr>
+<tr>
+<td><strong>3. Persistent low mean</strong></td>
+<td><code>mean(last 3) &lt; 1.0%</code></td>
+<td>Sensor consistently reporting near-zero — damaged probe, poor soil contact</td>
+</tr>
+</tbody>
+</table>
+<h3>Why This Matters for ML</h3>
+<p>A stuck sensor reporting <code>0.000%</code> moisture would produce <code>is_extreme_vpd</code>, <code>moisture_change_rate ≈ 0</code>, and an absolute moisture at floor — a combination that could trigger continuous EMERGENCY override cycles or paradoxically suppress watering (if the Decision Engine sees no change rate and no VPD). Neither outcome is acceptable. The validity guard prevents invalid sensor data from reaching the feature vector entirely.</p>
+<hr />
+<h2>8. Why Random Forest, Not Neural Network</h2>
+<p>The P-WOS ML layer was evaluated against several classifier types before settling on <code>RandomForestClassifier</code>. The comparison:</p>
+<table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>Random Forest</th>
+<th>Neural Network</th>
+<th>Winner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Training data requirement</strong></td>
+<td>Effective from ~10k samples</td>
+<td>Typically needs 100k–1M+ for tabular data</td>
+<td>Random Forest</td>
+</tr>
+<tr>
+<td><strong>Inference latency</strong></td>
+<td>&lt; 1 ms on CPU</td>
+<td>10–100 ms (GPU beneficial)</td>
+<td>Random Forest</td>
+</tr>
+<tr>
+<td><strong>Interpretability</strong></td>
+<td>Feature importances, decision paths</td>
+<td>Black box</td>
+<td>Random Forest</td>
+</tr>
+<tr>
+<td><strong>Hyperparameter sensitivity</strong></td>
+<td>Low; robust to defaults</td>
+<td>High; requires extensive tuning</td>
+<td>Random Forest</td>
+</tr>
+<tr>
+<td><strong>Retraining complexity</strong></td>
+<td>Simple; single fit() call</td>
+<td>Requires epoch management, optimizer selection</td>
+<td>Random Forest</td>
+</tr>
+<tr>
+<td><strong>Overfitting risk</strong></td>
+<td>Low; ensemble averaging</td>
+<td>High without regularisation</td>
+<td>Random Forest</td>
+</tr>
+<tr>
+<td><strong>Handles mixed feature types</strong></td>
+<td>Native (numeric + binary)</td>
+<td>Requires careful normalisation</td>
+<td>Random Forest</td>
+</tr>
+<tr>
+<td><strong>Deployment size</strong></td>
+<td>~2.3 MB (rf_model.pkl)</td>
+<td>10–500 MB (typical)</td>
+<td>Random Forest</td>
+</tr>
+<tr>
+<td><strong>Runs on Raspberry Pi / edge</strong></td>
+<td>Yes</td>
+<td>Marginal</td>
+<td>Random Forest</td>
+</tr>
+</tbody>
+</table>
+<h3>The Verdict</h3>
+<p>For a structured, moderate-scale (630k samples) agricultural tabular dataset with 20 features, mixed types, and a hard latency budget (5-second sensor cycle), Random Forest is the correct architectural choice. Neural networks offer no material advantage here and introduce significant operational complexity during retraining.</p>
+<p>The chosen hyperparameters:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>n_estimators</code></td>
+<td>100</td>
+<td>Balance between variance reduction and inference speed</td>
+</tr>
+<tr>
+<td><code>max_depth</code></td>
+<td>10</td>
+<td>Prevents overfitting on temporal correlation artefacts in the dataset</td>
+</tr>
+<tr>
+<td><code>random_state</code></td>
+<td>42</td>
+<td>Reproducible training runs; same seed → same model</td>
+</tr>
+<tr>
+<td><code>class_weight</code></td>
+<td><code>'balanced'</code></td>
+<td>Corrects for ~88:12 class ratio (see §5)</td>
+</tr>
+<tr>
+<td><code>n_jobs</code></td>
+<td><code>-1</code></td>
+<td>Uses all available CPU cores during training</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>9. The Two-Layer Architecture</h2>
+<p>The P-WOS irrigation decision pipeline is deliberately split into two layers with different roles:</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    SENSOR READING (every 5s)                    │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+                 ┌──────────▼──────────┐
+                 │  Validity Guard     │  (§7)
+                 │  check_sensor_validity()
+                 └──────────┬──────────┘
+                            │  valid = True
+                 ┌──────────▼──────────┐
+                 │  ML Model           │
+                 │  RandomForest       │
+                 │  predict_proba()    │
+                 │  → P(needs_water)   │
+                 └──────────┬──────────┘
+                            │  probability score + binary prediction
+                 ┌──────────▼──────────┐
+                 │  Decision Engine    │  (§10)
+                 │  Explicit rule tree │
+                 │  → Action + Reason  │
+                 └──────────┬──────────┘
+                            │
+               ┌────────────┴────────────┐
+               │                         │
+        ┌──────▼──────┐         ┌────────▼────────┐
+        │  Irrigate   │         │  Do Not Irrigate │
+        │  NOW / PREHEAT        │  STOP / STALL /  │
+        └─────────────┘         │  MONITOR         │
+                                └─────────────────-┘
+</code></pre>
+<h3>Why Both Layers?</h3>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>ML Model</th>
+<th>Decision Engine</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Learn patterns from 630k historical examples</td>
+<td>✅</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Predict irrigation need 2 hours ahead</td>
+<td>✅</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Handle real-time "currently raining" override</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Enforce absolute safety floor (critical moisture)</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Block irrigation during high-VPD peak hours</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Detect sensor saturation (&gt;85%)</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Produce human-readable reason codes</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p>The ML model excels at pattern recognition across complex, multi-dimensional sensor histories. The Decision Engine provides deterministic, auditable safety guarantees that cannot be delegated to a probabilistic model. Together they are more robust than either alone.</p>
+<hr />
+<h2>10. Full Decision Engine State Machine</h2>
+<p>The Decision Engine runs after the ML model returns its prediction. It evaluates a priority-ordered rule tree and returns an <code>(action, reason)</code> tuple.</p>
+<pre class="mermaid">flowchart TD
+    START([Sensor Reading + ML Score]) --&gt; V{Sensor Valid?}
+    V -- No --&gt; INVALID[MONITOR\nSENSOR_INVALID]
+
+    V -- Yes --&gt; R{is_raining?}
+    R -- Yes --&gt; RC{moisture &lt; CRITICAL?}
+    RC -- Yes --&gt; E1[NOW\nEMERGENCY]
+    RC -- No --&gt; S1[STOP\nRAINING]
+
+    R -- No --&gt; SAT{is_saturated?\nmoisture &gt; 85%}
+    SAT -- Yes --&gt; S2[STOP\nSATURATED]
+
+    SAT -- No --&gt; W{is_high_wind?}
+    W -- Yes --&gt; WC{moisture &lt; CRITICAL?}
+    WC -- Yes --&gt; E2[NOW\nEMERGENCY]
+    WC -- No --&gt; ST1[STALL\nWIND_DELAY]
+
+    W -- No --&gt; RF{should_wait_rain?}
+    RF -- Yes --&gt; RFC{moisture &lt; CRITICAL?}
+    RFC -- Yes --&gt; E3[NOW\nEMERGENCY]
+    RFC -- No --&gt; ST2[STALL\nRAIN_EXPECTED]
+
+    RF -- No --&gt; FD{is_false_dry?}
+    FD -- Yes --&gt; M1[MONITOR\nFALSE_DRY_CHECK]
+
+    FD -- No --&gt; CRIT{moisture &lt; CRITICAL?}
+    CRIT -- Yes --&gt; E4[NOW\nCRITICAL]
+
+    CRIT -- No --&gt; LOW{moisture &lt; LOW\nthreshold?}
+    LOW -- Yes --&gt; VPD{is_extreme_vpd\nAND 10:00–16:00?}
+    VPD -- Yes --&gt; ST3[STALL\nVPD_DELAY]
+    VPD -- No --&gt; E5[NOW\nDRY_TRIGGER]
+
+    LOW -- No --&gt; PRO{moisture &lt; PROACTIVE\nthreshold?}
+    PRO -- Yes --&gt; PREHEAT{04:00–06:00\nAND is_extreme_vpd?}
+    PREHEAT -- Yes --&gt; E6[NOW\nPREHEAT]
+    PREHEAT -- No --&gt; M2[MONITOR\nWATCHING]
+
+    PRO -- No --&gt; M3[MONITOR\nOPTIMAL]
+
+    style E1 fill:#ff4444,color:#fff
+    style E2 fill:#ff4444,color:#fff
+    style E3 fill:#ff4444,color:#fff
+    style E4 fill:#ff4444,color:#fff
+    style E5 fill:#ff8800,color:#fff
+    style E6 fill:#22aa44,color:#fff
+    style S1 fill:#2266cc,color:#fff
+    style S2 fill:#2266cc,color:#fff
+    style ST1 fill:#9944cc,color:#fff
+    style ST2 fill:#9944cc,color:#fff
+    style ST3 fill:#9944cc,color:#fff
+    style M1 fill:#888,color:#fff
+    style M2 fill:#888,color:#fff
+    style M3 fill:#44aa44,color:#fff
+    style INVALID fill:#888,color:#fff
+</pre>
+<h3>Action &amp; Reason Code Reference</h3>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Reason Code</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NOW</code></td>
+<td><code>EMERGENCY</code></td>
+<td>Raining or high wind but moisture is critically low — water anyway</td>
+</tr>
+<tr>
+<td><code>NOW</code></td>
+<td><code>CRITICAL</code></td>
+<td>Moisture below hard critical floor; immediate irrigation</td>
+</tr>
+<tr>
+<td><code>NOW</code></td>
+<td><code>DRY_TRIGGER</code></td>
+<td>Moisture below low threshold; no VPD contraindication</td>
+</tr>
+<tr>
+<td><code>NOW</code></td>
+<td><code>PREHEAT</code></td>
+<td>Pre-dawn proactive irrigation ahead of extreme heat day</td>
+</tr>
+<tr>
+<td><code>STOP</code></td>
+<td><code>RAINING</code></td>
+<td>Natural precipitation is occurring; pause irrigation</td>
+</tr>
+<tr>
+<td><code>STOP</code></td>
+<td><code>SATURATED</code></td>
+<td>Soil above 85%; further irrigation would cause runoff/anaerobia</td>
+</tr>
+<tr>
+<td><code>STALL</code></td>
+<td><code>WIND_DELAY</code></td>
+<td>High wind detected; delay to avoid spray drift and evaporation loss</td>
+</tr>
+<tr>
+<td><code>STALL</code></td>
+<td><code>RAIN_EXPECTED</code></td>
+<td>Rain forecast imminent; delay to avoid unnecessary water use</td>
+</tr>
+<tr>
+<td><code>STALL</code></td>
+<td><code>VPD_DELAY</code></td>
+<td>Peak VPD window; irrigation would be mostly lost to evaporation</td>
+</tr>
+<tr>
+<td><code>MONITOR</code></td>
+<td><code>FALSE_DRY_CHECK</code></td>
+<td>Sensor validity concern; monitoring before acting</td>
+</tr>
+<tr>
+<td><code>MONITOR</code></td>
+<td><code>WATCHING</code></td>
+<td>Proactive threshold in range; watching for trend</td>
+</tr>
+<tr>
+<td><code>MONITOR</code></td>
+<td><code>OPTIMAL</code></td>
+<td>Soil moisture in optimal range; no action needed</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>11. In-Memory Settings Injection</h2>
+<p>At each prediction cycle, the model requires crop-specific parameters (<code>crop_target_moisture</code>, <code>crop_critical_moisture</code>) and region-specific parameters (<code>region_evap_multiplier</code>). These values vary per deployment and can be updated at runtime via the P-WOS dashboard.</p>
+<h3>The Design Choice: No Disk I/O Per Cycle</h3>
+<pre><code class="language-python"># ml_predictor.py — line 197
+settings = active_settings or self.get_active_settings()
+# active_settings is passed IN MEMORY from app.py — no disk I/O per prediction
+</code></pre>
+<p><code>app.py</code> holds the current <code>active_settings</code> object in process memory and passes it directly to the predictor at each 5-second cycle. The predictor does <strong>not</strong> re-read configuration from disk, database, or any external source per inference call.</p>
+<h3>Why This Matters</h3>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Latency per cycle</th>
+<th>Risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Read from PostgreSQL on each call</td>
+<td>~5–50 ms DB round trip</td>
+<td>Adds ~1–10% overhead to 5s cycle; creates DB dependency on hot path</td>
+</tr>
+<tr>
+<td>Read from config file on each call</td>
+<td>~1–5 ms disk I/O</td>
+<td>File lock contention; 60k file reads per hour</td>
+</tr>
+<tr>
+<td><strong>In-memory injection (chosen)</strong></td>
+<td><strong>&lt; 1 µs</strong></td>
+<td>Settings stale until app.py reloads (acceptable; config changes are infrequent)</td>
+</tr>
+</tbody>
+</table>
+<p>At 5-second intervals, P-WOS issues ~720 prediction calls per hour. Disk or database I/O on each call would add measurable latency and create fragile dependencies in the hot path. In-memory injection eliminates this overhead entirely.</p>
+<p>Settings are refreshed in memory when:<br />
+- A user saves a new crop configuration via the dashboard<br />
+- The system restarts<br />
+- The active crop or region is switched</p>
+<hr />
+<h2>12. Self-Retraining</h2>
+<p>The P-WOS model is designed to retrain periodically as operational data accumulates. The retraining pipeline is fully automated and version-controlled.</p>
+<h3>Pipeline Steps</h3>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│  data_extractor.py                                      │
+│  → Query PostgreSQL sensor_readings + watering_events   │
+│  → Apply 2-hour lookback labeling strategy              │
+│  → Export labeled CSV                                   │
+└──────────────────────┬──────────────────────────────────┘
+                       │
+                ┌──────▼──────┐
+                │  ≥ 100      │
+                │  samples?   │
+                └──────┬──────┘
+              Yes │         │ No
+                  │         └──→  ABORT (insufficient data)
+                  │
+┌─────────────────▼───────────────────────────────────────┐
+│  train_model.py                                         │
+│  → Feature engineering (all 20 features)                │
+│  → RandomForestClassifier(n_estimators=100, …)          │
+│  → Evaluate on held-out 20% test split                  │
+│  → Assert accuracy ≥ threshold before saving            │
+└──────────────────────┬──────────────────────────────────┘
+                       │
+┌─────────────────────▼───────────────────────────────────┐
+│  Save artefacts                                         │
+│  rf_model.pkl          (~2.3 MB)                        │
+│  model_metadata.json   (feature list, thresholds, date) │
+└──────────────────────┬──────────────────────────────────┘
+                       │
+┌─────────────────────▼───────────────────────────────────┐
+│  Version log → model_versions table (PostgreSQL)        │
+│  Version tag format:  v{YYYYMMDD}_{HHMMSS}              │
+│  Example:             v20260523_143012                   │
+└─────────────────────────────────────────────────────────┘
+</code></pre>
+<h3>Minimum Sample Threshold</h3>
+<p>The pipeline enforces a hard floor of <strong>≥ 100 labeled samples</strong> before training proceeds. This threshold is intentionally conservative — a Random Forest trained on fewer than 100 agricultural sensor readings would have no statistical basis for generalisation and could produce dangerously erratic predictions.</p>
+<p>In practice, a farm generating 720 readings per hour and triggering 2–4 irrigation events per day will accumulate sufficient positive labels within 1–2 days of operation.</p>
+<h3>Recommended Retraining Triggers</h3>
+<table>
+<thead>
+<tr>
+<th>Trigger</th>
+<th>Condition</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Scheduled</strong></td>
+<td>Weekly or monthly</td>
+<td>Captures seasonal variation in crop water demand</td>
+</tr>
+<tr>
+<td><strong>Volume-based</strong></td>
+<td>Every 50,000 new labeled records</td>
+<td>Sufficient new data to meaningfully shift decision boundaries</td>
+</tr>
+<tr>
+<td><strong>Post-season</strong></td>
+<td>After each growing season</td>
+<td>New season may have different cultivar, climate, or soil state</td>
+</tr>
+<tr>
+<td><strong>Post-hardware change</strong></td>
+<td>After sensor replacement</td>
+<td>New sensor calibration curve may shift all readings</td>
+</tr>
+<tr>
+<td><strong>Post-crop change</strong></td>
+<td>After switching crop type</td>
+<td>Target/critical moisture thresholds change; model should relearn</td>
+</tr>
+<tr>
+<td><strong>Drift-triggered</strong></td>
+<td>On detection of drift signals (§13)</td>
+<td>Data distribution shift detected</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>13. Model Drift Indicators</h2>
+<p>Model drift occurs when the statistical distribution of incoming sensor data shifts away from the training distribution, causing the model's learned decision boundaries to become misaligned with operational reality. P-WOS operators should monitor for the following signals:</p>
+<h3>Prediction Distribution Shift</h3>
+<table>
+<thead>
+<tr>
+<th>Indicator</th>
+<th>Warning Signal</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>P(needs_watering)</code> mean over 7-day rolling window</td>
+<td>Rising above baseline by &gt;15%</td>
+<td>Crop may be under-watered; check sensor calibration or retrain</td>
+</tr>
+<tr>
+<td><code>P(needs_watering)</code> mean over 7-day rolling window</td>
+<td>Falling below baseline by &gt;15%</td>
+<td>Model may be over-predicting MONITOR; verify actual soil state</td>
+</tr>
+<tr>
+<td>Class 1 prediction rate</td>
+<td>Drops to near-zero</td>
+<td>Model possibly collapsed to always-0 prediction; re-evaluate</td>
+</tr>
+<tr>
+<td>Class 1 prediction rate</td>
+<td>Rises above 50%</td>
+<td>Possible feature distribution shift; sensors may be miscalibrated</td>
+</tr>
+</tbody>
+</table>
+<h3>Feature Distribution Signals</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Drift Signal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>soil_moisture</code></td>
+<td>7-day mean deviates &gt;10% from seasonal norm without corresponding weather event</td>
+</tr>
+<tr>
+<td><code>vpd</code></td>
+<td>Daily VPD peak consistently outside range seen during training (new season / climate shift)</td>
+</tr>
+<tr>
+<td><code>moisture_change_rate</code></td>
+<td>Baseline rate shift &gt;50% from training average (soil composition change, root health)</td>
+</tr>
+<tr>
+<td><code>region_evap_multiplier</code></td>
+<td>This is static — any change requires retraining from scratch</td>
+</tr>
+</tbody>
+</table>
+<h3>Outcome-Based Signals</h3>
+<p>The most reliable drift signal is <strong>operational mismatch</strong>: the model consistently recommends watering shortly after irrigation has already run, or consistently reports OPTIMAL when crops show visible moisture stress. When agronomist observation contradicts model output on more than ~3 consecutive days, treat it as a drift event.</p>
+<h3>Recommended Monitoring Cadence</h3>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Frequency</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Prediction distribution review</td>
+<td>Weekly</td>
+</tr>
+<tr>
+<td>Feature histogram comparison vs. training set</td>
+<td>Monthly</td>
+</tr>
+<tr>
+<td>Full model performance audit (precision/recall on recent labels)</td>
+<td>Per-season</td>
+</tr>
+<tr>
+<td>Emergency drift review</td>
+<td>Any time crop health KPIs decline without climatic explanation</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Quick Reference</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model type</td>
+<td><code>RandomForestClassifier</code></td>
+</tr>
+<tr>
+<td>Estimators</td>
+<td>100</td>
+</tr>
+<tr>
+<td>Max depth</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Class weight</td>
+<td><code>'balanced'</code></td>
+</tr>
+<tr>
+<td>Training samples</td>
+<td>504,000</td>
+</tr>
+<tr>
+<td>Test samples</td>
+<td>126,000</td>
+</tr>
+<tr>
+<td>Accuracy</td>
+<td><strong>83.43%</strong></td>
+</tr>
+<tr>
+<td>Precision (Class 1)</td>
+<td><strong>96%</strong></td>
+</tr>
+<tr>
+<td>Recall (Class 1)</td>
+<td><strong>72%</strong></td>
+</tr>
+<tr>
+<td>F1 Score (Class 1)</td>
+<td><strong>82%</strong></td>
+</tr>
+<tr>
+<td>Model file</td>
+<td><code>rf_model.pkl</code> (~2.3 MB)</td>
+</tr>
+<tr>
+<td>Metadata file</td>
+<td><code>model_metadata.json</code></td>
+</tr>
+<tr>
+<td>Version format</td>
+<td><code>v{YYYYMMDD}_{HHMMSS}</code></td>
+</tr>
+<tr>
+<td>Minimum retrain samples</td>
+<td>100</td>
+</tr>
+<tr>
+<td>Sensor cycle</td>
+<td>5 seconds</td>
+</tr>
+<tr>
+<td>Feature count</td>
+<td>12 base + 8 temporal = 20 total</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>P-WOS v2.0 | System Behaviour — ML Model Deep Dive</em></p>
+                            </div>
+                        </article>
+
+                        <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
+                            <a href="index.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Back to Index</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <aside class="hidden lg:block w-56 shrink-0 border-l border-slate-200 dark:border-slate-800/80 pl-6">
+                        <div class="sticky top-0">
+                            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5 mb-4">
+                                <i data-lucide="list-ordered" class="w-3.5 h-3.5 text-emerald-500"></i> On This Page
+                            </h4>
+                            <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                            <a href="index.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                                <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                                <span>Back to Home</span>
+                            </a>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const docs = [{"category": "Getting Started", "icon": "rocket", "pages": [{"title": "Project Overview", "file": "PROJECT_OVERVIEW.html"}, {"title": "Quickstart Guide", "file": "QUICKSTART.html"}, {"title": "Project Roadmap", "file": "PROJECT_ROADMAP.html"}]}, {"category": "System Architecture", "icon": "cpu", "pages": [{"title": "System Overview", "file": "system_overview.html"}, {"title": "Dataflow", "file": "dataflow.html"}, {"title": "Analytics Reference", "file": "analytics_reference.html"}, {"title": "Crop Profiles", "file": "crop_profiles.html"}, {"title": "Edge Cases & Scenarios", "file": "edge_cases_and_scenarios.html"}, {"title": "ML Model Deep Dive", "file": "ml_model_deep_dive.html"}, {"title": "VPD & Weather Engine", "file": "vpd_and_weather_engine.html"}]}, {"category": "Core Guides", "icon": "book-open", "pages": [{"title": "Installation Guide", "file": "installation_guide.html"}, {"title": "Backend API", "file": "backend_guide.html"}, {"title": "Database Guide", "file": "database_guide.html"}, {"title": "Firmware Guide", "file": "firmware_guide.html"}, {"title": "Simulation Guide", "file": "simulation_guide.html"}, {"title": "ML Model Guide", "file": "ml_model_guide.html"}, {"title": "Performance Guide", "file": "performance_guide.html"}, {"title": "Troubleshooting", "file": "troubleshooting.html"}, {"title": "Tests Reference", "file": "tests.html"}, {"title": "Analytics Dashboard", "file": "analytics_dashboard.html"}, {"title": "Main Dashboard", "file": "main_dashboard.html"}, {"title": "Mobile Guide", "file": "mobile_guide.html"}]}, {"category": "Hardware Engineering", "icon": "circuit-board", "pages": [{"title": "Hardware Architecture", "file": "hardware_architecture.html"}, {"title": "Breadboard Assembly", "file": "breadboard_assembly.html"}, {"title": "Breadboard Guide", "file": "breadboard.html"}, {"title": "Hardware Setup", "file": "hardware_setup.html"}, {"title": "Shopping List", "file": "hardware_shopping_list.html"}, {"title": "Migration Plan", "file": "hardware_migration_plan.html"}, {"title": "Testing Report", "file": "testing_report.html"}, {"title": "Hardware Progress", "file": "hardware_progress.html"}, {"title": "Phase 1 Report", "file": "phase1_report.html"}]}, {"category": "Scientific Research", "icon": "microscope", "pages": [{"title": "Codebase Analysis", "file": "codebase_analysis.html"}, {"title": "Codebase Audit", "file": "codebase_audit.html"}, {"title": "Crop Integration Plan", "file": "crop_integration_plan.html"}]}, {"category": "Technical Reference", "icon": "code", "pages": [{"title": "API Reference", "file": "api_reference.html"}, {"title": "MQTT Topics", "file": "mqtt_topics.html"}, {"title": "Coding Guidelines", "file": "coding_guidelines.html"}, {"title": "Project Structure", "file": "project_structure.html"}, {"title": "VPD Scenarios", "file": "vpd_scenarios.html"}]}, {"category": "Deployment & Operations", "icon": "cloud", "pages": [{"title": "Cloud ML Deployment", "file": "cloud_ml_deployment.html"}, {"title": "Local Implementation", "file": "local_implementation.html"}, {"title": "ML Roadmap", "file": "ml_implementation_roadmap.html"}]}, {"category": "Reports & Validation", "icon": "bar-chart-3", "pages": [{"title": "Final Report", "file": "final_report.html"}, {"title": "Validation Report", "file": "validation_report.html"}, {"title": "Simulation Analysis", "file": "simulation_analysis.html"}, {"title": "Moisture Analysis", "file": "moisture_analysis.html"}, {"title": "Phase 1 Setup Report", "file": "phase_01_setup_report.html"}, {"title": "Phase 5 ML Report", "file": "phase_05_ml_report.html"}, {"title": "Phase 6 Frontend Report", "file": "phase_06_frontend_report.html"}]}];
+
+        let expandedGroups = {};
+
+        function initTheme() {
+            const saved = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(saved);
+        }
+
+        function setTheme(theme) {
+            document.body.classList.remove('theme-light', 'theme-dark');
+            document.documentElement.classList.remove('dark');
+            const hljsLight = document.getElementById('hljs-light-theme');
+            const hljsDark = document.getElementById('hljs-dark-theme');
+            if (theme === 'dark') {
+                document.body.classList.add('theme-dark');
+                document.documentElement.classList.add('dark');
+                if (hljsLight) hljsLight.disabled = true;
+                if (hljsDark) hljsDark.disabled = false;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'moon');
+            } else {
+                document.body.classList.add('theme-light');
+                if (hljsLight) hljsLight.disabled = false;
+                if (hljsDark) hljsDark.disabled = true;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'sun');
+            }
+            localStorage.setItem('pwos-theme', theme);
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            const current = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(current === 'light' ? 'dark' : 'light');
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        function renderSidebar(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = docs.map(function(group, gi) {
+                const isOpen = expandedGroups[gi] || false;
+                return '<div class="sidebar-group">' +
+                    '<button onclick="toggleGroup(' + gi + ')" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' +
+                        '<span class="flex items-center gap-2"><i data-lucide="' + group.icon + '" class="w-4 h-4"></i><span>' + group.category + '</span></span>' +
+                        '<i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ' + (isOpen ? 'rotate-0' : '-rotate-90') + '"></i>' +
+                    '</button>' +
+                    '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
+                        '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
+                            group.pages.map(function(page) {
+                                return '<li><a href="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                            }).join('') +
+                        '</ul>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function toggleGroup(idx) {
+            expandedGroups[idx] = !expandedGroups[idx];
+            renderSidebar('sidebarGroups');
+            renderSidebar('mobileSidebarGroups');
+        }
+
+        function setupSearch(inputId, containerId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('input', function(e) {
+                const q = e.target.value.toLowerCase().trim();
+                document.querySelectorAll('#' + containerId + ' .sidebar-group').forEach(function(el) {
+                    el.style.display = q === '' || el.textContent.toLowerCase().includes(q) ? '' : 'none';
+                });
+            });
+        }
+
+        setupSearch('docSearch', 'sidebarGroups');
+        setupSearch('mobileDocSearch', 'mobileSidebarGroups');
+
+        function openMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            sidebar.classList.remove('hidden');
+            setTimeout(function() { panel.classList.remove('-translate-x-full'); }, 10);
+        }
+
+        function closeMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            panel.classList.add('-translate-x-full');
+            setTimeout(function() { sidebar.classList.add('hidden'); }, 300);
+        }
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', openMobileNav);
+        document.getElementById('closeMobileNav').addEventListener('click', closeMobileNav);
+        document.getElementById('navOverlay').addEventListener('click', closeMobileNav);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const output = document.getElementById('markdownOutput');
+            if (!output) return;
+
+            output.querySelectorAll('pre code').forEach(function(block) { hljs.highlightElement(block); });
+
+            try {
+                renderMathInElement(output, {
+                    delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}],
+                    throwOnError: false
+                });
+            } catch(e) {}
+
+            try {
+                mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+                mermaid.run({ nodes: output.querySelectorAll('.mermaid') });
+            } catch(e) {}
+
+            buildTOC(output);
+        });
+
+        function buildTOC(container) {
+            const list = document.getElementById('tocList');
+            if (!list) return;
+            list.innerHTML = '';
+            const headings = container.querySelectorAll('h2, h3');
+            if (headings.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'text-slate-400 italic';
+                li.textContent = 'No sub-headers on page';
+                list.appendChild(li);
+                return;
+            }
+            headings.forEach(function(heading, idx) {
+                const anchorId = 'toc-anchor-' + idx;
+                heading.setAttribute('id', anchorId);
+                const li = document.createElement('li');
+                const isSub = heading.tagName.toLowerCase() === 'h3';
+                li.className = 'transition-colors duration-150 ' + (isSub ? 'pl-3 border-l border-slate-100 dark:border-slate-800 ml-1 py-0.5' : 'font-medium py-1');
+                const link = document.createElement('a');
+                link.href = '#' + anchorId;
+                link.className = 'hover:text-emerald-500 block truncate transition-colors';
+                link.textContent = heading.textContent;
+                link.onclick = function(e) { e.preventDefault(); heading.scrollIntoView({ behavior: 'smooth' }); };
+                li.appendChild(link);
+                list.appendChild(li);
+            });
+        }
+
+        window.addEventListener('scroll', function() {
+            const main = document.querySelector('main');
+            if (!main) return;
+            const scrollTop = main.scrollTop;
+            const scrollHeight = main.scrollHeight - main.clientHeight;
+            document.getElementById('readingProgress').style.width = (scrollTop / Math.max(scrollHeight, 1)) * 100 + '%';
+        });
+
+        const copyBtn = document.getElementById('copyDocBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                const content = document.getElementById('markdownOutput')?.innerText;
+                if (!content) return;
+                navigator.clipboard.writeText(content).then(function() {
+                    copyBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>';
+                    lucide.createIcons();
+                    setTimeout(function() {
+                        copyBtn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
+                        lucide.createIcons();
+                    }, 1500);
+                });
+            });
+        }
+
+        initTheme();
+        renderSidebar('sidebarGroups');
+        renderSidebar('mobileSidebarGroups');
+    </script>
+</body>
+</html>

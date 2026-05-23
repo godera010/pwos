@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coding Guidelines - P-WOS Documentation Portal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#16a34a', 600: '#15803d', 700: '#166534' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css" id="hljs-dark-theme" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .theme-light ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+        .theme-dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .prose table { width: 100%; margin: 1.5rem 0; border-collapse: collapse; font-size: 0.875rem; }
+        .prose th { background-color: rgba(0,0,0,0.02); font-weight: 600; padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); text-align: left; }
+        .dark .prose th { background-color: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); }
+        .prose td { padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); }
+        .dark .prose td { border-color: rgba(255,255,255,0.08); }
+        .prose blockquote { border-left: 3px solid #16a34a; padding-left: 1rem; font-style: italic; color: #4b5563; }
+        .dark .prose blockquote { color: #9ca3af; }
+        .prose img { border-radius: 8px; margin: 1.5rem auto; max-width: 100%; }
+        .prose pre { border-radius: 10px; background: #f8fafc !important; border: 1px solid #e2e8f0; }
+        .dark .prose pre { background: #0f171a !important; border-color: #1e2a2e; }
+
+        .theme-dark { background-color: #0b0f11; color: #f1f5f9; }
+        .theme-dark .sidebar-bg { background-color: #101618; border-color: #1a2225; }
+        .theme-dark .content-card { background-color: #12191b; border-color: #1c272a; }
+
+        .sidebar-group-enter { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-in-out; }
+        .sidebar-group-enter.active { max-height: 500px; }
+    </style>
+</head>
+<body class="theme-light bg-slate-50 text-slate-800 transition-colors duration-200 antialiased font-sans h-screen overflow-hidden flex flex-col">
+
+    <div class="fixed top-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-900/50 z-50">
+        <div id="readingProgress" class="h-full bg-brand-500 w-0 transition-all duration-75"></div>
+    </div>
+
+    <header class="h-14 md:h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/85 dark:bg-[#101618]/85 backdrop-blur-md flex items-center justify-between px-4 md:px-6 z-40 shrink-0">
+        <div class="flex items-center space-x-3">
+            <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-500">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                <div class="p-1.5 bg-gradient-to-tr from-emerald-500 to-green-600 rounded-lg text-white">
+                    <i data-lucide="droplet" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <span class="font-bold text-sm md:text-base tracking-tight text-slate-900 dark:text-white">P-WOS Docs</span>
+                    <span class="hidden md:inline-block ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 font-medium">Predictive Water Optimization</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300" title="Toggle Light/Dark Mode">
+                <i data-lucide="sun" id="themeIcon" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Theme</span>
+            </button>
+            <button onclick="window.print()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Print to PDF">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Export PDF</span>
+            </button>
+            <a href="index.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Home</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="navSidebar" class="w-64 border-r border-slate-200 dark:border-slate-800/80 overflow-y-auto shrink-0 bg-white dark:bg-[#101618] hidden lg:block z-30">
+            <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text" id="docSearch" placeholder="Search documentation..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                </div>
+            </div>
+            <div class="p-3 space-y-1" id="sidebarGroups"></div>
+        </aside>
+
+        <aside id="mobileSidebar" class="fixed inset-0 z-40 lg:hidden hidden">
+            <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" id="navOverlay"></div>
+            <div class="relative w-72 max-w-[85vw] h-full bg-white dark:bg-[#101618] shadow-2xl overflow-y-auto transform transition-transform duration-300 -translate-x-full">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">Navigation</span>
+                    <button id="closeMobileNav" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-400">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="mobileDocSearch" placeholder="Search..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                    </div>
+                </div>
+                <div class="p-3 space-y-1" id="mobileSidebarGroups"></div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto min-w-0">
+            <div class="px-4 md:px-8 py-6 md:py-10">
+                <div class="flex gap-6 lg:gap-10">
+                    <div class="flex-1 min-w-0 max-w-4xl">
+                        <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                            <span id="breadcrumbCategory">Technical Reference</span>
+                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">coding_guidelines.md</span>
+                        </div>
+
+                        <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
+                            <div class="absolute top-6 right-6 flex items-center space-x-2 print:hidden">
+                                <button id="copyDocBtn" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Copy content">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <div id="markdownOutput" class="prose max-w-none dark:prose-invert
+                                prose-headings:font-bold prose-headings:tracking-tight
+                                prose-h1:text-3xl prose-h1:mb-6 prose-h1:text-slate-900 dark:prose-h1:text-white
+                                prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:text-slate-900 dark:prose-h2:text-white
+                                prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-slate-800 dark:prose-h3:text-slate-200
+                                prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
+                                prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                                prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
+                                <h1>DEVELOPMENT GUIDELINES</h1>
+<h2>Code Standards and Best Practices for P-WOS</h2>
+<hr />
+<h2>GENERAL PRINCIPLES</h2>
+<h3>1. <strong>Keep It Simple</strong></h3>
+<ul>
+<li>Write clear, readable code over clever code</li>
+<li>One function should do one thing</li>
+<li>Avoid premature optimization</li>
+<li>Comment why, not what</li>
+</ul>
+<h3>2. <strong>Test Early, Test Often</strong></h3>
+<ul>
+<li>Test each component before integration</li>
+<li>Write tests as you code, not after</li>
+<li>Manual testing first, then automate</li>
+<li>Fix bugs immediately</li>
+</ul>
+<h3>3. <strong>Document Everything</strong></h3>
+<ul>
+<li>Code comments for complex logic</li>
+<li>Docstrings for all functions</li>
+<li>README for each major module</li>
+<li>Update docs when code changes</li>
+</ul>
+<h3>4. <strong>Version Control Discipline</strong></h3>
+<ul>
+<li>Commit frequently with clear messages</li>
+<li>One feature per commit</li>
+<li>Never commit broken code</li>
+<li>Use branches for experiments</li>
+</ul>
+<hr />
+<h2>PYTHON CODE STANDARDS</h2>
+<h3>Naming Conventions</h3>
+<pre><code class="language-python"># Classes: PascalCase
+class ESP32Simulator:
+    pass
+
+class DatabaseManager:
+    pass
+
+# Functions and methods: snake_case
+def calculate_moisture_decay():
+    pass
+
+def get_sensor_reading():
+    pass
+
+# Constants: UPPER_SNAKE_CASE
+MAX_MOISTURE = 100
+MIN_TEMPERATURE = -10
+MQTT_BROKER_URL = &quot;localhost&quot;
+
+# Variables: snake_case
+soil_moisture = 45.5
+current_temperature = 25.0
+is_pump_active = False
+
+# Private methods/variables: prefix with underscore
+def _internal_helper_function():
+    pass
+
+_private_constant = 42
+</code></pre>
+<h3>Function Documentation</h3>
+<pre><code class="language-python">def predict_watering_need(sensor_data: dict, weather_data: dict) -&gt; dict:
+    &quot;&quot;&quot;
+    Predict whether watering is needed based on sensor and weather data.
+
+    This function uses a rule-based decision tree to determine if the plant
+    needs watering. It considers current moisture levels, temperature, 
+    humidity, and upcoming weather forecasts.
+
+    Args:
+        sensor_data (dict): Current sensor readings
+            - soil_moisture (float): Percentage 0-100
+            - temperature (float): Celsius
+            - humidity (float): Percentage 0-100
+            - timestamp (str): ISO format timestamp
+
+        weather_data (dict): Weather forecast
+            - rain_predicted (bool): Rain in next 6 hours
+            - rain_probability (float): Percentage 0-100
+            - avg_temp_next_12h (float): Celsius
+
+    Returns:
+        dict: Prediction result
+            - should_water (bool): Whether to water
+            - confidence (float): Confidence score 0.0-1.0
+            - reasoning (str): Human-readable explanation
+            - urgency (str): CRITICAL, HIGH, MEDIUM, LOW, NONE
+
+    Examples:
+        &gt;&gt;&gt; sensor = {&quot;soil_moisture&quot;: 28, &quot;temperature&quot;: 26, ...}
+        &gt;&gt;&gt; weather = {&quot;rain_predicted&quot;: False, &quot;rain_probability&quot;: 10}
+        &gt;&gt;&gt; result = predict_watering_need(sensor, weather)
+        &gt;&gt;&gt; result['should_water']
+        True
+
+    Raises:
+        ValueError: If sensor_data or weather_data is missing required fields
+        TypeError: If data types are incorrect
+
+    Notes:
+        - Decision thresholds are configurable in config.py
+        - Function is stateless and has no side effects
+        - See ml_model_guide.md for decision logic details
+    &quot;&quot;&quot;
+    # Validate inputs
+    if not sensor_data or not weather_data:
+        raise ValueError(&quot;Missing required data&quot;)
+
+    # Implementation...
+    pass
+</code></pre>
+<h3>Error Handling</h3>
+<pre><code class="language-python"># Always handle exceptions specifically
+try:
+    reading = get_sensor_reading()
+except ConnectionError as e:
+    logger.error(f&quot;Sensor connection failed: {e}&quot;)
+    return None
+except TimeoutError as e:
+    logger.warning(f&quot;Sensor timeout: {e}&quot;)
+    return None
+except Exception as e:
+    logger.critical(f&quot;Unexpected error: {e}&quot;)
+    raise
+
+# Use context managers for resources
+import psycopg2
+conn = psycopg2.connect(host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD)
+try:
+    with conn.cursor() as cur:
+        cur.execute(&quot;SELECT * FROM sensor_readings LIMIT 10&quot;)
+        rows = cur.fetchall()
+finally:
+    conn.close()
+
+# Fail fast - validate inputs early
+def set_moisture_threshold(value: float) -&gt; None:
+    if not 0 &lt;= value &lt;= 100:
+        raise ValueError(f&quot;Moisture must be 0-100, got {value}&quot;)
+
+    # Rest of function...
+</code></pre>
+<h3>Type Hints</h3>
+<pre><code class="language-python">from typing import List, Dict, Optional, Tuple, Union
+
+def process_readings(
+    readings: List[Dict[str, float]], 
+    min_count: int = 10
+) -&gt; Optional[Dict[str, float]]:
+    &quot;&quot;&quot;Process sensor readings and return summary statistics.&quot;&quot;&quot;
+    pass
+
+def get_prediction(
+    model: 'MLModel',
+    features: List[float]
+) -&gt; Tuple[bool, float]:
+    &quot;&quot;&quot;Returns (prediction, confidence).&quot;&quot;&quot;
+    pass
+
+# Use Optional for values that can be None
+def find_reading(timestamp: str) -&gt; Optional[Dict]:
+    &quot;&quot;&quot;Returns reading dict or None if not found.&quot;&quot;&quot;
+    pass
+</code></pre>
+<h3>Logging</h3>
+<pre><code class="language-python">import logging
+
+# Setup at module level
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('data/logs/system.log'),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
+# Usage
+logger.debug(&quot;Detailed debugging info&quot;)        # Development only
+logger.info(&quot;System started successfully&quot;)     # Normal operations
+logger.warning(&quot;Moisture below 20%&quot;)           # Potential issues
+logger.error(&quot;Failed to connect to MQTT&quot;)      # Errors
+logger.critical(&quot;Database corrupted!&quot;)         # System-breaking
+
+# Always include context
+logger.info(f&quot;Received reading: moisture={moisture}%, temp={temp}°C&quot;)
+logger.error(f&quot;MQTT connection failed: {error_message}&quot;)
+</code></pre>
+<hr />
+<h2>FILE ORGANIZATION</h2>
+<h3>Module Structure</h3>
+<pre><code class="language-python">&quot;&quot;&quot;
+Module: esp32_simulator
+Purpose: Simulate ESP32 hardware for testing without physical devices
+Author: [Your name]
+Created: 2025-01-15
+Modified: 2025-02-06
+
+This module provides a virtual ESP32 that generates realistic sensor data
+and responds to pump control commands via MQTT.
+&quot;&quot;&quot;
+
+# Standard library imports
+import json
+import time
+from datetime import datetime
+from typing import Dict
+
+# Third-party imports
+import paho.mqtt.client as mqtt
+
+# Local imports
+from config import MQTT_BROKER, MQTT_PORT
+
+# Constants
+DEFAULT_MOISTURE = 50.0
+DECAY_RATE = 0.5  # % per hour
+
+# Class definitions
+class ESP32Simulator:
+    &quot;&quot;&quot;Virtual ESP32 with realistic sensor physics.&quot;&quot;&quot;
+    pass
+
+# Helper functions
+def calculate_temperature_cycle(hour: int) -&gt; float:
+    &quot;&quot;&quot;Calculate temperature based on time of day.&quot;&quot;&quot;
+    pass
+
+# Main execution
+if __name__ == &quot;__main__&quot;:
+    # Module-specific test code
+    pass
+</code></pre>
+<h3>Configuration Files</h3>
+<pre><code class="language-python"># config/settings.py
+&quot;&quot;&quot;Application configuration settings.&quot;&quot;&quot;
+
+# MQTT Settings
+MQTT_BROKER = &quot;localhost&quot;
+MQTT_PORT = 1883
+MQTT_KEEPALIVE = 60
+
+# Sensor Thresholds
+CRITICAL_MOISTURE = 25.0
+LOW_MOISTURE = 30.0
+COMFORTABLE_MOISTURE = 40.0
+
+# Timing
+SENSOR_INTERVAL = 60  # seconds
+API_REFRESH_RATE = 10  # seconds
+
+# Database (PostgreSQL)
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_PORT = os.getenv('DB_PORT', '5432')
+DB_NAME = os.getenv('DB_NAME', 'pwos')
+DB_USER = os.getenv('DB_USER', 'postgres')
+DB_PASSWORD = os.getenv('DB_PASSWORD', '')
+
+# ML Model
+MODEL_PATH = &quot;data/trained_model.pkl&quot;
+MODEL_CONFIDENCE_THRESHOLD = 0.65
+</code></pre>
+<pre><code class="language-python"># Use in code:
+from config.settings import MQTT_BROKER, CRITICAL_MOISTURE
+</code></pre>
+<h3>Environment Variables</h3>
+<pre><code class="language-bash"># .env file (never commit to Git!)
+OPENWEATHER_API_KEY=your_api_key_here
+MQTT_USERNAME=admin
+MQTT_PASSWORD=secret123
+DATABASE_URL=postgresql://user:pass@host:5432/db
+
+# Production only
+DEBUG=False
+ENVIRONMENT=production
+</code></pre>
+<pre><code class="language-python"># Load in Python
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+API_KEY = os.getenv('OPENWEATHER_API_KEY')
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
+</code></pre>
+<hr />
+<h2>API DESIGN</h2>
+<h3>REST Endpoint Standards</h3>
+<pre><code class="language-python"># Good endpoint design:
+GET  /api/sensor-data?limit=100&amp;device=ESP32_001
+POST /api/control/pump
+GET  /api/predict
+GET  /api/status
+
+# Bad endpoint design:
+GET  /api/getSensorData        # Don't use verbs in URL
+POST /api/pumpControl          # Inconsistent naming
+GET  /api/prediction_endpoint  # Underscores in URL
+</code></pre>
+<h3>Response Format</h3>
+<pre><code class="language-python"># Success response
+{
+    &quot;status&quot;: &quot;success&quot;,
+    &quot;data&quot;: {
+        &quot;soil_moisture&quot;: 45.5,
+        &quot;temperature&quot;: 25.3,
+        &quot;timestamp&quot;: &quot;2025-02-06T14:30:00&quot;
+    },
+    &quot;message&quot;: &quot;Sensor reading retrieved successfully&quot;
+}
+
+# Error response
+{
+    &quot;status&quot;: &quot;error&quot;,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;SENSOR_OFFLINE&quot;,
+        &quot;message&quot;: &quot;Unable to reach sensor device&quot;,
+        &quot;details&quot;: &quot;Connection timeout after 5 seconds&quot;
+    },
+    &quot;timestamp&quot;: &quot;2025-02-06T14:30:00&quot;
+}
+
+# Pagination
+{
+    &quot;status&quot;: &quot;success&quot;,
+    &quot;data&quot;: [...],
+    &quot;pagination&quot;: {
+        &quot;page&quot;: 1,
+        &quot;per_page&quot;: 50,
+        &quot;total&quot;: 1245,
+        &quot;pages&quot;: 25
+    }
+}
+</code></pre>
+<h3>HTTP Status Codes</h3>
+<pre><code class="language-python"># Use appropriate status codes
+200 OK                  # Successful GET
+201 Created             # Successful POST
+204 No Content          # Successful DELETE
+400 Bad Request         # Invalid input
+401 Unauthorized        # Authentication required
+403 Forbidden           # No permission
+404 Not Found           # Resource doesn't exist
+500 Internal Server     # Server error
+
+# Example usage
+@app.route('/api/sensor-data', methods=['GET'])
+def get_sensor_data():
+    try:
+        limit = int(request.args.get('limit', 100))
+        if limit &lt; 1 or limit &gt; 1000:
+            return jsonify({
+                &quot;status&quot;: &quot;error&quot;,
+                &quot;error&quot;: &quot;limit must be between 1 and 1000&quot;
+            }), 400
+
+        data = db.get_recent(limit)
+        return jsonify({
+            &quot;status&quot;: &quot;success&quot;,
+            &quot;data&quot;: data
+        }), 200
+
+    except Exception as e:
+        logger.error(f&quot;Error fetching data: {e}&quot;)
+        return jsonify({
+            &quot;status&quot;: &quot;error&quot;,
+            &quot;error&quot;: &quot;Internal server error&quot;
+        }), 500
+</code></pre>
+<hr />
+<h2>DATABASE GUIDELINES</h2>
+<h3>Query Safety (PostgreSQL)</h3>
+<pre><code class="language-python"># GOOD - Parameterized queries (safe from SQL injection)
+cur.execute(
+    &quot;SELECT * FROM sensor_readings WHERE device_id = %s&quot;,
+    (device_id,)
+)
+
+# BAD - String formatting (vulnerable to SQL injection!)
+cur.execute(
+    f&quot;SELECT * FROM sensor_readings WHERE device_id = '{device_id}'&quot;
+)
+
+# GOOD - Multiple parameters
+cur.execute(
+    &quot;&quot;&quot;INSERT INTO sensor_readings 
+       (timestamp, moisture, temperature) 
+       VALUES (%s, %s, %s)&quot;&quot;&quot;,
+    (timestamp, moisture, temp)
+)
+</code></pre>
+<h3>Connection Management (PostgreSQL)</h3>
+<pre><code class="language-python">import psycopg2
+
+# GOOD - Use try/finally
+def get_readings():
+    conn = psycopg2.connect(host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD)
+    try:
+        with conn.cursor() as cur:
+            cur.execute(&quot;SELECT * FROM sensor_readings ORDER BY timestamp DESC LIMIT 10&quot;)
+            return cur.fetchall()
+    finally:
+        conn.close()
+
+# BAD - No cleanup on error
+def get_readings():
+    conn = psycopg2.connect(host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD)
+    cur = conn.cursor()
+    cur.execute(&quot;SELECT * FROM sensor_readings LIMIT 10&quot;)
+    data = cur.fetchall()
+    # Forgot to close connection!
+    return data
+</code></pre>
+<h3>Indexing</h3>
+<pre><code class="language-sql">-- Add indexes for frequently queried columns
+CREATE INDEX idx_timestamp ON sensor_readings(timestamp);
+CREATE INDEX idx_device_id ON sensor_readings(device_id);
+
+-- Check query performance
+EXPLAIN QUERY PLAN 
+SELECT * FROM sensor_readings 
+WHERE timestamp &gt; '2025-01-01' 
+ORDER BY timestamp DESC;
+</code></pre>
+<hr />
+<h2>TESTING STANDARDS</h2>
+<h3>Test Structure</h3>
+<pre><code class="language-python"># tests/test_simulator.py
+import pytest
+from src.simulation.esp32_simulator import ESP32Simulator
+
+class TestESP32Simulator:
+    &quot;&quot;&quot;Test suite for ESP32 simulator.&quot;&quot;&quot;
+
+    @pytest.fixture
+    def simulator(self):
+        &quot;&quot;&quot;Create fresh simulator for each test.&quot;&quot;&quot;
+        return ESP32Simulator(&quot;localhost&quot;, 1883)
+
+    def test_initial_moisture_in_range(self, simulator):
+        &quot;&quot;&quot;Initial moisture should be between 0 and 100.&quot;&quot;&quot;
+        assert 0 &lt;= simulator.soil_moisture &lt;= 100
+
+    def test_moisture_decays_over_time(self, simulator):
+        &quot;&quot;&quot;Moisture should decrease when pump is off.&quot;&quot;&quot;
+        initial = simulator.soil_moisture
+        simulator.simulate_sensors(minutes=60)
+        assert simulator.soil_moisture &lt; initial
+
+    def test_pump_increases_moisture(self, simulator):
+        &quot;&quot;&quot;Moisture should increase when pump is on.&quot;&quot;&quot;
+        simulator.soil_moisture = 30
+        simulator.pump_on = True
+        initial = simulator.soil_moisture
+        simulator.simulate_sensors(minutes=5)
+        assert simulator.soil_moisture &gt; initial
+
+    def test_moisture_stays_bounded(self, simulator):
+        &quot;&quot;&quot;Moisture should never go below 0 or above 100.&quot;&quot;&quot;
+        simulator.soil_moisture = 99
+        simulator.pump_on = True
+        simulator.simulate_sensors(minutes=60)
+        assert simulator.soil_moisture &lt;= 100
+
+        simulator.soil_moisture = 1
+        simulator.pump_on = False
+        simulator.simulate_sensors(minutes=60)
+        assert simulator.soil_moisture &gt;= 0
+
+# Run tests
+# pytest tests/test_simulator.py -v
+</code></pre>
+<h3>Test Coverage Goals</h3>
+<ul>
+<li><strong>Unit Tests:</strong> 80%+ code coverage</li>
+<li><strong>Integration Tests:</strong> All critical paths</li>
+<li><strong>End-to-End Tests:</strong> Full user workflows</li>
+</ul>
+<hr />
+<h2>GIT WORKFLOW</h2>
+<h3>Commit Messages</h3>
+<pre><code class="language-bash"># Good commit messages
+git commit -m &quot;feat(simulator): add moisture decay simulation&quot;
+git commit -m &quot;fix(api): correct MQTT reconnection logic&quot;
+git commit -m &quot;docs(readme): update installation instructions&quot;
+git commit -m &quot;test(ml): add model accuracy tests&quot;
+git commit -m &quot;refactor(database): optimize query performance&quot;
+
+# Bad commit messages
+git commit -m &quot;fixed stuff&quot;
+git commit -m &quot;updates&quot;
+git commit -m &quot;wip&quot;
+</code></pre>
+<h3>Commit Message Format</h3>
+<pre><code>&lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
+
+&lt;body&gt;
+
+&lt;footer&gt;
+</code></pre>
+<p><strong>Types:</strong><br />
+- <code>feat</code>: New feature<br />
+- <code>fix</code>: Bug fix<br />
+- <code>docs</code>: Documentation<br />
+- <code>style</code>: Formatting<br />
+- <code>refactor</code>: Code restructure<br />
+- <code>test</code>: Adding tests<br />
+- <code>chore</code>: Maintenance</p>
+<p><strong>Example:</strong></p>
+<pre><code>feat(ml): implement Random Forest classifier
+
+- Load training data from CSV
+- Train model with cross-validation
+- Save model and metadata
+- Achieve 78% accuracy on test set
+
+Closes #23
+</code></pre>
+<h3>Branch Strategy</h3>
+<pre><code class="language-bash"># Main branches
+main         # Production-ready code
+develop      # Integration branch
+
+# Feature branches
+git checkout -b feature/esp32-simulator
+git checkout -b feature/ml-training
+git checkout -b fix/mqtt-connection
+
+# Merge when complete
+git checkout develop
+git merge feature/esp32-simulator
+git branch -d feature/esp32-simulator
+</code></pre>
+<hr />
+<h2>SECURITY CONSIDERATIONS</h2>
+<h3>Never Commit Secrets</h3>
+<pre><code class="language-python"># BAD
+API_KEY = &quot;sk_live_abc123xyz789&quot;
+PASSWORD = &quot;mypassword123&quot;
+
+# GOOD
+API_KEY = os.getenv('API_KEY')
+PASSWORD = os.getenv('DATABASE_PASSWORD')
+</code></pre>
+<h3>Input Validation</h3>
+<pre><code class="language-python"># Always validate user input
+def set_watering_duration(duration: int) -&gt; None:
+    # Validate range
+    if not 1 &lt;= duration &lt;= 300:
+        raise ValueError(&quot;Duration must be 1-300 seconds&quot;)
+
+    # Validate type
+    if not isinstance(duration, int):
+        raise TypeError(&quot;Duration must be an integer&quot;)
+
+    # Safe to use
+    activate_pump(duration)
+</code></pre>
+<h3>MQTT Security</h3>
+<pre><code class="language-python"># Use authentication in production
+client.username_pw_set(username, password)
+
+# Use TLS encryption
+client.tls_set(ca_certs=&quot;/path/to/ca.crt&quot;)
+
+# Validate message sources
+def on_message(client, userdata, msg):
+    # Check topic is expected
+    if not msg.topic.startswith(&quot;pwos/&quot;):
+        logger.warning(f&quot;Unexpected topic: {msg.topic}&quot;)
+        return
+
+    # Validate payload
+    try:
+        data = json.loads(msg.payload)
+    except json.JSONDecodeError:
+        logger.error(&quot;Invalid JSON payload&quot;)
+        return
+</code></pre>
+<hr />
+<h2>PERFORMANCE GUIDELINES</h2>
+<h3>Database Optimization (PostgreSQL)</h3>
+<pre><code class="language-python">import psycopg2
+
+# Batch inserts for better performance
+def insert_batch(readings: List[Dict]) -&gt; None:
+    conn = psycopg2.connect(host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD)
+    try:
+        with conn.cursor() as cur:
+            cur.executemany(
+                &quot;&quot;&quot;INSERT INTO sensor_readings 
+                   (timestamp, moisture, temp, humidity)
+                   VALUES (%s, %s, %s, %s)&quot;&quot;&quot;,
+                [(r['timestamp'], r['moisture'], 
+                  r['temp'], r['humidity']) 
+                 for r in readings]
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+# Better than 1000 individual inserts!
+</code></pre>
+<h3>API Caching</h3>
+<pre><code class="language-python">from functools import lru_cache
+from datetime import datetime, timedelta
+
+@lru_cache(maxsize=128)
+def get_weather_forecast(lat: float, lon: float, date: str) -&gt; Dict:
+    &quot;&quot;&quot;Cache weather forecasts for 1 hour.&quot;&quot;&quot;
+    # Expensive API call
+    return fetch_from_api(lat, lon, date)
+
+# Clear cache periodically
+# lru_cache doesn't have TTL, so manually clear every hour
+</code></pre>
+<hr />
+<h2>CODE REVIEW CHECKLIST</h2>
+<p>Before merging code, verify:</p>
+<ul>
+<li>[ ] Code follows naming conventions</li>
+<li>[ ] All functions have docstrings</li>
+<li>[ ] Error handling is present</li>
+<li>[ ] No hardcoded secrets or passwords</li>
+<li>[ ] Tests are included and passing</li>
+<li>[ ] No commented-out code (use Git instead)</li>
+<li>[ ] Imports are organized</li>
+<li>[ ] Logging is appropriate</li>
+<li>[ ] Performance is acceptable</li>
+<li>[ ] Documentation is updated</li>
+</ul>
+<hr />
+<h2>ADDITIONAL RESOURCES</h2>
+<h3>Python Style</h3>
+<ul>
+<li>PEP 8: https://pep8.org/</li>
+<li>Google Python Style Guide</li>
+<li>Type hints: PEP 484</li>
+</ul>
+<h3>Flask Best Practices</h3>
+<ul>
+<li>Flask documentation</li>
+<li>REST API design principles</li>
+<li>Error handling patterns</li>
+</ul>
+<h3>Testing</h3>
+<ul>
+<li>pytest documentation</li>
+<li>Test-Driven Development (TDD)</li>
+<li>Integration testing strategies</li>
+</ul>
+<hr />
+<p><strong>Following these guidelines will ensure high-quality, maintainable code! 🚀</strong></p>
+                            </div>
+                        </article>
+
+                        <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
+                            <a href="index.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Back to Index</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <aside class="hidden lg:block w-56 shrink-0 border-l border-slate-200 dark:border-slate-800/80 pl-6">
+                        <div class="sticky top-0">
+                            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5 mb-4">
+                                <i data-lucide="list-ordered" class="w-3.5 h-3.5 text-emerald-500"></i> On This Page
+                            </h4>
+                            <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                            <a href="index.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                                <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                                <span>Back to Home</span>
+                            </a>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const docs = [{"category": "Getting Started", "icon": "rocket", "pages": [{"title": "Project Overview", "file": "PROJECT_OVERVIEW.html"}, {"title": "Quickstart Guide", "file": "QUICKSTART.html"}, {"title": "Project Roadmap", "file": "PROJECT_ROADMAP.html"}]}, {"category": "System Architecture", "icon": "cpu", "pages": [{"title": "System Overview", "file": "system_overview.html"}, {"title": "Dataflow", "file": "dataflow.html"}, {"title": "Analytics Reference", "file": "analytics_reference.html"}, {"title": "Crop Profiles", "file": "crop_profiles.html"}, {"title": "Edge Cases & Scenarios", "file": "edge_cases_and_scenarios.html"}, {"title": "ML Model Deep Dive", "file": "ml_model_deep_dive.html"}, {"title": "VPD & Weather Engine", "file": "vpd_and_weather_engine.html"}]}, {"category": "Core Guides", "icon": "book-open", "pages": [{"title": "Installation Guide", "file": "installation_guide.html"}, {"title": "Backend API", "file": "backend_guide.html"}, {"title": "Database Guide", "file": "database_guide.html"}, {"title": "Firmware Guide", "file": "firmware_guide.html"}, {"title": "Simulation Guide", "file": "simulation_guide.html"}, {"title": "ML Model Guide", "file": "ml_model_guide.html"}, {"title": "Performance Guide", "file": "performance_guide.html"}, {"title": "Troubleshooting", "file": "troubleshooting.html"}, {"title": "Tests Reference", "file": "tests.html"}, {"title": "Analytics Dashboard", "file": "analytics_dashboard.html"}, {"title": "Main Dashboard", "file": "main_dashboard.html"}, {"title": "Mobile Guide", "file": "mobile_guide.html"}]}, {"category": "Hardware Engineering", "icon": "circuit-board", "pages": [{"title": "Hardware Architecture", "file": "hardware_architecture.html"}, {"title": "Breadboard Assembly", "file": "breadboard_assembly.html"}, {"title": "Breadboard Guide", "file": "breadboard.html"}, {"title": "Hardware Setup", "file": "hardware_setup.html"}, {"title": "Shopping List", "file": "hardware_shopping_list.html"}, {"title": "Migration Plan", "file": "hardware_migration_plan.html"}, {"title": "Testing Report", "file": "testing_report.html"}, {"title": "Hardware Progress", "file": "hardware_progress.html"}, {"title": "Phase 1 Report", "file": "phase1_report.html"}]}, {"category": "Scientific Research", "icon": "microscope", "pages": [{"title": "Codebase Analysis", "file": "codebase_analysis.html"}, {"title": "Codebase Audit", "file": "codebase_audit.html"}, {"title": "Crop Integration Plan", "file": "crop_integration_plan.html"}]}, {"category": "Technical Reference", "icon": "code", "pages": [{"title": "API Reference", "file": "api_reference.html"}, {"title": "MQTT Topics", "file": "mqtt_topics.html"}, {"title": "Coding Guidelines", "file": "coding_guidelines.html"}, {"title": "Project Structure", "file": "project_structure.html"}, {"title": "VPD Scenarios", "file": "vpd_scenarios.html"}]}, {"category": "Deployment & Operations", "icon": "cloud", "pages": [{"title": "Cloud ML Deployment", "file": "cloud_ml_deployment.html"}, {"title": "Local Implementation", "file": "local_implementation.html"}, {"title": "ML Roadmap", "file": "ml_implementation_roadmap.html"}]}, {"category": "Reports & Validation", "icon": "bar-chart-3", "pages": [{"title": "Final Report", "file": "final_report.html"}, {"title": "Validation Report", "file": "validation_report.html"}, {"title": "Simulation Analysis", "file": "simulation_analysis.html"}, {"title": "Moisture Analysis", "file": "moisture_analysis.html"}, {"title": "Phase 1 Setup Report", "file": "phase_01_setup_report.html"}, {"title": "Phase 5 ML Report", "file": "phase_05_ml_report.html"}, {"title": "Phase 6 Frontend Report", "file": "phase_06_frontend_report.html"}]}];
+
+        let expandedGroups = {};
+
+        function initTheme() {
+            const saved = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(saved);
+        }
+
+        function setTheme(theme) {
+            document.body.classList.remove('theme-light', 'theme-dark');
+            document.documentElement.classList.remove('dark');
+            const hljsLight = document.getElementById('hljs-light-theme');
+            const hljsDark = document.getElementById('hljs-dark-theme');
+            if (theme === 'dark') {
+                document.body.classList.add('theme-dark');
+                document.documentElement.classList.add('dark');
+                if (hljsLight) hljsLight.disabled = true;
+                if (hljsDark) hljsDark.disabled = false;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'moon');
+            } else {
+                document.body.classList.add('theme-light');
+                if (hljsLight) hljsLight.disabled = false;
+                if (hljsDark) hljsDark.disabled = true;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'sun');
+            }
+            localStorage.setItem('pwos-theme', theme);
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            const current = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(current === 'light' ? 'dark' : 'light');
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        function renderSidebar(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = docs.map(function(group, gi) {
+                const isOpen = expandedGroups[gi] || false;
+                return '<div class="sidebar-group">' +
+                    '<button onclick="toggleGroup(' + gi + ')" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' +
+                        '<span class="flex items-center gap-2"><i data-lucide="' + group.icon + '" class="w-4 h-4"></i><span>' + group.category + '</span></span>' +
+                        '<i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ' + (isOpen ? 'rotate-0' : '-rotate-90') + '"></i>' +
+                    '</button>' +
+                    '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
+                        '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
+                            group.pages.map(function(page) {
+                                return '<li><a href="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                            }).join('') +
+                        '</ul>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function toggleGroup(idx) {
+            expandedGroups[idx] = !expandedGroups[idx];
+            renderSidebar('sidebarGroups');
+            renderSidebar('mobileSidebarGroups');
+        }
+
+        function setupSearch(inputId, containerId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('input', function(e) {
+                const q = e.target.value.toLowerCase().trim();
+                document.querySelectorAll('#' + containerId + ' .sidebar-group').forEach(function(el) {
+                    el.style.display = q === '' || el.textContent.toLowerCase().includes(q) ? '' : 'none';
+                });
+            });
+        }
+
+        setupSearch('docSearch', 'sidebarGroups');
+        setupSearch('mobileDocSearch', 'mobileSidebarGroups');
+
+        function openMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            sidebar.classList.remove('hidden');
+            setTimeout(function() { panel.classList.remove('-translate-x-full'); }, 10);
+        }
+
+        function closeMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            panel.classList.add('-translate-x-full');
+            setTimeout(function() { sidebar.classList.add('hidden'); }, 300);
+        }
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', openMobileNav);
+        document.getElementById('closeMobileNav').addEventListener('click', closeMobileNav);
+        document.getElementById('navOverlay').addEventListener('click', closeMobileNav);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const output = document.getElementById('markdownOutput');
+            if (!output) return;
+
+            output.querySelectorAll('pre code').forEach(function(block) { hljs.highlightElement(block); });
+
+            try {
+                renderMathInElement(output, {
+                    delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}],
+                    throwOnError: false
+                });
+            } catch(e) {}
+
+            try {
+                mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+                mermaid.run({ nodes: output.querySelectorAll('.mermaid') });
+            } catch(e) {}
+
+            buildTOC(output);
+        });
+
+        function buildTOC(container) {
+            const list = document.getElementById('tocList');
+            if (!list) return;
+            list.innerHTML = '';
+            const headings = container.querySelectorAll('h2, h3');
+            if (headings.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'text-slate-400 italic';
+                li.textContent = 'No sub-headers on page';
+                list.appendChild(li);
+                return;
+            }
+            headings.forEach(function(heading, idx) {
+                const anchorId = 'toc-anchor-' + idx;
+                heading.setAttribute('id', anchorId);
+                const li = document.createElement('li');
+                const isSub = heading.tagName.toLowerCase() === 'h3';
+                li.className = 'transition-colors duration-150 ' + (isSub ? 'pl-3 border-l border-slate-100 dark:border-slate-800 ml-1 py-0.5' : 'font-medium py-1');
+                const link = document.createElement('a');
+                link.href = '#' + anchorId;
+                link.className = 'hover:text-emerald-500 block truncate transition-colors';
+                link.textContent = heading.textContent;
+                link.onclick = function(e) { e.preventDefault(); heading.scrollIntoView({ behavior: 'smooth' }); };
+                li.appendChild(link);
+                list.appendChild(li);
+            });
+        }
+
+        window.addEventListener('scroll', function() {
+            const main = document.querySelector('main');
+            if (!main) return;
+            const scrollTop = main.scrollTop;
+            const scrollHeight = main.scrollHeight - main.clientHeight;
+            document.getElementById('readingProgress').style.width = (scrollTop / Math.max(scrollHeight, 1)) * 100 + '%';
+        });
+
+        const copyBtn = document.getElementById('copyDocBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                const content = document.getElementById('markdownOutput')?.innerText;
+                if (!content) return;
+                navigator.clipboard.writeText(content).then(function() {
+                    copyBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>';
+                    lucide.createIcons();
+                    setTimeout(function() {
+                        copyBtn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
+                        lucide.createIcons();
+                    }, 1500);
+                });
+            });
+        }
+
+        initTheme();
+        renderSidebar('sidebarGroups');
+        renderSidebar('mobileSidebarGroups');
+    </script>
+</body>
+</html>

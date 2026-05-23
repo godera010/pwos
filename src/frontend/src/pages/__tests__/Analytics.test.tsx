@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { Analytics } from '../Analytics';
 import { api } from '../../services/api';
-import React from 'react';
+
 
 // Mock the API service
 vi.mock('../../services/api', () => ({

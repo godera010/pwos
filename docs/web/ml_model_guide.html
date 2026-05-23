@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ml Model Guide - P-WOS Documentation Portal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#16a34a', 600: '#15803d', 700: '#166534' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css" id="hljs-dark-theme" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .theme-light ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+        .theme-dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .prose table { width: 100%; margin: 1.5rem 0; border-collapse: collapse; font-size: 0.875rem; }
+        .prose th { background-color: rgba(0,0,0,0.02); font-weight: 600; padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); text-align: left; }
+        .dark .prose th { background-color: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); }
+        .prose td { padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); }
+        .dark .prose td { border-color: rgba(255,255,255,0.08); }
+        .prose blockquote { border-left: 3px solid #16a34a; padding-left: 1rem; font-style: italic; color: #4b5563; }
+        .dark .prose blockquote { color: #9ca3af; }
+        .prose img { border-radius: 8px; margin: 1.5rem auto; max-width: 100%; }
+        .prose pre { border-radius: 10px; background: #f8fafc !important; border: 1px solid #e2e8f0; }
+        .dark .prose pre { background: #0f171a !important; border-color: #1e2a2e; }
+
+        .theme-dark { background-color: #0b0f11; color: #f1f5f9; }
+        .theme-dark .sidebar-bg { background-color: #101618; border-color: #1a2225; }
+        .theme-dark .content-card { background-color: #12191b; border-color: #1c272a; }
+
+        .sidebar-group-enter { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-in-out; }
+        .sidebar-group-enter.active { max-height: 500px; }
+    </style>
+</head>
+<body class="theme-light bg-slate-50 text-slate-800 transition-colors duration-200 antialiased font-sans h-screen overflow-hidden flex flex-col">
+
+    <div class="fixed top-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-900/50 z-50">
+        <div id="readingProgress" class="h-full bg-brand-500 w-0 transition-all duration-75"></div>
+    </div>
+
+    <header class="h-14 md:h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/85 dark:bg-[#101618]/85 backdrop-blur-md flex items-center justify-between px-4 md:px-6 z-40 shrink-0">
+        <div class="flex items-center space-x-3">
+            <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-500">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                <div class="p-1.5 bg-gradient-to-tr from-emerald-500 to-green-600 rounded-lg text-white">
+                    <i data-lucide="droplet" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <span class="font-bold text-sm md:text-base tracking-tight text-slate-900 dark:text-white">P-WOS Docs</span>
+                    <span class="hidden md:inline-block ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 font-medium">Predictive Water Optimization</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300" title="Toggle Light/Dark Mode">
+                <i data-lucide="sun" id="themeIcon" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Theme</span>
+            </button>
+            <button onclick="window.print()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Print to PDF">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Export PDF</span>
+            </button>
+            <a href="index.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Home</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="navSidebar" class="w-64 border-r border-slate-200 dark:border-slate-800/80 overflow-y-auto shrink-0 bg-white dark:bg-[#101618] hidden lg:block z-30">
+            <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text" id="docSearch" placeholder="Search documentation..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                </div>
+            </div>
+            <div class="p-3 space-y-1" id="sidebarGroups"></div>
+        </aside>
+
+        <aside id="mobileSidebar" class="fixed inset-0 z-40 lg:hidden hidden">
+            <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" id="navOverlay"></div>
+            <div class="relative w-72 max-w-[85vw] h-full bg-white dark:bg-[#101618] shadow-2xl overflow-y-auto transform transition-transform duration-300 -translate-x-full">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">Navigation</span>
+                    <button id="closeMobileNav" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-400">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="mobileDocSearch" placeholder="Search..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                    </div>
+                </div>
+                <div class="p-3 space-y-1" id="mobileSidebarGroups"></div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto min-w-0">
+            <div class="px-4 md:px-8 py-6 md:py-10">
+                <div class="flex gap-6 lg:gap-10">
+                    <div class="flex-1 min-w-0 max-w-4xl">
+                        <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                            <span id="breadcrumbCategory">Core Guides</span>
+                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">ml_model_guide.md</span>
+                        </div>
+
+                        <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
+                            <div class="absolute top-6 right-6 flex items-center space-x-2 print:hidden">
+                                <button id="copyDocBtn" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Copy content">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <div id="markdownOutput" class="prose max-w-none dark:prose-invert
+                                prose-headings:font-bold prose-headings:tracking-tight
+                                prose-h1:text-3xl prose-h1:mb-6 prose-h1:text-slate-900 dark:prose-h1:text-white
+                                prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:text-slate-900 dark:prose-h2:text-white
+                                prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-slate-800 dark:prose-h3:text-slate-200
+                                prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
+                                prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                                prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
+                                <h1>ML Model Guide</h1>
+<p><strong>P-WOS Machine Learning — How the System Thinks</strong></p>
+<hr />
+<h2>Overview</h2>
+<p>P-WOS uses a <strong>Random Forest Classifier</strong> to predict whether a plant will need watering in the next 24 hours. The model is <strong>crop-aware and region-aware</strong> — it includes agronomic parameters for 5 Zimbabwean crops across 3 agro-ecological regions. It works alongside a rule-based <strong>Decision Engine</strong> that converts raw ML predictions into actionable pump commands (NOW, STALL, STOP, MONITOR).</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                     P-WOS AI PIPELINE (v3.0)                     │
+│                                                                 │
+│  Sensors + Crop   Features  ML Model  Decision Engine Pump Action │
+│  &amp; Region Info    → 12 feat  → RF       → Rule-Based    → NOW/STALL/ │
+│                            630k samp  (VPD + Weather)   STOP/MONITOR │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3>Current Model Performance</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Accuracy</strong></td>
+<td>83.43%</td>
+</tr>
+<tr>
+<td><strong>Precision</strong> (Class 1)</td>
+<td>96%</td>
+</tr>
+<tr>
+<td><strong>Recall</strong> (Class 1)</td>
+<td>72%</td>
+</tr>
+<tr>
+<td><strong>F1-Score</strong> (Class 1)</td>
+<td>82%</td>
+</tr>
+<tr>
+<td><strong>Model Type</strong></td>
+<td>RandomForestClassifier</td>
+</tr>
+<tr>
+<td><strong>Estimators</strong></td>
+<td>100 trees, max_depth=10</td>
+</tr>
+<tr>
+<td><strong>Training Samples</strong></td>
+<td>504,000 (80% of 630k)</td>
+</tr>
+<tr>
+<td><strong>Testing Samples</strong></td>
+<td>126,000 (20% of 630k)</td>
+</tr>
+<tr>
+<td><strong>Model Size</strong></td>
+<td>~2.3 MB (<code>rf_model.pkl</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Architecture</h2>
+<pre class="mermaid">graph TD
+    subgraph &quot;Data Sources&quot;
+        ESP32[&quot;ESP32 / Simulator&quot;]
+        WEATHER[&quot;Weather API / Simulator&quot;]
+    end
+
+    subgraph &quot;Data Collection&quot;
+        MQTT[&quot;MQTT Broker&quot;]
+        DB[(PostgreSQL)]
+        EXTRACT[&quot;data_extractor.py&quot;]
+        COLLECT[&quot;data_collector.py&quot;]
+    end
+
+    subgraph &quot;Feature Engineering&quot;
+        CSV[&quot;training_data.csv&quot;]
+        FE[&quot;Feature Engineering&lt;br/&gt;(VPD, time, flags)&quot;]
+    end
+
+    subgraph &quot;ML Training&quot;
+        TRAIN[&quot;train_model.py&quot;]
+        RF[&quot;Random Forest&lt;br/&gt;(100 trees)&quot;]
+        PKL[&quot;rf_model.pkl&quot;]
+        META[&quot;model_metadata.json&quot;]
+    end
+
+    subgraph &quot;Inference&quot;
+        PREDICT[&quot;ml_predictor.py&quot;]
+        DECISION[&quot;Decision Engine&quot;]
+        AUTO[&quot;automation_controller.py&quot;]
+        PUMP[&quot;Pump Command&quot;]
+    end
+
+    ESP32 --&gt; MQTT --&gt; DB
+    WEATHER --&gt; MQTT
+    DB --&gt; EXTRACT --&gt; CSV
+    DB --&gt; COLLECT --&gt; CSV
+    CSV --&gt; FE --&gt; TRAIN --&gt; RF
+    RF --&gt; PKL
+    RF --&gt; META
+    PKL --&gt; PREDICT
+    META --&gt; PREDICT
+    PREDICT --&gt; DECISION --&gt; AUTO --&gt; PUMP
+</pre>
+<hr />
+<h2>The 4-Phase ML Pipeline</h2>
+<h3>Phase 1: Data Collection</h3>
+<p>Data flows from sensors through MQTT into PostgreSQL, then gets extracted into CSV for training.</p>
+<pre><code>ESP32/Simulator → MQTT → app.py (on_message) → PostgreSQL
+                                                    ↓
+                                            data_extractor.py
+                                                    ↓
+                                         real_training_data.csv
+</code></pre>
+<h4>Two Data Collection Paths</h4>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>File</th>
+<th>Source</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Legacy</strong></td>
+<td><code>data_collector.py</code></td>
+<td>SQLite simulation DB</td>
+<td>Initial training with synthetic data</td>
+</tr>
+<tr>
+<td><strong>Production</strong></td>
+<td><code>data_extractor.py</code></td>
+<td>PostgreSQL live DB</td>
+<td>Retraining with real sensor data</td>
+</tr>
+</tbody>
+</table>
+<h4>Labeling Strategy</h4>
+<p>The labeling logic creates the target variable <code>needs_watering_soon</code>:</p>
+<pre><code class="language-python"># data_extractor.py — Production labeling
+LOOKBACK_WINDOW = 2 hours
+
+For each watering event:
+    Label all readings within 2 hours BEFORE the event as 1
+    All other readings = 0
+</code></pre>
+<pre><code class="language-python"># data_collector.py — Legacy labeling  
+LOOKAHEAD_WINDOW = 24 hours
+
+For each sensor reading:
+    If watering happened within 24 hours AFTER this reading → label = 1
+    Otherwise → label = 0
+</code></pre>
+<hr />
+<h3>Phase 2: Feature Engineering</h3>
+<p>The model uses <strong>12 features</strong> (9 original + 3 new crop/region context features):</p>
+<h4>Feature Table</h4>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Type</th>
+<th>Source</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>soil_moisture</code></td>
+<td>float</td>
+<td>Sensor</td>
+<td>Current soil moisture (0–100%)</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>temperature</code></td>
+<td>float</td>
+<td>Sensor</td>
+<td>Air temperature (°C)</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>humidity</code></td>
+<td>float</td>
+<td>Sensor</td>
+<td>Relative humidity (0–100%)</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>wind_speed</code></td>
+<td>float</td>
+<td>Weather</td>
+<td>Wind speed (km/h)</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>rain_intensity</code></td>
+<td>float</td>
+<td>Weather</td>
+<td>Current rain intensity</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>vpd</code></td>
+<td>float</td>
+<td><strong>Calculated</strong></td>
+<td>Vapor Pressure Deficit (kPa)</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>is_extreme_vpd</code></td>
+<td>binary</td>
+<td><strong>Calculated</strong></td>
+<td>1 if VPD &gt; 2.0 kPa (heatwave)</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>is_raining</code></td>
+<td>binary</td>
+<td><strong>Calculated</strong></td>
+<td>1 if rain_intensity &gt; 0</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>is_high_wind</code></td>
+<td>binary</td>
+<td><strong>Calculated</strong></td>
+<td>1 if wind_speed &gt; 20 km/h</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>crop_target_moisture</code></td>
+<td>float</td>
+<td><strong>Settings</strong></td>
+<td>Active crop's optimal moisture %</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>crop_critical_moisture</code></td>
+<td>float</td>
+<td><strong>Settings</strong></td>
+<td>Active crop's critical low moisture %</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>region_evap_multiplier</code></td>
+<td>float</td>
+<td><strong>Settings</strong></td>
+<td>Evaporation multiplier for resolved region</td>
+</tr>
+</tbody>
+</table>
+<h4>VPD Calculation (Tetens Formula)</h4>
+<p>VPD (Vapor Pressure Deficit) measures the "drying power" of the air — higher VPD means faster evaporation.</p>
+<pre><code class="language-python"># Saturation vapor pressure (kPa)
+es = 0.6108 × exp((17.27 × T) / (T + 237.3))
+
+# Actual vapor pressure (kPa)
+ea = es × (RH / 100)
+
+# Vapor Pressure Deficit
+VPD = max(0, es - ea)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>VPD Range</th>
+<th>Condition</th>
+<th>Plant Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.0–0.4 kPa</td>
+<td>Very humid</td>
+<td>Minimal transpiration</td>
+</tr>
+<tr>
+<td>0.4–0.8 kPa</td>
+<td>Ideal</td>
+<td>Healthy transpiration</td>
+</tr>
+<tr>
+<td>0.8–1.2 kPa</td>
+<td>Moderate stress</td>
+<td>Increased water demand</td>
+</tr>
+<tr>
+<td>1.2–2.0 kPa</td>
+<td>High stress</td>
+<td>Rapid drying</td>
+</tr>
+<tr>
+<td>&gt; 2.0 kPa</td>
+<td><strong>Extreme</strong> (heatwave)</td>
+<td>Stomata close, risk of damage</td>
+</tr>
+</tbody>
+</table>
+<h4>Additional Inference-Only Features</h4>
+<p>The predictor also calculates these features at inference time for the Decision Engine (not used by the Random Forest model directly):</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+<th>Used By</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hour</code></td>
+<td>Current hour (0–23)</td>
+<td>Decision Engine (timing)</td>
+</tr>
+<tr>
+<td><code>day_of_week</code></td>
+<td>Day of week (0–6)</td>
+<td>Decision Engine</td>
+</tr>
+<tr>
+<td><code>is_daytime</code></td>
+<td>1 if 6:00–18:00</td>
+<td>Decision Engine</td>
+</tr>
+<tr>
+<td><code>is_hot_hours</code></td>
+<td>1 if 10:00–16:00</td>
+<td>Decision Engine (VPD delay)</td>
+</tr>
+<tr>
+<td><code>forecast_minutes</code></td>
+<td>Minutes until next rain</td>
+<td>Rain confidence logic</td>
+</tr>
+<tr>
+<td><code>moisture_change_rate</code></td>
+<td>%/hour change</td>
+<td>Decay rate estimation</td>
+</tr>
+<tr>
+<td><code>moisture_rolling_6</code></td>
+<td>6-reading rolling avg</td>
+<td>Trend smoothing</td>
+</tr>
+<tr>
+<td><code>temp_rolling_6</code></td>
+<td>6-reading rolling avg</td>
+<td>Trend smoothing</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Phase 3: Training</h3>
+<pre><code class="language-bash">python src/backend/models/train_model.py
+</code></pre>
+<h4>Training Process</h4>
+<pre class="mermaid">graph LR
+    A[&quot;Load CSV&quot;] --&gt; B[&quot;Engineer Features&lt;br/&gt;(VPD, flags)&quot;]
+    B --&gt; C[&quot;Train/Test Split&lt;br/&gt;(80/20, stratified)&quot;]
+    C --&gt; D[&quot;Train Random Forest&lt;br/&gt;(100 trees, depth=10)&quot;]
+    D --&gt; E[&quot;Evaluate&lt;br/&gt;(accuracy, precision, recall)&quot;]
+    E --&gt; F[&quot;Save Artifacts&lt;br/&gt;(rf_model.pkl + metadata.json)&quot;]
+</pre>
+<h4>Hyperparameters</h4>
+<pre><code class="language-python">RandomForestClassifier(
+    n_estimators=100,       # 100 decision trees
+    max_depth=10,           # Max tree depth (prevents overfitting)
+    random_state=42,        # Reproducible results
+    class_weight='balanced', # Handles class imbalance
+    n_jobs=-1               # Use all CPU cores
+)
+</code></pre>
+<h4>Why Random Forest?</h4>
+<table>
+<thead>
+<tr>
+<th>Consideration</th>
+<th>Random Forest</th>
+<th>Neural Network</th>
+<th>Linear Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Training data needed</strong></td>
+<td>~1,000+ samples ✅</td>
+<td>~100,000+</td>
+<td>~500+</td>
+</tr>
+<tr>
+<td><strong>Interpretability</strong></td>
+<td>Feature importances ✅</td>
+<td>Black box ❌</td>
+<td>Coefficients</td>
+</tr>
+<tr>
+<td><strong>Handles nonlinear</strong></td>
+<td>Yes ✅</td>
+<td>Yes</td>
+<td>No ❌</td>
+</tr>
+<tr>
+<td><strong>Overfitting risk</strong></td>
+<td>Low (ensemble) ✅</td>
+<td>High</td>
+<td>Low</td>
+</tr>
+<tr>
+<td><strong>Inference speed</strong></td>
+<td>Fast ✅</td>
+<td>Slower</td>
+<td>Fastest</td>
+</tr>
+<tr>
+<td><strong>Handles missing data</strong></td>
+<td>Graceful ✅</td>
+<td>Needs imputation</td>
+<td>Needs imputation</td>
+</tr>
+</tbody>
+</table>
+<h4>Output Artifacts</h4>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Location</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rf_model.pkl</code></td>
+<td><code>src/backend/models/artifacts/</code></td>
+<td>Serialized scikit-learn model (~2.3 MB)</td>
+</tr>
+<tr>
+<td><code>model_metadata.json</code></td>
+<td><code>src/backend/models/artifacts/</code></td>
+<td>Accuracy, feature list, metrics, timestamp, crop coverage</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Crop Agronomic Profiles</h2>
+<p>The model includes the following crop profiles for Zimbabwe:</p>
+<table>
+<thead>
+<tr>
+<th>Crop</th>
+<th style="text-align: center;">Target Moisture</th>
+<th style="text-align: center;">Critical</th>
+<th style="text-align: center;">Low</th>
+<th style="text-align: center;">Proactive</th>
+<th style="text-align: center;">High/Sat</th>
+<th style="text-align: center;">Evap Mult</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Maize</strong></td>
+<td style="text-align: center;">60%</td>
+<td style="text-align: center;">30%</td>
+<td style="text-align: center;">45%</td>
+<td style="text-align: center;">55%</td>
+<td style="text-align: center;">75%</td>
+<td style="text-align: center;">1.0×</td>
+</tr>
+<tr>
+<td><strong>Potatoes</strong></td>
+<td style="text-align: center;">70%</td>
+<td style="text-align: center;">45%</td>
+<td style="text-align: center;">55%</td>
+<td style="text-align: center;">65%</td>
+<td style="text-align: center;">85%</td>
+<td style="text-align: center;">1.4×</td>
+</tr>
+<tr>
+<td><strong>Tomatoes</strong></td>
+<td style="text-align: center;">62%</td>
+<td style="text-align: center;">35%</td>
+<td style="text-align: center;">48%</td>
+<td style="text-align: center;">58%</td>
+<td style="text-align: center;">75%</td>
+<td style="text-align: center;">1.2×</td>
+</tr>
+<tr>
+<td><strong>Onions</strong></td>
+<td style="text-align: center;">65%</td>
+<td style="text-align: center;">40%</td>
+<td style="text-align: center;">52%</td>
+<td style="text-align: center;">60%</td>
+<td style="text-align: center;">80%</td>
+<td style="text-align: center;">0.8×</td>
+</tr>
+<tr>
+<td><strong>Sorghum</strong></td>
+<td style="text-align: center;">50%</td>
+<td style="text-align: center;">20%</td>
+<td style="text-align: center;">30%</td>
+<td style="text-align: center;">40%</td>
+<td style="text-align: center;">65%</td>
+<td style="text-align: center;">0.6×</td>
+</tr>
+</tbody>
+</table>
+<p>Dynamic re-labeling: a soil moisture of 35% labels Sorghum as comfortable (<code>needs_watering_soon=0</code>) but Potatoes as critically dry (<code>needs_watering_soon=1</code>).</p>
+<h2>Regional Evaporation Multipliers</h2>
+<table>
+<thead>
+<tr>
+<th>Region</th>
+<th>Representative City</th>
+<th>Evap Multiplier</th>
+<th>Lat/Lon Bounds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Matabeleland</strong></td>
+<td>Bulawayo</td>
+<td>1.5× (semi-arid)</td>
+<td>-22.5 to -19.0 / 25.0 to 30.0</td>
+</tr>
+<tr>
+<td><strong>Mashonaland</strong></td>
+<td>Harare</td>
+<td>1.0× (sub-humid)</td>
+<td>Default</td>
+</tr>
+<tr>
+<td><strong>Manicaland</strong></td>
+<td>Mutare</td>
+<td>0.6× (humid-cool)</td>
+<td>-21.0 to -17.5 / 32.0 to 34.0</td>
+</tr>
+</tbody>
+</table>
+<p>Regional CSVs (15-day hourly from Visual Crossing API) are merged into the training dataset by <code>data_extractor.py</code>.</p>
+<hr />
+<h3>Phase 4: Inference &amp; Decision Engine</h3>
+<pre><code class="language-bash"># API endpoint
+GET /api/predict-next-watering
+</code></pre>
+<p>The prediction pipeline runs in two stages:</p>
+<pre><code>Stage 1: ML Prediction (Random Forest)
+  Input: 12 features (9 sensor/physics + 3 crop/region) → Model → probability(needs_watering)
+
+Stage 2: Decision Engine (Rule-Based)
+  Input: ML output + environment + crop thresholds → Action
+</code></pre>
+<blockquote>
+<p><strong>In-memory settings injection</strong>: <code>app.py</code> passes pre-loaded settings to <code>ml_predictor.py</code> directly, completely eliminating disk I/O on every prediction call.</p>
+</blockquote>
+<hr />
+<h2>Decision Engine (Detailed)</h2>
+<p>The Decision Engine converts the ML prediction into one of <strong>4 actions</strong>:</p>
+<h3>Action Types</h3>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Meaning</th>
+<th>Pump</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>NOW</strong></td>
+<td>Water immediately</td>
+<td>✅ ON</td>
+</tr>
+<tr>
+<td><strong>STALL</strong></td>
+<td>Delay watering (wait for rain, VPD, wind)</td>
+<td>❌ OFF</td>
+</tr>
+<tr>
+<td><strong>STOP</strong></td>
+<td>Do not water (raining, saturated)</td>
+<td>❌ OFF</td>
+</tr>
+<tr>
+<td><strong>MONITOR</strong></td>
+<td>All good, keep watching</td>
+<td>❌ OFF</td>
+</tr>
+</tbody>
+</table>
+<h3>Decision Flow</h3>
+<pre class="mermaid">graph TD
+    START[&quot;New Prediction Request&quot;] --&gt; HW{&quot;Hardware&lt;br/&gt;Online?&quot;}
+    HW --&gt;|No| OFFLINE[&quot;STOP&lt;br/&gt;HARDWARE_OFFLINE&quot;]
+    HW --&gt;|Yes| RAIN{&quot;Currently&lt;br/&gt;Raining?&quot;}
+
+    RAIN --&gt;|Yes| CRIT_RAIN{&quot;Moisture&lt;br/&gt;&lt; CRITICAL?&quot;}
+    CRIT_RAIN --&gt;|Yes| EMERGENCY1[&quot;NOW&lt;br/&gt;EMERGENCY&quot;]
+    CRIT_RAIN --&gt;|No| STOP_RAIN[&quot;STOP&lt;br/&gt;RAINING&quot;]
+
+    RAIN --&gt;|No| SAT{&quot;Moisture&lt;br/&gt;&gt; 85%?&quot;}
+    SAT --&gt;|Yes| STOP_SAT[&quot;STOP&lt;br/&gt;SATURATED&quot;]
+    SAT --&gt;|No| WIND{&quot;Wind&lt;br/&gt;&gt; 20 km/h?&quot;}
+
+    WIND --&gt;|Yes| CRIT_WIND{&quot;Moisture&lt;br/&gt;&lt; CRITICAL?&quot;}
+    CRIT_WIND --&gt;|Yes| EMERGENCY2[&quot;NOW&lt;br/&gt;EMERGENCY&quot;]
+    CRIT_WIND --&gt;|No| STALL_WIND[&quot;STALL&lt;br/&gt;WIND_DELAY&quot;]
+
+    WIND --&gt;|No| FORECAST{&quot;Rain&lt;br/&gt;Forecast?&quot;}
+    FORECAST --&gt;|Yes| CRIT_FORE{&quot;Moisture&lt;br/&gt;&lt; CRITICAL?&quot;}
+    CRIT_FORE --&gt;|Yes| EMERGENCY3[&quot;NOW&lt;br/&gt;EMERGENCY&quot;]
+    CRIT_FORE --&gt;|No| STALL_FORE[&quot;STALL&lt;br/&gt;RAIN_EXPECTED&quot;]
+
+    FORECAST --&gt;|No| FALSEDRY{&quot;False Dry&lt;br/&gt;Detected?&quot;}
+    FALSEDRY --&gt;|Yes| MON_FD[&quot;MONITOR&lt;br/&gt;FALSE_DRY_CHECK&quot;]
+
+    FALSEDRY --&gt;|No| MOISTURE{&quot;Check&lt;br/&gt;Moisture Level&quot;}
+    MOISTURE --&gt; CRIT{&quot;&lt; CRITICAL&lt;br/&gt;threshold?&quot;}
+    CRIT --&gt;|Yes| NOW_CRIT[&quot;NOW&lt;br/&gt;CRITICAL&quot;]
+    CRIT --&gt;|No| LOW{&quot;&lt; LOW&lt;br/&gt;threshold?&quot;}
+    LOW --&gt;|Yes| VPD_CHECK{&quot;Extreme VPD&lt;br/&gt;+ Midday?&quot;}
+    VPD_CHECK --&gt;|Yes| STALL_VPD[&quot;STALL&lt;br/&gt;VPD_DELAY&quot;]
+    VPD_CHECK --&gt;|No| NOW_DRY[&quot;NOW&lt;br/&gt;DRY_TRIGGER&quot;]
+    LOW --&gt;|No| PROACTIVE{&quot;&lt; PROACTIVE&lt;br/&gt;threshold?&quot;}
+    PROACTIVE --&gt;|Yes| MORNING{&quot;Morning +&lt;br/&gt;Hot Day?&quot;}
+    MORNING --&gt;|Yes| NOW_PRE[&quot;NOW&lt;br/&gt;PREHEAT&quot;]
+    MORNING --&gt;|No| MON_WATCH[&quot;MONITOR&lt;br/&gt;WATCHING&quot;]
+    PROACTIVE --&gt;|No| MON_OPT[&quot;MONITOR&lt;br/&gt;OPTIMAL&quot;]
+</pre>
+<h3>Seasonal Thresholds (Zimbabwe / Southern Hemisphere)</h3>
+<pre><code class="language-python"># Adjusted by month — higher thresholds in summer when evaporation is faster
+
+Summer (Nov–Mar):  critical=15%  low=35%  proactive=50%  high=80%
+Winter (May–Sep):  critical=10%  low=25%  proactive=40%  high=70%
+Autumn/Spring:     critical=12%  low=30%  proactive=45%  high=75%
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Season</th>
+<th>CRITICAL</th>
+<th>LOW</th>
+<th>PROACTIVE</th>
+<th>HIGH</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🌞 Summer (Nov–Mar)</td>
+<td>&lt; 15%</td>
+<td>&lt; 35%</td>
+<td>&lt; 50%</td>
+<td>&gt; 80%</td>
+</tr>
+<tr>
+<td>❄️ Winter (May–Sep)</td>
+<td>&lt; 10%</td>
+<td>&lt; 25%</td>
+<td>&lt; 40%</td>
+<td>&gt; 70%</td>
+</tr>
+<tr>
+<td>🍂 Transition</td>
+<td>&lt; 12%</td>
+<td>&lt; 30%</td>
+<td>&lt; 45%</td>
+<td>&gt; 75%</td>
+</tr>
+</tbody>
+</table>
+<h3>Moisture Decay Rate Prediction</h3>
+<p>The system predicts how fast soil will dry to estimate when watering will be needed:</p>
+<pre><code class="language-python">Decay Rate = base_rate × temp_factor × vpd_factor × time_factor
+
+Where:
+  base_rate   = 0.5%/hour
+  temp_factor = 1 + (temp - 25) × 0.08   (if temp &gt; 25°C, else 0.7)
+  vpd_factor  = 1 + (VPD × 0.4)
+  time_factor = 1.5 (midday)  /  0.3 (night)  /  1.0 (other)
+</code></pre>
+<h3>Rain Confidence System</h3>
+<p>When rain is in the forecast, the system calculates whether to wait or water anyway:</p>
+<table>
+<thead>
+<tr>
+<th>Rain ETA</th>
+<th>Moisture</th>
+<th>Decision</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt; 2 hours</td>
+<td>Any (&gt; CRITICAL)</td>
+<td><strong>STALL</strong></td>
+<td>95%</td>
+</tr>
+<tr>
+<td>2–6 hours</td>
+<td>&gt; 25%</td>
+<td><strong>STALL</strong></td>
+<td>75%</td>
+</tr>
+<tr>
+<td>6–12 hours</td>
+<td>&gt; 40%</td>
+<td><strong>STALL</strong></td>
+<td>50%</td>
+</tr>
+<tr>
+<td>Any</td>
+<td>&lt; CRITICAL</td>
+<td><strong>NOW</strong> (override)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>&gt; 12 hours</td>
+<td>Any</td>
+<td>Ignore rain</td>
+<td>0%</td>
+</tr>
+</tbody>
+</table>
+<h3>Safety Interlocks</h3>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Condition</th>
+<th>Action</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Saturation Guard</strong></td>
+<td>Moisture &gt; 85%</td>
+<td>STOP</td>
+<td>Highest</td>
+</tr>
+<tr>
+<td><strong>False Dry Detector</strong></td>
+<td>Wind &gt; 20 km/h + Humidity &lt; 40% + rapid drop</td>
+<td>MONITOR (wait)</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>Weather Staleness</strong></td>
+<td>Source = "stale" / "fallback" / "none"</td>
+<td>Zero all weather features</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>Manual Mode Override</strong></td>
+<td>Moisture &lt; 15% while in MANUAL</td>
+<td>Force AUTO</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td><strong>Saturation Override</strong></td>
+<td>Moisture ≥ 95% while in MANUAL</td>
+<td>Force AUTO + pump OFF</td>
+<td>Critical</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Pump Duration Calculation</h2>
+<p>When the decision is <strong>NOW</strong>, the system calculates how long to run the pump:</p>
+<pre><code class="language-python">target_moisture = 60%
+deficit = target_moisture - current_moisture
+duration = max(5, min(60, int(deficit / 0.5)))
+
+# Examples:
+#   Moisture 10% → deficit 50% → duration = 60s (capped)
+#   Moisture 30% → deficit 30% → duration = 60s
+#   Moisture 45% → deficit 15% → duration = 30s
+#   Moisture 55% → deficit  5% → duration = 10s
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Current Moisture</th>
+<th>Deficit</th>
+<th>Duration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10%</td>
+<td>50%</td>
+<td>60s (max)</td>
+</tr>
+<tr>
+<td>25%</td>
+<td>35%</td>
+<td>60s (max)</td>
+</tr>
+<tr>
+<td>40%</td>
+<td>20%</td>
+<td>40s</td>
+</tr>
+<tr>
+<td>50%</td>
+<td>10%</td>
+<td>20s</td>
+</tr>
+<tr>
+<td>57%</td>
+<td>3%</td>
+<td>6s</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Automation Controller ("Autopilot")</h2>
+<p>The <code>automation_controller.py</code> is the execution layer — it polls the ML prediction API every 5 seconds and acts on the recommended action:</p>
+<pre class="mermaid">graph LR
+    A[&quot;Poll /api/predict-next-watering&quot;] --&gt; B{&quot;Action?&quot;}
+    B --&gt;|NOW| C[&quot;POST /api/control/pump&lt;br/&gt;{action: ON, duration: Ns}&quot;]
+    B --&gt;|STALL| D[&quot;Log reason, wait&quot;]
+    B --&gt;|STOP| E[&quot;Log reason, wait&quot;]
+    B --&gt;|MONITOR| F[&quot;Log status, wait&quot;]
+    C --&gt; G[&quot;Wait duration + 5s&quot;]
+    D --&gt; H[&quot;Wait 5s&quot;]
+    E --&gt; H
+    F --&gt; H
+    H --&gt; A
+</pre>
+<h3>Safety Overrides (Even in MANUAL Mode)</h3>
+<pre><code>If moisture &lt; 15%  → Force AUTO mode (prevent plant death)
+If moisture ≥ 95%  → Force pump OFF + AUTO mode (prevent flooding)
+</code></pre>
+<hr />
+<h2>Self-Retraining Pipeline</h2>
+<p>The system can retrain itself with real-world data:</p>
+<pre><code class="language-bash">python src/backend/ai_service/retrain_pipeline.py
+</code></pre>
+<h3>Retraining Flow</h3>
+<pre class="mermaid">graph TD
+    A[&quot;1. Extract Data&lt;br/&gt;(data_extractor.py)&quot;] --&gt; B[&quot;PostgreSQL → CSV&lt;br/&gt;(labeled dataset)&quot;]
+    B --&gt; C{&quot;Enough data?&lt;br/&gt;(≥ 100 samples)&quot;}
+    C --&gt;|No| D[&quot;Abort retraining&quot;]
+    C --&gt;|Yes| E[&quot;2. Train Model&lt;br/&gt;(train_model.py)&quot;]
+    E --&gt; F[&quot;3. Evaluate&lt;br/&gt;(accuracy, precision, recall)&quot;]
+    F --&gt; G[&quot;4. Save Artifacts&lt;br/&gt;(rf_model.pkl)&quot;]
+    G --&gt; H[&quot;5. Log Version&lt;br/&gt;(model_versions table)&quot;]
+    H --&gt; I[&quot;Version: v20260319_092225&quot;]
+</pre>
+<h3>When to Retrain</h3>
+<table>
+<thead>
+<tr>
+<th>Trigger</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>After 500+ new sensor readings</td>
+<td>Fresh data available</td>
+</tr>
+<tr>
+<td>After seasonal change</td>
+<td>Thresholds shift</td>
+</tr>
+<tr>
+<td>If prediction accuracy drops</td>
+<td>Model drift detected</td>
+</tr>
+<tr>
+<td>After hardware changes</td>
+<td>New sensor calibration</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>API Response Format</h2>
+<pre><code class="language-bash">GET /api/predict-next-watering
+</code></pre>
+<pre><code class="language-json">{
+    &quot;recommended_action&quot;: &quot;NOW&quot;,
+    &quot;recommended_duration&quot;: 30,
+    &quot;current_moisture&quot;: 28.5,
+    &quot;hardware_status&quot;: &quot;ONLINE&quot;,
+    &quot;ml_analysis&quot;: {
+        &quot;prediction&quot;: 1,
+        &quot;confidence&quot;: 87.3,
+        &quot;probability_class_1&quot;: 87.3,
+        &quot;recommended_action&quot;: &quot;NOW&quot;,
+        &quot;recommended_duration&quot;: 30,
+        &quot;system_status&quot;: &quot;DRY_TRIGGER&quot;,
+        &quot;reason&quot;: &quot;Water pump is turned ON (Moisture below threshold).&quot;,
+        &quot;features_used&quot;: {
+            &quot;soil_moisture&quot;: 28.5,
+            &quot;temperature&quot;: 30.2,
+            &quot;humidity&quot;: 45.0,
+            &quot;vpd&quot;: 2.35,
+            &quot;is_extreme_vpd&quot;: 1,
+            &quot;wind_speed&quot;: 5.0,
+            &quot;rain_intensity&quot;: 0.0,
+            &quot;is_raining&quot;: 0,
+            &quot;is_high_wind&quot;: 0,
+            &quot;forecast_minutes&quot;: 0,
+            &quot;hour&quot;: 14,
+            &quot;day_of_week&quot;: 3,
+            &quot;is_daytime&quot;: 1,
+            &quot;is_hot_hours&quot;: 1
+        }
+    }
+}
+</code></pre>
+<h3>System Status Codes</h3>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CRITICAL</code></td>
+<td>Dangerously low moisture</td>
+<td>NOW</td>
+</tr>
+<tr>
+<td><code>DRY_TRIGGER</code></td>
+<td>Below LOW threshold</td>
+<td>NOW</td>
+</tr>
+<tr>
+<td><code>PREHEAT</code></td>
+<td>Proactive morning watering</td>
+<td>NOW</td>
+</tr>
+<tr>
+<td><code>EMERGENCY</code></td>
+<td>Critical override (rain/wind)</td>
+<td>NOW</td>
+</tr>
+<tr>
+<td><code>VPD_DELAY</code></td>
+<td>Too hot to water efficiently</td>
+<td>STALL</td>
+</tr>
+<tr>
+<td><code>WIND_DELAY</code></td>
+<td>High wind wastes water</td>
+<td>STALL</td>
+</tr>
+<tr>
+<td><code>RAIN_EXPECTED</code></td>
+<td>Rain coming, wait</td>
+<td>STALL</td>
+</tr>
+<tr>
+<td><code>RAINING</code></td>
+<td>Currently raining</td>
+<td>STOP</td>
+</tr>
+<tr>
+<td><code>SATURATED</code></td>
+<td>Soil &gt; 85%</td>
+<td>STOP</td>
+</tr>
+<tr>
+<td><code>HARDWARE_OFFLINE</code></td>
+<td>No sensor data</td>
+<td>STOP</td>
+</tr>
+<tr>
+<td><code>WATCHING</code></td>
+<td>In proactive zone</td>
+<td>MONITOR</td>
+</tr>
+<tr>
+<td><code>OPTIMAL</code></td>
+<td>Moisture is good</td>
+<td>MONITOR</td>
+</tr>
+<tr>
+<td><code>FALSE_DRY_CHECK</code></td>
+<td>Sensor may be reading low</td>
+<td>MONITOR</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>File Reference</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="file:///C:/Users/Godwin/Documents/projects/pwos/src/backend/models/ml_predictor.py"><code>ml_predictor.py</code></a></td>
+<td><code>MLPredictor</code> class — feature prep, inference, decision engine</td>
+</tr>
+<tr>
+<td><a href="file:///C:/Users/Godwin/Documents/projects/pwos/src/backend/models/train_model.py"><code>train_model.py</code></a></td>
+<td>Training script — load CSV, engineer features, train RF, save artifacts</td>
+</tr>
+<tr>
+<td><a href="file:///C:/Users/Godwin/Documents/projects/pwos/src/backend/models/data_collector.py"><code>data_collector.py</code></a></td>
+<td>Legacy data collector (SQLite → CSV)</td>
+</tr>
+<tr>
+<td><a href="file:///C:/Users/Godwin/Documents/projects/pwos/src/backend/ai_service/data_extractor.py"><code>data_extractor.py</code></a></td>
+<td>Production data extractor (PostgreSQL → CSV)</td>
+</tr>
+<tr>
+<td><a href="file:///C:/Users/Godwin/Documents/projects/pwos/src/backend/ai_service/retrain_pipeline.py"><code>retrain_pipeline.py</code></a></td>
+<td>Orchestrates extract → train → log version</td>
+</tr>
+<tr>
+<td><a href="file:///C:/Users/Godwin/Documents/projects/pwos/src/backend/automation_controller.py"><code>automation_controller.py</code></a></td>
+<td>Autopilot — polls prediction API, executes pump commands</td>
+</tr>
+<tr>
+<td><a href="file:///C:/Users/Godwin/Documents/projects/pwos/src/backend/models/artifacts/rf_model.pkl"><code>rf_model.pkl</code></a></td>
+<td>Trained Random Forest model (2.3 MB)</td>
+</tr>
+<tr>
+<td><a href="file:///C:/Users/Godwin/Documents/projects/pwos/src/backend/models/artifacts/model_metadata.json"><code>model_metadata.json</code></a></td>
+<td>Model version, accuracy, feature list</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Glossary</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>VPD</strong></td>
+<td>Vapor Pressure Deficit — atmospheric drying power (kPa)</td>
+</tr>
+<tr>
+<td><strong>Stomata</strong></td>
+<td>Pores on plant leaves that regulate gas/water exchange</td>
+</tr>
+<tr>
+<td><strong>False Dry</strong></td>
+<td>Sensor reads low moisture due to wind evaporation, not actual soil dryness</td>
+</tr>
+<tr>
+<td><strong>Proactive Watering</strong></td>
+<td>Pre-emptive watering before peak heat to reduce VPD stress</td>
+</tr>
+<tr>
+<td><strong>PREHEAT</strong></td>
+<td>Early morning watering when a hot day is predicted</td>
+</tr>
+<tr>
+<td><strong>LWT</strong></td>
+<td>MQTT Last Will and Testament — auto-publishes OFFLINE on disconnect</td>
+</tr>
+<tr>
+<td><strong>Class Balance</strong></td>
+<td>Ratio of positive (needs water) to negative (no water) samples</td>
+</tr>
+<tr>
+<td><strong>Stratified Split</strong></td>
+<td>Train/test split that preserves class ratio in both sets</td>
+</tr>
+</tbody>
+</table>
+                            </div>
+                        </article>
+
+                        <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
+                            <a href="index.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Back to Index</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <aside class="hidden lg:block w-56 shrink-0 border-l border-slate-200 dark:border-slate-800/80 pl-6">
+                        <div class="sticky top-0">
+                            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5 mb-4">
+                                <i data-lucide="list-ordered" class="w-3.5 h-3.5 text-emerald-500"></i> On This Page
+                            </h4>
+                            <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                            <a href="index.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                                <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                                <span>Back to Home</span>
+                            </a>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const docs = [{"category": "Getting Started", "icon": "rocket", "pages": [{"title": "Project Overview", "file": "PROJECT_OVERVIEW.html"}, {"title": "Quickstart Guide", "file": "QUICKSTART.html"}, {"title": "Project Roadmap", "file": "PROJECT_ROADMAP.html"}]}, {"category": "System Architecture", "icon": "cpu", "pages": [{"title": "System Overview", "file": "system_overview.html"}, {"title": "Dataflow", "file": "dataflow.html"}, {"title": "Analytics Reference", "file": "analytics_reference.html"}, {"title": "Crop Profiles", "file": "crop_profiles.html"}, {"title": "Edge Cases & Scenarios", "file": "edge_cases_and_scenarios.html"}, {"title": "ML Model Deep Dive", "file": "ml_model_deep_dive.html"}, {"title": "VPD & Weather Engine", "file": "vpd_and_weather_engine.html"}]}, {"category": "Core Guides", "icon": "book-open", "pages": [{"title": "Installation Guide", "file": "installation_guide.html"}, {"title": "Backend API", "file": "backend_guide.html"}, {"title": "Database Guide", "file": "database_guide.html"}, {"title": "Firmware Guide", "file": "firmware_guide.html"}, {"title": "Simulation Guide", "file": "simulation_guide.html"}, {"title": "ML Model Guide", "file": "ml_model_guide.html"}, {"title": "Performance Guide", "file": "performance_guide.html"}, {"title": "Troubleshooting", "file": "troubleshooting.html"}, {"title": "Tests Reference", "file": "tests.html"}, {"title": "Analytics Dashboard", "file": "analytics_dashboard.html"}, {"title": "Main Dashboard", "file": "main_dashboard.html"}, {"title": "Mobile Guide", "file": "mobile_guide.html"}]}, {"category": "Hardware Engineering", "icon": "circuit-board", "pages": [{"title": "Hardware Architecture", "file": "hardware_architecture.html"}, {"title": "Breadboard Assembly", "file": "breadboard_assembly.html"}, {"title": "Breadboard Guide", "file": "breadboard.html"}, {"title": "Hardware Setup", "file": "hardware_setup.html"}, {"title": "Shopping List", "file": "hardware_shopping_list.html"}, {"title": "Migration Plan", "file": "hardware_migration_plan.html"}, {"title": "Testing Report", "file": "testing_report.html"}, {"title": "Hardware Progress", "file": "hardware_progress.html"}, {"title": "Phase 1 Report", "file": "phase1_report.html"}]}, {"category": "Scientific Research", "icon": "microscope", "pages": [{"title": "Codebase Analysis", "file": "codebase_analysis.html"}, {"title": "Codebase Audit", "file": "codebase_audit.html"}, {"title": "Crop Integration Plan", "file": "crop_integration_plan.html"}]}, {"category": "Technical Reference", "icon": "code", "pages": [{"title": "API Reference", "file": "api_reference.html"}, {"title": "MQTT Topics", "file": "mqtt_topics.html"}, {"title": "Coding Guidelines", "file": "coding_guidelines.html"}, {"title": "Project Structure", "file": "project_structure.html"}, {"title": "VPD Scenarios", "file": "vpd_scenarios.html"}]}, {"category": "Deployment & Operations", "icon": "cloud", "pages": [{"title": "Cloud ML Deployment", "file": "cloud_ml_deployment.html"}, {"title": "Local Implementation", "file": "local_implementation.html"}, {"title": "ML Roadmap", "file": "ml_implementation_roadmap.html"}]}, {"category": "Reports & Validation", "icon": "bar-chart-3", "pages": [{"title": "Final Report", "file": "final_report.html"}, {"title": "Validation Report", "file": "validation_report.html"}, {"title": "Simulation Analysis", "file": "simulation_analysis.html"}, {"title": "Moisture Analysis", "file": "moisture_analysis.html"}, {"title": "Phase 1 Setup Report", "file": "phase_01_setup_report.html"}, {"title": "Phase 5 ML Report", "file": "phase_05_ml_report.html"}, {"title": "Phase 6 Frontend Report", "file": "phase_06_frontend_report.html"}]}];
+
+        let expandedGroups = {};
+
+        function initTheme() {
+            const saved = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(saved);
+        }
+
+        function setTheme(theme) {
+            document.body.classList.remove('theme-light', 'theme-dark');
+            document.documentElement.classList.remove('dark');
+            const hljsLight = document.getElementById('hljs-light-theme');
+            const hljsDark = document.getElementById('hljs-dark-theme');
+            if (theme === 'dark') {
+                document.body.classList.add('theme-dark');
+                document.documentElement.classList.add('dark');
+                if (hljsLight) hljsLight.disabled = true;
+                if (hljsDark) hljsDark.disabled = false;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'moon');
+            } else {
+                document.body.classList.add('theme-light');
+                if (hljsLight) hljsLight.disabled = false;
+                if (hljsDark) hljsDark.disabled = true;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'sun');
+            }
+            localStorage.setItem('pwos-theme', theme);
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            const current = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(current === 'light' ? 'dark' : 'light');
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        function renderSidebar(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = docs.map(function(group, gi) {
+                const isOpen = expandedGroups[gi] || false;
+                return '<div class="sidebar-group">' +
+                    '<button onclick="toggleGroup(' + gi + ')" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' +
+                        '<span class="flex items-center gap-2"><i data-lucide="' + group.icon + '" class="w-4 h-4"></i><span>' + group.category + '</span></span>' +
+                        '<i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ' + (isOpen ? 'rotate-0' : '-rotate-90') + '"></i>' +
+                    '</button>' +
+                    '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
+                        '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
+                            group.pages.map(function(page) {
+                                return '<li><a href="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                            }).join('') +
+                        '</ul>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function toggleGroup(idx) {
+            expandedGroups[idx] = !expandedGroups[idx];
+            renderSidebar('sidebarGroups');
+            renderSidebar('mobileSidebarGroups');
+        }
+
+        function setupSearch(inputId, containerId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('input', function(e) {
+                const q = e.target.value.toLowerCase().trim();
+                document.querySelectorAll('#' + containerId + ' .sidebar-group').forEach(function(el) {
+                    el.style.display = q === '' || el.textContent.toLowerCase().includes(q) ? '' : 'none';
+                });
+            });
+        }
+
+        setupSearch('docSearch', 'sidebarGroups');
+        setupSearch('mobileDocSearch', 'mobileSidebarGroups');
+
+        function openMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            sidebar.classList.remove('hidden');
+            setTimeout(function() { panel.classList.remove('-translate-x-full'); }, 10);
+        }
+
+        function closeMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            panel.classList.add('-translate-x-full');
+            setTimeout(function() { sidebar.classList.add('hidden'); }, 300);
+        }
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', openMobileNav);
+        document.getElementById('closeMobileNav').addEventListener('click', closeMobileNav);
+        document.getElementById('navOverlay').addEventListener('click', closeMobileNav);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const output = document.getElementById('markdownOutput');
+            if (!output) return;
+
+            output.querySelectorAll('pre code').forEach(function(block) { hljs.highlightElement(block); });
+
+            try {
+                renderMathInElement(output, {
+                    delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}],
+                    throwOnError: false
+                });
+            } catch(e) {}
+
+            try {
+                mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+                mermaid.run({ nodes: output.querySelectorAll('.mermaid') });
+            } catch(e) {}
+
+            buildTOC(output);
+        });
+
+        function buildTOC(container) {
+            const list = document.getElementById('tocList');
+            if (!list) return;
+            list.innerHTML = '';
+            const headings = container.querySelectorAll('h2, h3');
+            if (headings.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'text-slate-400 italic';
+                li.textContent = 'No sub-headers on page';
+                list.appendChild(li);
+                return;
+            }
+            headings.forEach(function(heading, idx) {
+                const anchorId = 'toc-anchor-' + idx;
+                heading.setAttribute('id', anchorId);
+                const li = document.createElement('li');
+                const isSub = heading.tagName.toLowerCase() === 'h3';
+                li.className = 'transition-colors duration-150 ' + (isSub ? 'pl-3 border-l border-slate-100 dark:border-slate-800 ml-1 py-0.5' : 'font-medium py-1');
+                const link = document.createElement('a');
+                link.href = '#' + anchorId;
+                link.className = 'hover:text-emerald-500 block truncate transition-colors';
+                link.textContent = heading.textContent;
+                link.onclick = function(e) { e.preventDefault(); heading.scrollIntoView({ behavior: 'smooth' }); };
+                li.appendChild(link);
+                list.appendChild(li);
+            });
+        }
+
+        window.addEventListener('scroll', function() {
+            const main = document.querySelector('main');
+            if (!main) return;
+            const scrollTop = main.scrollTop;
+            const scrollHeight = main.scrollHeight - main.clientHeight;
+            document.getElementById('readingProgress').style.width = (scrollTop / Math.max(scrollHeight, 1)) * 100 + '%';
+        });
+
+        const copyBtn = document.getElementById('copyDocBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                const content = document.getElementById('markdownOutput')?.innerText;
+                if (!content) return;
+                navigator.clipboard.writeText(content).then(function() {
+                    copyBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>';
+                    lucide.createIcons();
+                    setTimeout(function() {
+                        copyBtn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
+                        lucide.createIcons();
+                    }, 1500);
+                });
+            });
+        }
+
+        initTheme();
+        renderSidebar('sidebarGroups');
+        renderSidebar('mobileSidebarGroups');
+    </script>
+</body>
+</html>

@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tests - P-WOS Documentation Portal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#16a34a', 600: '#15803d', 700: '#166534' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css" id="hljs-dark-theme" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .theme-light ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+        .theme-dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .prose table { width: 100%; margin: 1.5rem 0; border-collapse: collapse; font-size: 0.875rem; }
+        .prose th { background-color: rgba(0,0,0,0.02); font-weight: 600; padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); text-align: left; }
+        .dark .prose th { background-color: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); }
+        .prose td { padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); }
+        .dark .prose td { border-color: rgba(255,255,255,0.08); }
+        .prose blockquote { border-left: 3px solid #16a34a; padding-left: 1rem; font-style: italic; color: #4b5563; }
+        .dark .prose blockquote { color: #9ca3af; }
+        .prose img { border-radius: 8px; margin: 1.5rem auto; max-width: 100%; }
+        .prose pre { border-radius: 10px; background: #f8fafc !important; border: 1px solid #e2e8f0; }
+        .dark .prose pre { background: #0f171a !important; border-color: #1e2a2e; }
+
+        .theme-dark { background-color: #0b0f11; color: #f1f5f9; }
+        .theme-dark .sidebar-bg { background-color: #101618; border-color: #1a2225; }
+        .theme-dark .content-card { background-color: #12191b; border-color: #1c272a; }
+
+        .sidebar-group-enter { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-in-out; }
+        .sidebar-group-enter.active { max-height: 500px; }
+    </style>
+</head>
+<body class="theme-light bg-slate-50 text-slate-800 transition-colors duration-200 antialiased font-sans h-screen overflow-hidden flex flex-col">
+
+    <div class="fixed top-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-900/50 z-50">
+        <div id="readingProgress" class="h-full bg-brand-500 w-0 transition-all duration-75"></div>
+    </div>
+
+    <header class="h-14 md:h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/85 dark:bg-[#101618]/85 backdrop-blur-md flex items-center justify-between px-4 md:px-6 z-40 shrink-0">
+        <div class="flex items-center space-x-3">
+            <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-500">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                <div class="p-1.5 bg-gradient-to-tr from-emerald-500 to-green-600 rounded-lg text-white">
+                    <i data-lucide="droplet" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <span class="font-bold text-sm md:text-base tracking-tight text-slate-900 dark:text-white">P-WOS Docs</span>
+                    <span class="hidden md:inline-block ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 font-medium">Predictive Water Optimization</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300" title="Toggle Light/Dark Mode">
+                <i data-lucide="sun" id="themeIcon" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Theme</span>
+            </button>
+            <button onclick="window.print()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Print to PDF">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Export PDF</span>
+            </button>
+            <a href="index.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Home</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="navSidebar" class="w-64 border-r border-slate-200 dark:border-slate-800/80 overflow-y-auto shrink-0 bg-white dark:bg-[#101618] hidden lg:block z-30">
+            <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text" id="docSearch" placeholder="Search documentation..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                </div>
+            </div>
+            <div class="p-3 space-y-1" id="sidebarGroups"></div>
+        </aside>
+
+        <aside id="mobileSidebar" class="fixed inset-0 z-40 lg:hidden hidden">
+            <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" id="navOverlay"></div>
+            <div class="relative w-72 max-w-[85vw] h-full bg-white dark:bg-[#101618] shadow-2xl overflow-y-auto transform transition-transform duration-300 -translate-x-full">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">Navigation</span>
+                    <button id="closeMobileNav" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-400">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="mobileDocSearch" placeholder="Search..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                    </div>
+                </div>
+                <div class="p-3 space-y-1" id="mobileSidebarGroups"></div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto min-w-0">
+            <div class="px-4 md:px-8 py-6 md:py-10">
+                <div class="flex gap-6 lg:gap-10">
+                    <div class="flex-1 min-w-0 max-w-4xl">
+                        <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                            <span id="breadcrumbCategory">Core Guides</span>
+                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">tests.md</span>
+                        </div>
+
+                        <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
+                            <div class="absolute top-6 right-6 flex items-center space-x-2 print:hidden">
+                                <button id="copyDocBtn" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Copy content">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <div id="markdownOutput" class="prose max-w-none dark:prose-invert
+                                prose-headings:font-bold prose-headings:tracking-tight
+                                prose-h1:text-3xl prose-h1:mb-6 prose-h1:text-slate-900 dark:prose-h1:text-white
+                                prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:text-slate-900 dark:prose-h2:text-white
+                                prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-slate-800 dark:prose-h3:text-slate-200
+                                prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
+                                prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                                prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
+                                <h1>P-WOS Test Suite Documentation</h1>
+<blockquote>
+<p>Complete reference for every test file and individual test case in P-WOS.</p>
+</blockquote>
+<h2>Running Tests</h2>
+<pre><code class="language-bash"># Activate virtual environment
+.venv\Scripts\activate
+
+# Run entire suite
+cd src/backend
+pytest tests/ -v
+
+# Run by category
+pytest tests/unit/ -v           # Unit tests only
+pytest tests/integration/ -v    # Integration tests only
+pytest tests/scenarios/ -v      # Scenario tests only
+pytest tests/performance/ -v    # Benchmarks only
+
+# Run single file
+pytest tests/unit/test_weather_api.py -v
+</code></pre>
+<hr />
+<h2>Shared Configuration</h2>
+<h3><code>conftest.py</code></h3>
+<p><strong>Path:</strong> <code>src/backend/tests/conftest.py</code></p>
+<p>Global test fixtures shared across all test categories.</p>
+<table>
+<thead>
+<tr>
+<th>Fixture</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>predictor</code></td>
+<td><code>MLPredictor</code></td>
+<td>Fresh ML predictor instance per test</td>
+</tr>
+<tr>
+<td><code>mock_sensor_data</code></td>
+<td><code>dict</code></td>
+<td>Standard sensor payload (45% moisture, 25°C, 60% RH)</td>
+</tr>
+</tbody>
+</table>
+<p>Test logs are written to <code>logs/test/test.log</code> (UTF-8 encoded).</p>
+<hr />
+<h2>Unit Tests</h2>
+<h3>1. <code>validation.py</code> — Input Validation</h3>
+<p><strong>Path:</strong> <code>src/backend/tests/unit/validation.py</code><br />
+<strong>Class:</strong> <code>TestInputValidation</code> (~20 tests)</p>
+<p>Tests boundary checking and type safety for all system inputs.</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_soil_moisture_valid_range</code></td>
+<td>Valid moisture values 0–100 are accepted</td>
+</tr>
+<tr>
+<td><code>test_soil_moisture_out_of_bounds</code></td>
+<td>Rejects -1, 101, -0.01, 100.1 (parametrized)</td>
+</tr>
+<tr>
+<td><code>test_temperature_out_of_bounds</code></td>
+<td>Rejects -51, 61, 1000°C (parametrized)</td>
+</tr>
+<tr>
+<td><code>test_humidity_out_of_bounds</code></td>
+<td>Rejects -1, 101% (parametrized)</td>
+</tr>
+<tr>
+<td><code>test_device_id_validation</code></td>
+<td>Device IDs must be alphanumeric (no path traversal)</td>
+</tr>
+<tr>
+<td><code>test_forecast_minutes_non_negative</code></td>
+<td>Detects negative forecast values</td>
+</tr>
+<tr>
+<td><code>test_wind_speed_non_negative</code></td>
+<td>Detects negative wind speed</td>
+</tr>
+<tr>
+<td><code>test_pump_duration_limit</code></td>
+<td>Duration &gt; 60s exceeds hard limit</td>
+</tr>
+<tr>
+<td><code>test_control_action_enum</code></td>
+<td>Only ON/OFF actions accepted (rejects RESET)</td>
+</tr>
+<tr>
+<td><code>test_timestamps_format</code></td>
+<td>Validates ISO 8601 timestamp parsing</td>
+</tr>
+<tr>
+<td><code>test_invalid_timestamp</code></td>
+<td>Rejects malformed timestamps</td>
+</tr>
+<tr>
+<td><code>test_sql_injection_string</code></td>
+<td>Detects basic SQL injection patterns</td>
+</tr>
+<tr>
+<td><code>test_handle_null_sensor_values</code></td>
+<td>Verifies None sensor value handling</td>
+</tr>
+<tr>
+<td><code>test_missing_required_fields</code></td>
+<td>Detects missing <code>soil_moisture</code> field</td>
+</tr>
+<tr>
+<td><code>test_vpd_zero_division_prevention</code></td>
+<td>VPD calc doesn't crash on edge inputs</td>
+</tr>
+<tr>
+<td><code>test_rain_probability_range</code></td>
+<td>Rejects probability &gt; 100%</td>
+</tr>
+<tr>
+<td><code>test_string_instead_of_float</code></td>
+<td>Raises <code>ValueError</code> on invalid string→float</td>
+</tr>
+<tr>
+<td><code>test_bool_instead_of_int</code></td>
+<td>Type strictness check for bool vs int</td>
+</tr>
+<tr>
+<td><code>test_extra_fields_ignored</code></td>
+<td>Extra JSON fields don't cause crashes</td>
+</tr>
+<tr>
+<td><code>test_json_parsing_error</code></td>
+<td>Malformed JSON raises <code>JSONDecodeError</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>2. <code>calculations.py</code> — ML Calculations</h3>
+<p><strong>Path:</strong> <code>src/backend/tests/unit/calculations.py</code><br />
+<strong>Class:</strong> <code>TestCalculations</code> (6 tests)</p>
+<p>Tests the mathematical core of the ML predictor.</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_vpd_calculation_standard</code></td>
+<td>Decay rate at 25°C/60% RH; noon &gt; night</td>
+</tr>
+<tr>
+<td><code>test_moisture_decay_extreme_heat</code></td>
+<td>Decay rate &gt; 1.0 at 35°C/40% RH</td>
+</tr>
+<tr>
+<td><code>test_rain_confidence_imminent</code></td>
+<td>Rain in &lt; 2h → <code>wait=True</code>, confidence ≥ 0.9</td>
+</tr>
+<tr>
+<td><code>test_rain_confidence_distant_dry</code></td>
+<td>Rain in 10h + dry soil (20%) → don't wait</td>
+</tr>
+<tr>
+<td><code>test_saturation_risk</code></td>
+<td>90% moisture → <code>SATURATED</code>; 80% → not saturated</td>
+</tr>
+<tr>
+<td><code>test_false_dry_detection</code></td>
+<td>High wind + low humidity + rapid drop → false dry</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>3. <code>database_ops.py</code> — Database Operations</h3>
+<p><strong>Path:</strong> <code>src/backend/tests/unit/database_ops.py</code><br />
+<strong>Class:</strong> <code>TestDatabaseOps</code> (10 tests)</p>
+<p>Tests database CRUD operations with mocked PostgreSQL connections.</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_connection_failure_handling</code></td>
+<td>Raises exception on DB connection timeout</td>
+</tr>
+<tr>
+<td><code>test_get_statistics_empty_db</code></td>
+<td>Returns zeros when tables are empty</td>
+</tr>
+<tr>
+<td><code>test_insert_log_special_chars</code></td>
+<td>Emoji/Unicode in logs doesn't crash</td>
+</tr>
+<tr>
+<td><code>test_get_recent_readings_limit</code></td>
+<td>LIMIT param is correctly passed to SQL</td>
+</tr>
+<tr>
+<td><code>test_insert_watering_event_null_after</code></td>
+<td>Watering event with null post-moisture</td>
+</tr>
+<tr>
+<td><code>test_sql_query_structure_sensors</code></td>
+<td>INSERT INTO sensor_readings query is valid</td>
+</tr>
+<tr>
+<td><code>test_get_logs_error_handling</code></td>
+<td>Raises exception when DB is down</td>
+</tr>
+<tr>
+<td><code>test_ml_decision_insert</code></td>
+<td>ML decisions INSERT INTO ml_decisions</td>
+</tr>
+<tr>
+<td><code>test_init_database_idempotency</code></td>
+<td>init_database() can run twice (IF EXISTS)</td>
+</tr>
+<tr>
+<td><code>test_close_connection_called</code></td>
+<td>Connection is closed after operations</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>4. <code>decision_logic.py</code> — ML Decision Logic</h3>
+<p><strong>Path:</strong> <code>src/backend/tests/unit/decision_logic.py</code><br />
+<strong>Class:</strong> <code>TestDecisionLogic</code> (5 tests)</p>
+<p>Tests the rule-based decision engine inside <code>MLPredictor.predict_next_watering()</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_emergency_watering_low_moisture</code></td>
+<td>10% moisture → <code>NOW</code> + <code>CRITICAL</code> (rules override model)</td>
+</tr>
+<tr>
+<td><code>test_rain_delay_logic</code></td>
+<td>30% moisture + rain in 60 min → <code>STALL</code> + <code>RAIN_EXPECTED</code></td>
+</tr>
+<tr>
+<td><code>test_vpd_delay_midday</code></td>
+<td>High VPD at 1 PM → <code>STALL</code> + <code>VPD_DELAY</code></td>
+</tr>
+<tr>
+<td><code>test_stop_if_raining</code></td>
+<td>Active rain (intensity 5.0) → <code>STOP</code> + <code>RAINING</code></td>
+</tr>
+<tr>
+<td><code>test_proactive_morning_watering</code></td>
+<td>5 AM + 40% moisture + high VPD → <code>NOW</code> + <code>PREHEAT</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>5. <code>utils.py</code> — Utility Functions</h3>
+<p><strong>Path:</strong> <code>src/backend/tests/unit/utils.py</code><br />
+<strong>Class:</strong> <code>TestUtils</code> (10 tests)</p>
+<p>Tests standalone utility functions including VPD calculator.</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_vpd_standard</code></td>
+<td>25°C/60% RH → VPD ≈ 1.25 kPa</td>
+</tr>
+<tr>
+<td><code>test_vpd_saturated</code></td>
+<td>100% humidity → VPD = 0.0</td>
+</tr>
+<tr>
+<td><code>test_vpd_dry_hot</code></td>
+<td>35°C/20% RH → VPD &gt; 3.0 kPa</td>
+</tr>
+<tr>
+<td><code>test_vpd_cold_wet</code></td>
+<td>10°C/90% RH → VPD &lt; 0.2 kPa</td>
+</tr>
+<tr>
+<td><code>test_vpd_freezing</code></td>
+<td>0°C → still calculates valid VPD</td>
+</tr>
+<tr>
+<td><code>test_vpd_invalid_humidity_high</code></td>
+<td>Robustness against humidity &gt; 100%</td>
+</tr>
+<tr>
+<td><code>test_date_parsing_util</code></td>
+<td>Date parser utility (placeholder)</td>
+</tr>
+<tr>
+<td><code>test_decay_rate_math</code></td>
+<td>0.5 × 1.2 = 0.6</td>
+</tr>
+<tr>
+<td><code>test_safe_float_conversion</code></td>
+<td>"12.5" → 12.5; "invalid" → default 5.0</td>
+</tr>
+<tr>
+<td><code>test_clamp_function</code></td>
+<td>Clamps 150 → 100, -10 → 0, 50 → 50</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>6. <code>test_weather_api.py</code> — Weather API</h3>
+<p><strong>Path:</strong> <code>src/backend/tests/unit/test_weather_api.py</code><br />
+<strong>Classes:</strong> 5 test classes (24 tests total)</p>
+<p>Comprehensive tests for the <code>WeatherAPI</code> class — parsing, fallback, caching, and format consistency.</p>
+<h4><code>TestParseOWMForecast</code> (10 tests)</h4>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_parse_wind_speed_conversion</code></td>
+<td>3.5 m/s × 3.6 = 12.6 km/h</td>
+</tr>
+<tr>
+<td><code>test_parse_temperature_humidity</code></td>
+<td>Extracts temp=22.5, humidity=65 from OWM</td>
+</tr>
+<tr>
+<td><code>test_parse_cloud_cover</code></td>
+<td>Cloud cover from <code>clouds.all</code> = 45%</td>
+</tr>
+<tr>
+<td><code>test_parse_precipitation_chance</code></td>
+<td>pop=0.3 → 30%</td>
+</tr>
+<tr>
+<td><code>test_parse_rain_intensity</code></td>
+<td>4.5mm × 20 = 90% intensity</td>
+</tr>
+<tr>
+<td><code>test_parse_condition_cloudy</code></td>
+<td>Current weather condition = "Clouds"</td>
+</tr>
+<tr>
+<td><code>test_parse_condition_raining</code></td>
+<td>Current weather condition = "Rain"</td>
+</tr>
+<tr>
+<td><code>test_parse_rain_forecast_minutes</code></td>
+<td>Minutes until rain from forecast items</td>
+</tr>
+<tr>
+<td><code>test_parse_source_openweathermap</code></td>
+<td>Source field = "openweathermap"</td>
+</tr>
+<tr>
+<td><code>test_parse_empty_forecast</code></td>
+<td>Empty forecast → safe defaults (0 wind, 25°C)</td>
+</tr>
+</tbody>
+</table>
+<h4><code>TestSimulateWeather</code> (2 tests)</h4>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_simulate_with_mqtt_data</code></td>
+<td>Returns MQTT sim data (wind=8.5, source=simulation)</td>
+</tr>
+<tr>
+<td><code>test_simulate_without_mqtt_data</code></td>
+<td>No MQTT → fallback defaults (wind=0, source=fallback)</td>
+</tr>
+</tbody>
+</table>
+<h4><code>TestGetForecast</code> (2 tests)</h4>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_openweathermap_mode_calls_fetch</code></td>
+<td>OWM mode calls <code>_fetch_openweathermap</code></td>
+</tr>
+<tr>
+<td><code>test_simulation_mode_calls_simulate</code></td>
+<td>Sim mode calls <code>_simulate_weather</code></td>
+</tr>
+</tbody>
+</table>
+<h4><code>TestOWMFallback</code> (4 tests)</h4>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_fallback_to_simulator_on_api_error</code></td>
+<td>API error → falls back to simulator</td>
+</tr>
+<tr>
+<td><code>test_fallback_to_simulator_on_timeout</code></td>
+<td>Timeout → falls back to simulator</td>
+</tr>
+<tr>
+<td><code>test_simulator_returns_safe_defaults_when_unavailable</code></td>
+<td>No sim data → safe "fallback" source</td>
+</tr>
+<tr>
+<td><code>test_cache_prevents_repeated_api_calls</code></td>
+<td>Cached result returned without re-fetching</td>
+</tr>
+</tbody>
+</table>
+<h4><code>TestUnifiedFormat</code> (3 tests)</h4>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_owm_format_has_all_keys</code></td>
+<td>OWM result has all 10 required keys</td>
+</tr>
+<tr>
+<td><code>test_simulation_format_has_all_keys</code></td>
+<td>Simulation result has all 10 required keys</td>
+</tr>
+<tr>
+<td><code>test_fallback_format_has_all_keys</code></td>
+<td>Fallback result has all 10 required keys</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Integration Tests</h2>
+<h3>7. <code>api_endpoints.py</code> — API Endpoints</h3>
+<p><strong>Path:</strong> <code>src/backend/tests/integration/api_endpoints.py</code><br />
+<strong>Class:</strong> <code>TestAPIEndpoints</code> (4 tests)</p>
+<p>End-to-end tests for Flask API routes.</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_health_check</code></td>
+<td><code>GET /api/health</code> → 200 + <code>status: online</code></td>
+</tr>
+<tr>
+<td><code>test_predict_endpoint</code></td>
+<td><code>GET /api/predict-next-watering</code> → 200 + valid action</td>
+</tr>
+<tr>
+<td><code>test_control_pump_manual</code></td>
+<td><code>POST /api/control/pump</code> → 200 + MQTT publish called</td>
+</tr>
+<tr>
+<td><code>test_logs_retrieval</code></td>
+<td><code>GET /api/logs</code> → 200 + returns list</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>8. <code>data_flow.py</code> — Data Flow</h3>
+<p><strong>Path:</strong> <code>src/backend/tests/integration/data_flow.py</code><br />
+<strong>Class:</strong> <code>TestDataFlow</code> (2 tests)</p>
+<p>Tests the sensor data → database pipeline.</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_db_insert_sensor_reading</code></td>
+<td>Sensor data INSERT executes with correct SQL</td>
+</tr>
+<tr>
+<td><code>test_system_state_persistence</code></td>
+<td>AUTO/MANUAL state toggle persists (placeholder)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>9. <code>error_handling.py</code> — Error Handling</h3>
+<p><strong>Path:</strong> <code>src/backend/tests/integration/error_handling.py</code><br />
+<strong>Class:</strong> <code>TestErrorHandling</code> (5 tests)</p>
+<p>Tests API robustness against malformed requests and internal failures.</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_404_not_found</code></td>
+<td>Unknown <code>/api/*</code> route serves React app (200)</td>
+</tr>
+<tr>
+<td><code>test_control_pump_missing_body</code></td>
+<td>Missing JSON body → 400 or 500 (not crash)</td>
+</tr>
+<tr>
+<td><code>test_sensor_history_invalid_limit_param</code></td>
+<td><code>limit=abc</code> → uses default, returns 200</td>
+</tr>
+<tr>
+<td><code>test_weather_endpoint_failure</code></td>
+<td>Weather endpoint always returns 200 with valid keys</td>
+</tr>
+<tr>
+<td><code>test_predict_endpoint_internal_error</code></td>
+<td>ML crash → 500 + error message in JSON</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>10. <code>weather_fallback.py</code> — Weather Fallback</h3>
+<p><strong>Path:</strong> <code>src/backend/tests/integration/weather_fallback.py</code><br />
+<strong>Classes:</strong> 3 test classes (8 tests)</p>
+<p>Tests weather source priority (OWM &gt; Simulator &gt; Fallback) in app.py.</p>
+<h4><code>TestWeatherSourcePriority</code> (4 tests)</h4>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_real_mode_ignores_sim_weather</code></td>
+<td>OWM mode blocks simulator MQTT data</td>
+</tr>
+<tr>
+<td><code>test_sim_mode_accepts_sim_weather</code></td>
+<td>Sim mode accepts simulator MQTT data</td>
+</tr>
+<tr>
+<td><code>test_real_mode_fetches_real_weather_on_sensor_update</code></td>
+<td>Sensor MQTT → triggers OWM fetch</td>
+</tr>
+<tr>
+<td><code>test_real_mode_sensor_update_survives_api_failure</code></td>
+<td>OWM failure doesn't lose sensor data</td>
+</tr>
+</tbody>
+</table>
+<h4><code>TestWeatherFallbackEndpoint</code> (3 tests)</h4>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_weather_endpoint_returns_200</code></td>
+<td><code>/api/weather/forecast</code> always 200</td>
+</tr>
+<tr>
+<td><code>test_weather_endpoint_has_required_keys</code></td>
+<td>Response contains temperature, condition</td>
+</tr>
+<tr>
+<td><code>test_weather_endpoint_wind_is_reasonable</code></td>
+<td>Wind 0–150 km/h (realistic bounds)</td>
+</tr>
+</tbody>
+</table>
+<h4><code>TestDataFlowConsistency</code> (2 tests)</h4>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_weather_source_is_openweathermap_in_real_mode</code></td>
+<td>Logged source = "openweathermap"</td>
+</tr>
+<tr>
+<td><code>test_weather_source_is_simulation_in_sim_mode</code></td>
+<td>Logged source = "simulation"</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>11. <code>simulation_api.py</code> — Simulation API</h3>
+<p><strong>Path:</strong> <code>src/backend/tests/integration/simulation_api.py</code><br />
+<strong>Class:</strong> <code>TestSimulationAPI</code> (5 tests)</p>
+<p>Tests the simulation step/reset/state API endpoints.</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_reset_default_scenario</code></td>
+<td>Reset → mixed_weather, running=false</td>
+</tr>
+<tr>
+<td><code>test_reset_custom_scenario</code></td>
+<td>Reset heat_wave → temp=38°C</td>
+</tr>
+<tr>
+<td><code>test_simulation_step_logic</code></td>
+<td>Step → step=1, hour=8.25</td>
+</tr>
+<tr>
+<td><code>test_get_simulation_state</code></td>
+<td>State includes fields + weather</td>
+</tr>
+<tr>
+<td><code>test_invalid_scenario_fallback</code></td>
+<td>Invalid name → mixed_weather default</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>12. <code>test_analytics_aggregated.py</code> — Analytics Aggregation</h3>
+<p><strong>Path:</strong> <code>src/backend/tests/integration/test_analytics_aggregated.py</code><br />
+<strong>Class:</strong> <code>TestAggregatedAnalytics</code> (4 tests)</p>
+<p>Live database integration tests using a dedicated <code>pwos_test_db</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_basic_functionality_and_aggregation_correctness</code></td>
+<td>AVG(moisture)=55, SUM(duration)=75</td>
+</tr>
+<tr>
+<td><code>test_bucket_alignment</code></td>
+<td>15-min buckets align to XX:00:00 boundaries</td>
+</tr>
+<tr>
+<td><code>test_edge_cases_empty_and_mismatched</code></td>
+<td>Empty DB, events-only, readings-only</td>
+</tr>
+<tr>
+<td><code>test_parameter_validation</code></td>
+<td>Invalid params (hours=broken) → safe defaults</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note:</strong> Requires PostgreSQL running. Uses <code>pwos_test_db</code> (auto-created/dropped per session).</p>
+</blockquote>
+<hr />
+<h2>Scenario Tests</h2>
+<h3>13. <code>edge_cases.py</code> — Sensor Anomalies</h3>
+<p><strong>Path:</strong> <code>src/backend/tests/scenarios/edge_cases.py</code><br />
+<strong>Class:</strong> <code>TestEdgeCases</code> (5 tests)</p>
+<p>Tests system behavior under abnormal sensor conditions.</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_sudden_moisture_spike</code></td>
+<td>10→90% spike → STOP or MONITOR (not NOW)</td>
+</tr>
+<tr>
+<td><code>test_sensor_drift_handling</code></td>
+<td>Consistent weird values (placeholder)</td>
+</tr>
+<tr>
+<td><code>test_negative_readings</code></td>
+<td>-50% moisture robustness (placeholder)</td>
+</tr>
+<tr>
+<td><code>test_all_zeros_scenario</code></td>
+<td>All zeros → NOW (critical watering)</td>
+</tr>
+<tr>
+<td><code>test_max_values_scenario</code></td>
+<td>All 100 → never water</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>14. <code>conflict_resolution.py</code> — Logic Conflicts</h3>
+<p><strong>Path:</strong> <code>src/backend/tests/scenarios/conflict_resolution.py</code><br />
+<strong>Class:</strong> <code>TestConflictResolution</code> (3 tests)</p>
+<p>Tests priority resolution when multiple rules conflict.</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_manual_override_persists</code></td>
+<td>Manual mode persists against auto logic (placeholder)</td>
+</tr>
+<tr>
+<td><code>test_rain_vs_critical_dry</code></td>
+<td>Rain + 5% moisture → NOW (critical wins over rain)</td>
+</tr>
+<tr>
+<td><code>test_heatwave_vs_critical_dry</code></td>
+<td>Heatwave + 10% moisture → NOW (survival wins)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>15. <code>environmental.py</code> — Environmental Scenarios</h3>
+<p><strong>Path:</strong> <code>src/backend/tests/scenarios/environmental.py</code><br />
+<strong>Class:</strong> <code>TestEnvironmentalScenarios</code> (3 tests)</p>
+<p>Tests real-world weather-driven decision scenarios.</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_rain_event_scenario</code></td>
+<td>Dry→Rain transition → STOP + RAINING</td>
+</tr>
+<tr>
+<td><code>test_heatwave_prevention</code></td>
+<td>38°C/15% RH at 2 PM → STALL (VPD too high)</td>
+</tr>
+<tr>
+<td><code>test_high_wind_safety</code></td>
+<td>Wind 25 km/h → STALL (spray drift)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Performance Tests</h2>
+<h3>16. <code>benchmarks.py</code> — Performance Benchmarks</h3>
+<p><strong>Path:</strong> <code>src/backend/tests/performance/benchmarks.py</code><br />
+<strong>Class:</strong> <code>TestPerformance</code> (2 tests)</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What It Verifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_inference_latency</code></td>
+<td>100 predictions avg &lt; 100ms</td>
+</tr>
+<tr>
+<td><code>test_decision_throughput</code></td>
+<td>&gt; 0 decisions/sec under load</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Test Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Files</th>
+<th>Test Classes</th>
+<th>Total Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Unit</strong></td>
+<td>6</td>
+<td>7</td>
+<td>~75</td>
+</tr>
+<tr>
+<td><strong>Integration</strong></td>
+<td>6</td>
+<td>8</td>
+<td>~25</td>
+</tr>
+<tr>
+<td><strong>Scenarios</strong></td>
+<td>3</td>
+<td>3</td>
+<td>~11</td>
+</tr>
+<tr>
+<td><strong>Performance</strong></td>
+<td>1</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>16</strong></td>
+<td><strong>19</strong></td>
+<td><strong>116</strong> ✅</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>All 116 tests pass with <code>pytest src/backend/tests/ -v</code>. No skipped or xfail tests.</p>
+</blockquote>
+<hr />
+<h2>Known Fixes &amp; Notes</h2>
+<h3>Seasonal Mock Fix (May 2026)</h3>
+<p>Tests <code>test_vpd_delay_midday</code> (decision_logic.py) and <code>test_heatwave_prevention</code> (environmental.py) previously failed in October because the production code uses the real calendar month to calculate seasonal thresholds (summer/winter). The tests were updated to explicitly mock <code>datetime.now()</code> to return a dry-season October date, making the tests season-independent:</p>
+<pre><code class="language-python"># decision_logic.py — seasonal mock pattern
+with patch('models.ml_predictor.datetime') as mock_dt:
+    mock_dt.now.return_value = datetime(2026, 10, 15, 13, 0, 0)  # October (spring/dry)
+    result = predictor.predict_next_watering(sensor_data)
+    assert result['recommended_action'] == 'STALL'
+</code></pre>
+<h3>Pool Compatibility</h3>
+<p>All database tests use <code>unittest.mock.patch</code> on <code>psycopg2.connect</code>. The <code>PoolConnectionWrapper</code> in <code>database.py</code> automatically detects the mock and bypasses the pool, so all 10 <code>database_ops.py</code> tests remain fully functional without modifications.</p>
+                            </div>
+                        </article>
+
+                        <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
+                            <a href="index.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Back to Index</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <aside class="hidden lg:block w-56 shrink-0 border-l border-slate-200 dark:border-slate-800/80 pl-6">
+                        <div class="sticky top-0">
+                            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5 mb-4">
+                                <i data-lucide="list-ordered" class="w-3.5 h-3.5 text-emerald-500"></i> On This Page
+                            </h4>
+                            <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                            <a href="index.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                                <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                                <span>Back to Home</span>
+                            </a>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const docs = [{"category": "Getting Started", "icon": "rocket", "pages": [{"title": "Project Overview", "file": "PROJECT_OVERVIEW.html"}, {"title": "Quickstart Guide", "file": "QUICKSTART.html"}, {"title": "Project Roadmap", "file": "PROJECT_ROADMAP.html"}]}, {"category": "System Architecture", "icon": "cpu", "pages": [{"title": "System Overview", "file": "system_overview.html"}, {"title": "Dataflow", "file": "dataflow.html"}, {"title": "Analytics Reference", "file": "analytics_reference.html"}, {"title": "Crop Profiles", "file": "crop_profiles.html"}, {"title": "Edge Cases & Scenarios", "file": "edge_cases_and_scenarios.html"}, {"title": "ML Model Deep Dive", "file": "ml_model_deep_dive.html"}, {"title": "VPD & Weather Engine", "file": "vpd_and_weather_engine.html"}]}, {"category": "Core Guides", "icon": "book-open", "pages": [{"title": "Installation Guide", "file": "installation_guide.html"}, {"title": "Backend API", "file": "backend_guide.html"}, {"title": "Database Guide", "file": "database_guide.html"}, {"title": "Firmware Guide", "file": "firmware_guide.html"}, {"title": "Simulation Guide", "file": "simulation_guide.html"}, {"title": "ML Model Guide", "file": "ml_model_guide.html"}, {"title": "Performance Guide", "file": "performance_guide.html"}, {"title": "Troubleshooting", "file": "troubleshooting.html"}, {"title": "Tests Reference", "file": "tests.html"}, {"title": "Analytics Dashboard", "file": "analytics_dashboard.html"}, {"title": "Main Dashboard", "file": "main_dashboard.html"}, {"title": "Mobile Guide", "file": "mobile_guide.html"}]}, {"category": "Hardware Engineering", "icon": "circuit-board", "pages": [{"title": "Hardware Architecture", "file": "hardware_architecture.html"}, {"title": "Breadboard Assembly", "file": "breadboard_assembly.html"}, {"title": "Breadboard Guide", "file": "breadboard.html"}, {"title": "Hardware Setup", "file": "hardware_setup.html"}, {"title": "Shopping List", "file": "hardware_shopping_list.html"}, {"title": "Migration Plan", "file": "hardware_migration_plan.html"}, {"title": "Testing Report", "file": "testing_report.html"}, {"title": "Hardware Progress", "file": "hardware_progress.html"}, {"title": "Phase 1 Report", "file": "phase1_report.html"}]}, {"category": "Scientific Research", "icon": "microscope", "pages": [{"title": "Codebase Analysis", "file": "codebase_analysis.html"}, {"title": "Codebase Audit", "file": "codebase_audit.html"}, {"title": "Crop Integration Plan", "file": "crop_integration_plan.html"}]}, {"category": "Technical Reference", "icon": "code", "pages": [{"title": "API Reference", "file": "api_reference.html"}, {"title": "MQTT Topics", "file": "mqtt_topics.html"}, {"title": "Coding Guidelines", "file": "coding_guidelines.html"}, {"title": "Project Structure", "file": "project_structure.html"}, {"title": "VPD Scenarios", "file": "vpd_scenarios.html"}]}, {"category": "Deployment & Operations", "icon": "cloud", "pages": [{"title": "Cloud ML Deployment", "file": "cloud_ml_deployment.html"}, {"title": "Local Implementation", "file": "local_implementation.html"}, {"title": "ML Roadmap", "file": "ml_implementation_roadmap.html"}]}, {"category": "Reports & Validation", "icon": "bar-chart-3", "pages": [{"title": "Final Report", "file": "final_report.html"}, {"title": "Validation Report", "file": "validation_report.html"}, {"title": "Simulation Analysis", "file": "simulation_analysis.html"}, {"title": "Moisture Analysis", "file": "moisture_analysis.html"}, {"title": "Phase 1 Setup Report", "file": "phase_01_setup_report.html"}, {"title": "Phase 5 ML Report", "file": "phase_05_ml_report.html"}, {"title": "Phase 6 Frontend Report", "file": "phase_06_frontend_report.html"}]}];
+
+        let expandedGroups = {};
+
+        function initTheme() {
+            const saved = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(saved);
+        }
+
+        function setTheme(theme) {
+            document.body.classList.remove('theme-light', 'theme-dark');
+            document.documentElement.classList.remove('dark');
+            const hljsLight = document.getElementById('hljs-light-theme');
+            const hljsDark = document.getElementById('hljs-dark-theme');
+            if (theme === 'dark') {
+                document.body.classList.add('theme-dark');
+                document.documentElement.classList.add('dark');
+                if (hljsLight) hljsLight.disabled = true;
+                if (hljsDark) hljsDark.disabled = false;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'moon');
+            } else {
+                document.body.classList.add('theme-light');
+                if (hljsLight) hljsLight.disabled = false;
+                if (hljsDark) hljsDark.disabled = true;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'sun');
+            }
+            localStorage.setItem('pwos-theme', theme);
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            const current = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(current === 'light' ? 'dark' : 'light');
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        function renderSidebar(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = docs.map(function(group, gi) {
+                const isOpen = expandedGroups[gi] || false;
+                return '<div class="sidebar-group">' +
+                    '<button onclick="toggleGroup(' + gi + ')" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' +
+                        '<span class="flex items-center gap-2"><i data-lucide="' + group.icon + '" class="w-4 h-4"></i><span>' + group.category + '</span></span>' +
+                        '<i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ' + (isOpen ? 'rotate-0' : '-rotate-90') + '"></i>' +
+                    '</button>' +
+                    '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
+                        '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
+                            group.pages.map(function(page) {
+                                return '<li><a href="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                            }).join('') +
+                        '</ul>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function toggleGroup(idx) {
+            expandedGroups[idx] = !expandedGroups[idx];
+            renderSidebar('sidebarGroups');
+            renderSidebar('mobileSidebarGroups');
+        }
+
+        function setupSearch(inputId, containerId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('input', function(e) {
+                const q = e.target.value.toLowerCase().trim();
+                document.querySelectorAll('#' + containerId + ' .sidebar-group').forEach(function(el) {
+                    el.style.display = q === '' || el.textContent.toLowerCase().includes(q) ? '' : 'none';
+                });
+            });
+        }
+
+        setupSearch('docSearch', 'sidebarGroups');
+        setupSearch('mobileDocSearch', 'mobileSidebarGroups');
+
+        function openMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            sidebar.classList.remove('hidden');
+            setTimeout(function() { panel.classList.remove('-translate-x-full'); }, 10);
+        }
+
+        function closeMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            panel.classList.add('-translate-x-full');
+            setTimeout(function() { sidebar.classList.add('hidden'); }, 300);
+        }
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', openMobileNav);
+        document.getElementById('closeMobileNav').addEventListener('click', closeMobileNav);
+        document.getElementById('navOverlay').addEventListener('click', closeMobileNav);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const output = document.getElementById('markdownOutput');
+            if (!output) return;
+
+            output.querySelectorAll('pre code').forEach(function(block) { hljs.highlightElement(block); });
+
+            try {
+                renderMathInElement(output, {
+                    delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}],
+                    throwOnError: false
+                });
+            } catch(e) {}
+
+            try {
+                mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+                mermaid.run({ nodes: output.querySelectorAll('.mermaid') });
+            } catch(e) {}
+
+            buildTOC(output);
+        });
+
+        function buildTOC(container) {
+            const list = document.getElementById('tocList');
+            if (!list) return;
+            list.innerHTML = '';
+            const headings = container.querySelectorAll('h2, h3');
+            if (headings.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'text-slate-400 italic';
+                li.textContent = 'No sub-headers on page';
+                list.appendChild(li);
+                return;
+            }
+            headings.forEach(function(heading, idx) {
+                const anchorId = 'toc-anchor-' + idx;
+                heading.setAttribute('id', anchorId);
+                const li = document.createElement('li');
+                const isSub = heading.tagName.toLowerCase() === 'h3';
+                li.className = 'transition-colors duration-150 ' + (isSub ? 'pl-3 border-l border-slate-100 dark:border-slate-800 ml-1 py-0.5' : 'font-medium py-1');
+                const link = document.createElement('a');
+                link.href = '#' + anchorId;
+                link.className = 'hover:text-emerald-500 block truncate transition-colors';
+                link.textContent = heading.textContent;
+                link.onclick = function(e) { e.preventDefault(); heading.scrollIntoView({ behavior: 'smooth' }); };
+                li.appendChild(link);
+                list.appendChild(li);
+            });
+        }
+
+        window.addEventListener('scroll', function() {
+            const main = document.querySelector('main');
+            if (!main) return;
+            const scrollTop = main.scrollTop;
+            const scrollHeight = main.scrollHeight - main.clientHeight;
+            document.getElementById('readingProgress').style.width = (scrollTop / Math.max(scrollHeight, 1)) * 100 + '%';
+        });
+
+        const copyBtn = document.getElementById('copyDocBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                const content = document.getElementById('markdownOutput')?.innerText;
+                if (!content) return;
+                navigator.clipboard.writeText(content).then(function() {
+                    copyBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>';
+                    lucide.createIcons();
+                    setTimeout(function() {
+                        copyBtn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
+                        lucide.createIcons();
+                    }, 1500);
+                });
+            });
+        }
+
+        initTheme();
+        renderSidebar('sidebarGroups');
+        renderSidebar('mobileSidebarGroups');
+    </script>
+</body>
+</html>

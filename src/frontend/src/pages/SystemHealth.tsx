@@ -16,7 +16,10 @@ import {
     XCircle,
     RefreshCw,
     HardDrive,
-    Signal
+    Signal,
+    Cpu,
+    ChevronDown,
+    ChevronUp
 } from 'lucide-react';
 
 interface ServiceStatus {
@@ -36,6 +39,8 @@ export const SystemHealth: React.FC = () => {
 
     const [deviceOnline, setDeviceOnline] = useState(false);
     const [deviceLastSeen, setDeviceLastSeen] = useState('--');
+    const [pumping, setPumping] = useState(false);
+    const [showBlueprint, setShowBlueprint] = useState(false);
 
     const [systemMetrics, setSystemMetrics] = useState({
         uptime: '--',
@@ -58,7 +63,6 @@ export const SystemHealth: React.FC = () => {
         ];
 
         try {
-            // 1. Check Backend API + Database via /api/health
             const startTime = performance.now();
             const healthRes = await fetch(`${API_BASE_URL}/health`, { signal: AbortSignal.timeout(5000) });
             const latency = Math.round(performance.now() - startTime);
@@ -67,7 +71,6 @@ export const SystemHealth: React.FC = () => {
                 const health = await healthRes.json();
                 serviceUpdates[0] = { ...serviceUpdates[0], status: 'online', latency: `${latency}ms` };
 
-                // If health includes database stats, database is online
                 if (health.database) {
                     serviceUpdates[1] = { ...serviceUpdates[1], status: 'online', latency: `${Math.round(latency * 0.6)}ms` };
                 }
@@ -77,7 +80,6 @@ export const SystemHealth: React.FC = () => {
         }
 
         try {
-            // 2. Check statistics for real counts
             const stats = await api.getStatistics();
             if (stats) {
                 setSystemMetrics(prev => ({
@@ -89,17 +91,14 @@ export const SystemHealth: React.FC = () => {
         } catch { /* stats endpoint may fail */ }
 
         try {
-            // 3. Check authoritative hardware status from the backend state (driven by MQTT LWT)
             const systemState = await api.getSystemState();
             const isOnline = systemState?.hardware_status === 'ONLINE';
             setDeviceOnline(isOnline);
             
             if (isOnline) {
-                // If it's online, MQTT broker is also confirmed handling device traffic
                 serviceUpdates[2] = { ...serviceUpdates[2], status: 'online' };
             }
 
-            // Also fetch the last sensor reading just to display the "Last seen" timestamp
             const sensors = await api.getLatestSensors();
             if (sensors?.timestamp) {
                 setDeviceLastSeen(new Date(sensors.timestamp).toLocaleTimeString());
@@ -112,14 +111,13 @@ export const SystemHealth: React.FC = () => {
         }
 
         try {
-            // 4. Check Weather API by asking for prediction (uses weather data)
             const prediction = await api.getPrediction();
             if (prediction?.sensor_snapshot) {
                 serviceUpdates[3] = { ...serviceUpdates[3], status: 'online' };
             }
+            setPumping(prediction?.system_status === 'PUMPING');
         } catch { /* weather may fail */ }
 
-        // Calculate uptime
         const uptimeMs = Date.now() - serverStartTime.getTime();
         const days = Math.floor(uptimeMs / 86400000);
         const hours = Math.floor((uptimeMs % 86400000) / 3600000);
@@ -163,31 +161,34 @@ export const SystemHealth: React.FC = () => {
     const overallLabel = allOnline ? 'All Systems Operational' : 'Some Services Degraded';
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in fade-in duration-500 pb-12 px-4 md:px-0">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
-                        System Health
-                        <Badge variant="outline" className={`${getStatusColor(overallStatus)} border-current bg-current/10 gap-1`}>
-                            <span className={`size-1.5 rounded-full ${getStatusBg(overallStatus)}`} />
-                            {overallLabel}
-                        </Badge>
+                    <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+                        System <span className="text-emerald-500 dark:text-primary">Health</span>
                     </h1>
-                    <p className="text-slate-500 text-sm font-medium">
+                    <p className="text-muted-foreground font-mono mt-1 uppercase text-[10px] tracking-wider">
                         Monitor service status, device connectivity, and system performance.
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <span className="text-xs text-slate-400">
-                        Last update: {lastUpdate.toLocaleTimeString()}
-                    </span>
+                
+                <div className="flex flex-wrap items-center gap-2.5">
+                    <div className={`flex items-center gap-1.5 py-1 px-3.5 rounded-full text-[10px] font-bold uppercase tracking-wider border backdrop-blur-sm ${getStatusColor(overallStatus)} border-current bg-current/5`}>
+                        <span className={`size-1.5 rounded-full ${getStatusBg(overallStatus)}`} />
+                        <span>{overallLabel}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-secondary/50 border border-border px-3 py-1 rounded-xl text-xs text-muted-foreground font-mono">
+                        <span>Last update: {lastUpdate.toLocaleTimeString()}</span>
+                    </div>
+
                     <Button 
                         variant="outline" 
                         size="sm" 
                         onClick={refreshStatus}
                         disabled={isRefreshing}
-                        className="gap-1.5"
+                        className="gap-1.5 border-border h-9 rounded-xl text-xs font-bold uppercase tracking-wider bg-transparent hover:bg-secondary"
                     >
                         <RefreshCw className={`size-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
                         Refresh
@@ -198,43 +199,47 @@ export const SystemHealth: React.FC = () => {
             {/* Quick Metrics */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <MetricCard 
-                    icon={<Clock className="size-5 text-indigo-500" />}
-                    label="Session"
+                    icon={<Clock className="size-4" />}
+                    label="Uptime Session"
                     value={systemMetrics.uptime}
                     subtext="Since page load"
+                    colorClass="text-indigo-500 bg-indigo-500/10"
                 />
                 <MetricCard 
-                    icon={<Activity className="size-5 text-emerald-500" />}
+                    icon={<Activity className="size-4" />}
                     label="Total Readings"
                     value={systemMetrics.totalReadings}
                     subtext="Sensor data points"
+                    colorClass="text-emerald-500 bg-emerald-500/10"
                 />
                 <MetricCard 
-                    icon={<Zap className="size-5 text-amber-500" />}
+                    icon={<Zap className="size-4" />}
                     label="Total Waterings"
                     value={systemMetrics.totalWaterings}
                     subtext="Pump cycles"
+                    colorClass="text-amber-500 bg-amber-500/10"
                 />
                 <MetricCard 
-                    icon={<AlertTriangle className="size-5 text-red-500" />}
-                    label="Errors"
+                    icon={<AlertTriangle className="size-4" />}
+                    label="Errors Logged"
                     value={systemMetrics.errors.toString()}
                     subtext="Current session"
+                    colorClass="text-red-500 bg-red-500/10"
                 />
             </div>
 
             {/* Service Status */}
-            <Card className="shadow-none border border-slate-200 dark:border-slate-800">
+            <Card className="shadow-none border border-slate-200 dark:border-slate-800 bg-card rounded-2xl">
                 <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
-                        <Server className="size-4" /> Service Status
+                        <Server className="size-4 text-emerald-500" /> Service Status
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     {services.map((service, idx) => (
-                        <div key={idx} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                        <div key={idx} className="flex items-center justify-between py-2.5 border-b border-border last:border-0">
                             <div className="flex items-center gap-3">
-                                <div className={getStatusColor(service.status)}>
+                                <div className={`${getStatusColor(service.status)} p-2 rounded-lg bg-secondary/80`}>
                                     {service.icon}
                                 </div>
                                 <div>
@@ -248,7 +253,7 @@ export const SystemHealth: React.FC = () => {
                                 {service.status === 'online' && <CheckCircle2 className={`size-4 ${getStatusColor(service.status)}`} />}
                                 {service.status === 'offline' && <XCircle className={`size-4 ${getStatusColor(service.status)}`} />}
                                 {service.status === 'degraded' && <AlertTriangle className={`size-4 ${getStatusColor(service.status)}`} />}
-                                <Badge variant="outline" className={`text-[10px] font-black uppercase ${getStatusColor(service.status)} border-current`}>
+                                <Badge variant="outline" className={`text-[9px] font-black uppercase ${getStatusColor(service.status)} border-current`}>
                                     {service.status}
                                 </Badge>
                             </div>
@@ -258,10 +263,10 @@ export const SystemHealth: React.FC = () => {
             </Card>
 
             {/* Device Status */}
-            <Card className="shadow-none border border-slate-200 dark:border-slate-800">
+            <Card className="shadow-none border border-slate-200 dark:border-slate-800 bg-card rounded-2xl">
                 <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
-                        <Wifi className="size-4" /> Connected Devices
+                        <Wifi className="size-4 text-emerald-500" /> Connected Devices
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -275,18 +280,97 @@ export const SystemHealth: React.FC = () => {
                                 <p className="text-xs text-slate-500">Last seen: {deviceLastSeen}</p>
                             </div>
                         </div>
-                        <Badge variant="outline" className={`text-[10px] font-black uppercase ${deviceOnline ? 'text-emerald-500' : 'text-red-500'} border-current`}>
+                        <Badge variant="outline" className={`text-[9px] font-black uppercase ${deviceOnline ? 'text-emerald-500' : 'text-red-500'} border-current`}>
                             {deviceOnline ? 'ONLINE' : 'OFFLINE'}
                         </Badge>
                     </div>
                 </CardContent>
             </Card>
 
+            {/* ESP32 Blueprint Expandable Card */}
+            <Card className="shadow-none border border-slate-200 dark:border-slate-800 bg-card rounded-2xl overflow-hidden">
+                <CardHeader className="pb-2 cursor-pointer select-none hover:bg-secondary/45 transition-colors" onClick={() => setShowBlueprint(!showBlueprint)}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                            <Cpu className="size-4 text-indigo-500" />
+                            <CardTitle className="text-sm font-bold uppercase tracking-wider">ESP32 Pinout Blueprint</CardTitle>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Badge variant="outline" className={`text-[9px] font-black uppercase ${deviceOnline ? 'text-emerald-500' : 'text-red-500'} border-current`}>
+                                {deviceOnline ? 'Online' : 'Offline'}
+                            </Badge>
+                            {showBlueprint ? <ChevronUp className="size-4 text-slate-400" /> : <ChevronDown className="size-4 text-slate-400" />}
+                        </div>
+                    </div>
+                </CardHeader>
+                {showBlueprint && (
+                    <CardContent className="pt-4 border-t border-border bg-secondary/15 grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-2 duration-200">
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-secondary/35">
+                                <div className="flex items-center gap-3">
+                                    <div className="size-10 rounded-xl border-2 border-emerald-500 bg-emerald-500/10 flex items-center justify-center font-black text-xs text-emerald-500">
+                                        P34
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold">Soil Moisture</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase">Analog • ADC1_0</p>
+                                    </div>
+                                </div>
+                                <Badge variant="secondary" className="text-[10px] font-bold">ACTIVE</Badge>
+                            </div>
+
+                            <div className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-secondary/35">
+                                <div className="flex items-center gap-3">
+                                    <div className="size-10 rounded-xl border-2 border-indigo-500 bg-indigo-500/10 flex items-center justify-center font-black text-xs text-indigo-500">
+                                        P32
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold">DHT22 Sense</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase">Digital • Single Bus</p>
+                                    </div>
+                                </div>
+                                <Badge variant="secondary" className="text-[10px] font-bold">ACTIVE</Badge>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-secondary/35">
+                                <div className="flex items-center gap-3">
+                                    <div className={`size-10 rounded-xl border-2 transition-all flex items-center justify-center font-black text-xs ${pumping ? 'border-emerald-500 bg-emerald-500/20 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'border-slate-300 dark:border-slate-800 text-slate-400'}`}>
+                                        P27
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold">Pump Relay</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase">Digital • Output</p>
+                                    </div>
+                                </div>
+                                <Badge className={`text-[10px] font-black uppercase ${pumping ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
+                                    {pumping ? 'Pumping' : 'Idle'}
+                                </Badge>
+                            </div>
+
+                            <div className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-secondary/35">
+                                <div className="flex items-center gap-3">
+                                    <div className="size-10 rounded-xl border-2 border-indigo-500 bg-indigo-500/10 flex items-center justify-center font-black text-xs text-indigo-500">
+                                        P33
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold">Rain Node</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase">Analog/Digital</p>
+                                    </div>
+                                </div>
+                                <Badge variant="secondary" className="text-[10px] font-bold">ACTIVE</Badge>
+                            </div>
+                        </div>
+                    </CardContent>
+                )}
+            </Card>
+
             {/* System Info */}
-            <Card className="shadow-none border border-slate-200 dark:border-slate-800">
+            <Card className="shadow-none border border-slate-200 dark:border-slate-800 bg-card rounded-2xl">
                 <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
-                        <HardDrive className="size-4" /> System Information
+                        <HardDrive className="size-4 text-emerald-500" /> System Information
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -302,15 +386,19 @@ export const SystemHealth: React.FC = () => {
     );
 };
 
-const MetricCard: React.FC<{ icon: React.ReactNode; label: string; value: string; subtext: string }> = ({ icon, label, value, subtext }) => (
-    <Card className="shadow-none border border-slate-200 dark:border-slate-800">
-        <CardContent className="p-4">
-            <div className="flex items-center gap-3 mb-2">
-                {icon}
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</span>
+const MetricCard: React.FC<{ icon: React.ReactNode; label: string; value: string; subtext: string; colorClass: string }> = ({ icon, label, value, subtext, colorClass }) => (
+    <Card className="shadow-none border border-slate-200 dark:border-slate-800 bg-card rounded-2xl">
+        <CardContent className="p-5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl flex items-center justify-center ${colorClass}`}>
+                    {icon}
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest font-mono">{label}</span>
+                    <span className="text-xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">{value}</span>
+                    <span className="text-[9px] text-slate-400 dark:text-neutral-500 mt-0.5 leading-none">{subtext}</span>
+                </div>
             </div>
-            <p className="text-2xl font-black">{value}</p>
-            <p className="text-[10px] text-slate-400 mt-1">{subtext}</p>
         </CardContent>
     </Card>
 );

@@ -31,7 +31,7 @@ class TestEnvironmentalScenarios:
         # Mock midday in Summer
         with patch('models.ml_predictor.datetime') as mock_date:
             mock_date.now.return_value.hour = 14 # 2 PM
-            mock_date.now.return_value.month = 1
+            mock_date.now.return_value.month = 10 # Spring/Dry (no seasonal shift)
             mock_date.now.return_value.weekday.return_value = 0 # Mock weekday
             
             # High VPD conditions

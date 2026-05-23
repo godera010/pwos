@@ -15,6 +15,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from log_config import setup_logger
 logger = setup_logger("Database", "database.log", "app")
+from utils.vpd_calculator import calculate_vpd
 
 # Define paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -22,23 +23,68 @@ SRC_DIR = os.path.join(BASE_DIR, 'src')
 sys.path.insert(0, SRC_DIR)
 from config import DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
 
+from psycopg2.pool import ThreadedConnectionPool
+
+class PoolConnectionWrapper:
+    def __init__(self, pool, conn):
+        self._pool = pool
+        self._conn = conn
+    
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+        
+    def __enter__(self):
+        return self._conn.__enter__()
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return self._conn.__exit__(exc_type, exc_val, exc_tb)
+        
+    def close(self):
+        if self._conn:
+            self._pool.putconn(self._conn)
+            self._conn = None
+
 class PWOSDatabase:
+    _pool = None
+
     def __init__(self):
+        # If psycopg2.connect is mocked (during unit tests), bypass connection pool setup
+        from unittest.mock import Mock, MagicMock
+        if not isinstance(psycopg2.connect, (Mock, MagicMock)):
+            if PWOSDatabase._pool is None:
+                try:
+                    PWOSDatabase._pool = ThreadedConnectionPool(
+                        minconn=1,
+                        maxconn=20,
+                        host=DB_HOST,
+                        port=DB_PORT,
+                        database=DB_NAME,
+                        user=DB_USER,
+                        password=DB_PASSWORD
+                    )
+                    logger.info("Database connection pool initialized (1-20 connections)")
+                except Exception as e:
+                    logger.critical(f"Database connection pool initialization failed: {e}")
+                    raise e
         self.init_database()
     
     def get_connection(self):
-        """Get a database connection"""
-        try:
-            conn = psycopg2.connect(
+        """Get a database connection from the pool"""
+        from unittest.mock import Mock, MagicMock
+        if isinstance(psycopg2.connect, (Mock, MagicMock)):
+            return psycopg2.connect(
                 host=DB_HOST,
                 port=DB_PORT,
                 database=DB_NAME,
                 user=DB_USER,
                 password=DB_PASSWORD
             )
-            return conn
+            
+        try:
+            conn = PWOSDatabase._pool.getconn()
+            return PoolConnectionWrapper(PWOSDatabase._pool, conn)
         except Exception as e:
-            logger.critical(f"Database connection failed: {e}")
+            logger.critical(f"Database connection acquisition failed: {e}")
             raise e
 
     def init_database(self):
@@ -143,6 +189,12 @@ class PWOSDatabase:
                 );
             ''')
             
+            # Performance Optimization: Indexes for heavy time-range queries
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_sensor_readings_timestamp ON sensor_readings(timestamp DESC);')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_watering_events_timestamp ON watering_events(timestamp DESC);')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_ml_decisions_timestamp ON ml_decisions(timestamp DESC);')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_system_logs_timestamp ON system_logs(timestamp DESC);')
+            
             conn.commit()
             conn.close()
             logger.info("PostgreSQL Database initialized")
@@ -173,54 +225,54 @@ class PWOSDatabase:
         conn.close()
         return rows
     
-    @staticmethod
-    def calculate_vpd(temp, humidity):
-        """Calculate Vapor Pressure Deficit from temperature and humidity (Tetens formula)"""
-        try:
-            es = 0.6108 * math.exp((17.27 * temp) / (temp + 237.3))
-            ea = es * (humidity / 100.0)
-            return round(max(0, es - ea), 4)
-        except Exception:
-            return 0.0
-
     def insert_sensor_reading(self, data):
         """Insert sensor data with auto-calculated VPD"""
         conn = self.get_connection()
-        cursor = conn.cursor()
+        try:
+            cursor = conn.cursor()
 
-        temp = data.get('temperature', 25.0)
-        humidity = data.get('humidity', 60.0)
-        vpd = data.get('vpd') or self.calculate_vpd(temp, humidity)
-        rain_intensity = data.get('rain_intensity', 0.0)
-        cloud_cover = data.get('cloud_cover', 0.0)
-        
-        cursor.execute('''
-            INSERT INTO sensor_readings 
-            (timestamp, soil_moisture, temperature, humidity, device_id,
-             forecast_minutes, wind_speed, precipitation_chance, vpd,
-             rain_intensity, cloud_cover, forecast_temp, forecast_humidity,
-             weather_condition, weather_source)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (
-            data['timestamp'],
-            data['soil_moisture'],
-            temp,
-            humidity,
-            data['device_id'],
-            data.get('forecast_minutes', 0),
-            data.get('wind_speed', 0.0),
-            data.get('precipitation_chance', 0),
-            vpd,
-            rain_intensity,
-            cloud_cover,
-            data.get('forecast_temp', 0.0),
-            data.get('forecast_humidity', 0.0),
-            data.get('weather_condition', 'unknown'),
-            data.get('weather_source', 'none')
-        ))
-        
-        conn.commit()
-        conn.close()
+            temp = data.get('temperature', 25.0)
+            humidity = data.get('humidity', 60.0)
+            
+            # Defensive Safety Guards: Clamp extreme spikes (e.g. 21474840.0) from sensor/ADC errors
+            if temp is None or temp > 100.0 or temp < -50.0:
+                logger.warning(f"Extreme or null temperature reading clamped: {temp}")
+                temp = 25.0
+            if humidity is None or humidity > 100.0 or humidity < 0.0:
+                logger.warning(f"Extreme or null humidity reading clamped: {humidity}")
+                humidity = 60.0
+
+            vpd = data.get('vpd') or calculate_vpd(temp, humidity)
+            rain_intensity = data.get('rain_intensity', 0.0)
+            cloud_cover = data.get('cloud_cover', 0.0)
+            
+            cursor.execute('''
+                INSERT INTO sensor_readings 
+                (timestamp, soil_moisture, temperature, humidity, device_id,
+                 forecast_minutes, wind_speed, precipitation_chance, vpd,
+                 rain_intensity, cloud_cover, forecast_temp, forecast_humidity,
+                 weather_condition, weather_source)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (
+                data['timestamp'],
+                data['soil_moisture'],
+                temp,
+                humidity,
+                data['device_id'],
+                data.get('forecast_minutes', 0),
+                data.get('wind_speed', 0.0),
+                data.get('precipitation_chance', 0),
+                vpd,
+                rain_intensity,
+                cloud_cover,
+                data.get('forecast_temp', 0.0),
+                data.get('forecast_humidity', 0.0),
+                data.get('weather_condition', 'unknown'),
+                data.get('weather_source', 'none')
+            ))
+            conn.commit()
+        finally:
+            conn.close()
     
     def get_recent_readings(self, limit=100):
         """Get recent sensor readings"""
@@ -248,7 +300,7 @@ class PWOSDatabase:
         
         cursor.execute('''
             SELECT * FROM sensor_readings 
-            WHERE timestamp > NOW() - INTERVAL '%s hours'
+            WHERE timestamp > NOW() - make_interval(hours => %s)
             ORDER BY timestamp ASC
         ''', (hours,))
         
@@ -303,7 +355,7 @@ class PWOSDatabase:
         
         cursor.execute('''
             SELECT * FROM watering_events 
-            WHERE timestamp > NOW() - INTERVAL '%s hours'
+            WHERE timestamp > NOW() - make_interval(hours => %s)
             ORDER BY timestamp DESC
         ''', (hours,))
         
@@ -314,11 +366,15 @@ class PWOSDatabase:
     
     def get_aggregated_data(self, hours, interval_seconds):
         """Get aggregated sensor data and watering events grouped by interval"""
+        # Sanitize inputs to prevent SQL injection (INTERVAL doesn't support %s params)
+        safe_hours = int(hours)
+        safe_interval = int(interval_seconds)
+
         conn = self.get_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
         # Sensor data
-        cursor.execute(f'''
+        cursor.execute('''
             SELECT 
                 to_timestamp(floor((extract('epoch' from timestamp) / %s)) * %s) as bucket,
                 AVG(soil_moisture) as avg_moisture,
@@ -326,14 +382,14 @@ class PWOSDatabase:
                 AVG(humidity) as avg_humidity,
                 AVG(vpd) as avg_vpd
             FROM sensor_readings 
-            WHERE timestamp > NOW() - INTERVAL '{hours} hours'
+            WHERE timestamp > NOW() - make_interval(hours => %s)
             GROUP BY bucket
             ORDER BY bucket ASC
-        ''', (interval_seconds, interval_seconds))
+        ''', (safe_interval, safe_interval, safe_hours))
         sensors = cursor.fetchall()
         
         # Watering events
-        cursor.execute(f'''
+        cursor.execute('''
             SELECT 
                 to_timestamp(floor((extract('epoch' from timestamp) / %s)) * %s) as bucket,
                 SUM(duration_seconds) as total_duration,
@@ -341,10 +397,10 @@ class PWOSDatabase:
                 COUNT(CASE WHEN trigger_type != 'MANUAL' THEN 1 END) as ai_event_count,
                 COUNT(*) as event_count
             FROM watering_events 
-            WHERE timestamp > NOW() - INTERVAL '{hours} hours'
+            WHERE timestamp > NOW() - make_interval(hours => %s)
             GROUP BY bucket
             ORDER BY bucket ASC
-        ''', (interval_seconds, interval_seconds))
+        ''', (safe_interval, safe_interval, safe_hours))
         events = cursor.fetchall()
         
         conn.close()

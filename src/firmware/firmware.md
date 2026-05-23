@@ -19,7 +19,7 @@ firmware/
 
 ## Purpose
 
-This directory contains the C++ firmware that runs on the ESP32 microcontroller. It reads sensors (DHT22, soil moisture), publishes data to MQTT, and controls a relay-driven water pump.
+This directory contains the C++ firmware that runs on the ESP32 microcontroller. It reads sensors (DHT11, resistive soil moisture), publishes data to MQTT, and controls a relay-driven water pump.
 
 ## Technology
 
@@ -46,7 +46,7 @@ See [docs/hardware/hardware_setup.md](../../docs/hardware/guides/hardware_setup.
 | Pin | Component | Direction |
 |-----|-----------|-----------|
 | GPIO 34 | Soil Moisture (ADC) | Input |
-| GPIO 25 | DHT22 (Data) | Input |
+| GPIO 25 | DHT11 (Data) | Input |
 | GPIO 26 | Relay (Pump) | Output |
 | GPIO 2  | Status LED | Output |
 

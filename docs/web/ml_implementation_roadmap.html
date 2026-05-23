@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ml Implementation Roadmap - P-WOS Documentation Portal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#16a34a', 600: '#15803d', 700: '#166534' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css" id="hljs-dark-theme" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .theme-light ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+        .theme-dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .prose table { width: 100%; margin: 1.5rem 0; border-collapse: collapse; font-size: 0.875rem; }
+        .prose th { background-color: rgba(0,0,0,0.02); font-weight: 600; padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); text-align: left; }
+        .dark .prose th { background-color: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); }
+        .prose td { padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); }
+        .dark .prose td { border-color: rgba(255,255,255,0.08); }
+        .prose blockquote { border-left: 3px solid #16a34a; padding-left: 1rem; font-style: italic; color: #4b5563; }
+        .dark .prose blockquote { color: #9ca3af; }
+        .prose img { border-radius: 8px; margin: 1.5rem auto; max-width: 100%; }
+        .prose pre { border-radius: 10px; background: #f8fafc !important; border: 1px solid #e2e8f0; }
+        .dark .prose pre { background: #0f171a !important; border-color: #1e2a2e; }
+
+        .theme-dark { background-color: #0b0f11; color: #f1f5f9; }
+        .theme-dark .sidebar-bg { background-color: #101618; border-color: #1a2225; }
+        .theme-dark .content-card { background-color: #12191b; border-color: #1c272a; }
+
+        .sidebar-group-enter { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-in-out; }
+        .sidebar-group-enter.active { max-height: 500px; }
+    </style>
+</head>
+<body class="theme-light bg-slate-50 text-slate-800 transition-colors duration-200 antialiased font-sans h-screen overflow-hidden flex flex-col">
+
+    <div class="fixed top-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-900/50 z-50">
+        <div id="readingProgress" class="h-full bg-brand-500 w-0 transition-all duration-75"></div>
+    </div>
+
+    <header class="h-14 md:h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/85 dark:bg-[#101618]/85 backdrop-blur-md flex items-center justify-between px-4 md:px-6 z-40 shrink-0">
+        <div class="flex items-center space-x-3">
+            <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-500">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                <div class="p-1.5 bg-gradient-to-tr from-emerald-500 to-green-600 rounded-lg text-white">
+                    <i data-lucide="droplet" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <span class="font-bold text-sm md:text-base tracking-tight text-slate-900 dark:text-white">P-WOS Docs</span>
+                    <span class="hidden md:inline-block ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 font-medium">Predictive Water Optimization</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300" title="Toggle Light/Dark Mode">
+                <i data-lucide="sun" id="themeIcon" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Theme</span>
+            </button>
+            <button onclick="window.print()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Print to PDF">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Export PDF</span>
+            </button>
+            <a href="index.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Home</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="navSidebar" class="w-64 border-r border-slate-200 dark:border-slate-800/80 overflow-y-auto shrink-0 bg-white dark:bg-[#101618] hidden lg:block z-30">
+            <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text" id="docSearch" placeholder="Search documentation..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                </div>
+            </div>
+            <div class="p-3 space-y-1" id="sidebarGroups"></div>
+        </aside>
+
+        <aside id="mobileSidebar" class="fixed inset-0 z-40 lg:hidden hidden">
+            <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" id="navOverlay"></div>
+            <div class="relative w-72 max-w-[85vw] h-full bg-white dark:bg-[#101618] shadow-2xl overflow-y-auto transform transition-transform duration-300 -translate-x-full">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">Navigation</span>
+                    <button id="closeMobileNav" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-400">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="mobileDocSearch" placeholder="Search..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                    </div>
+                </div>
+                <div class="p-3 space-y-1" id="mobileSidebarGroups"></div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto min-w-0">
+            <div class="px-4 md:px-8 py-6 md:py-10">
+                <div class="flex gap-6 lg:gap-10">
+                    <div class="flex-1 min-w-0 max-w-4xl">
+                        <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                            <span id="breadcrumbCategory">Core Guides</span>
+                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">ml_implementation_roadmap.md</span>
+                        </div>
+
+                        <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
+                            <div class="absolute top-6 right-6 flex items-center space-x-2 print:hidden">
+                                <button id="copyDocBtn" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Copy content">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <div id="markdownOutput" class="prose max-w-none dark:prose-invert
+                                prose-headings:font-bold prose-headings:tracking-tight
+                                prose-h1:text-3xl prose-h1:mb-6 prose-h1:text-slate-900 dark:prose-h1:text-white
+                                prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:text-slate-900 dark:prose-h2:text-white
+                                prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-slate-800 dark:prose-h3:text-slate-200
+                                prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
+                                prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                                prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
+                                <h1>P-WOS ML Implementation Roadmap</h1>
+<h2>Phase 5-9: From Synthetic Data to Production ML Model</h2>
+<p><strong>Current Status:</strong> Phase 4 Complete ✅<br />
+<strong>Data Available:</strong> 10,823 sensor readings (90 days synthetic)<br />
+<strong>Next Goal:</strong> Train and deploy Random Forest model  </p>
+<hr />
+<h2>🎯 OVERVIEW</h2>
+<p>You're in an excellent position! You have:<br />
+- ✅ Working simulation with realistic physics<br />
+- ✅ 10,823 data points with 42 watering events<br />
+- ✅ Complete data pipeline (MQTT → DB → API)<br />
+- ✅ Weather integration affecting sensor behavior</p>
+<p><strong>What's Next:</strong> Train an ML model to predict "Hours until watering needed" instead of simple threshold rules.</p>
+<hr />
+<h2>📊 YOUR DATA ANALYSIS (From phase_report_01.md)</h2>
+<h3>Available Features:</h3>
+<ul>
+<li><strong>soil_moisture</strong>: 0-100% (your target predictor)</li>
+<li><strong>temperature</strong>: Diurnal cycle (peaks 2 PM, drops 2 AM)</li>
+<li><strong>humidity</strong>: Inversely related to temperature</li>
+<li><strong>timestamp</strong>: Enables time-based features (hour, day_of_week)</li>
+<li><strong>weather_condition</strong>: Sun/Rain/Clouds (affects evaporation)</li>
+</ul>
+<h3>Key Patterns Identified:</h3>
+<ol>
+<li><strong>Time-to-Empty Curve</strong>: 3-5 days from 60% → 30% without rain</li>
+<li><strong>Rain Resets</strong>: Rain events reset the moisture decay clock</li>
+<li><strong>Temperature Effect</strong>: Faster decay 10 AM - 4 PM</li>
+<li><strong>42 Watering Events</strong>: Triggered at &lt;30% moisture threshold</li>
+</ol>
+<hr />
+<h2>🚀 IMPLEMENTATION PHASES</h2>
+<h3>PHASE 5: DATA PREPARATION (2-3 hours)</h3>
+<h4>Task 9.1: Create Data Collector</h4>
+<p><strong>File:</strong> <code>src/backend/models/data_collector.py</code></p>
+<pre><code class="language-python">import sqlite3
+import pandas as pd
+from datetime import datetime, timedelta
+
+class DataCollector:
+    &quot;&quot;&quot;Prepare P-WOS simulation data for ML training.&quot;&quot;&quot;
+
+    def __init__(self, db_path='pwos_simulation.db'):
+        self.db_path = db_path
+
+    def load_sensor_data(self):
+        &quot;&quot;&quot;Load all sensor readings from database.&quot;&quot;&quot;
+        conn = sqlite3.connect(self.db_path)
+
+        query = &quot;&quot;&quot;
+        SELECT 
+            timestamp,
+            soil_moisture,
+            temperature,
+            humidity
+        FROM sensor_readings
+        ORDER BY timestamp ASC
+        &quot;&quot;&quot;
+
+        df = pd.read_sql_query(query, conn)
+        conn.close()
+
+        # Convert timestamp to datetime
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+        return df
+
+    def load_watering_events(self):
+        &quot;&quot;&quot;Load watering events.&quot;&quot;&quot;
+        conn = sqlite3.connect(self.db_path)
+
+        query = &quot;&quot;&quot;
+        SELECT 
+            timestamp,
+            moisture_before
+        FROM watering_events
+        ORDER BY timestamp ASC
+        &quot;&quot;&quot;
+
+        df = pd.read_sql_query(query, conn)
+        conn.close()
+
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+        return df
+
+    def create_training_labels(self, sensor_df, watering_df, 
+                               prediction_window_hours=24):
+        &quot;&quot;&quot;
+        Create labels: &quot;Will need watering in next X hours?&quot;
+
+        Args:
+            sensor_df: DataFrame with sensor readings
+            watering_df: DataFrame with watering events
+            prediction_window_hours: How far ahead to predict (default 24h)
+
+        Returns:
+            DataFrame with 'needs_watering_soon' label
+        &quot;&quot;&quot;
+        sensor_df = sensor_df.copy()
+        sensor_df['needs_watering_soon'] = 0
+
+        for idx, sensor_row in sensor_df.iterrows():
+            sensor_time = sensor_row['timestamp']
+
+            # Check if watering happened within next X hours
+            future_waterings = watering_df[
+                (watering_df['timestamp'] &gt; sensor_time) &amp;
+                (watering_df['timestamp'] &lt;= sensor_time + timedelta(hours=prediction_window_hours))
+            ]
+
+            if len(future_waterings) &gt; 0:
+                sensor_df.at[idx, 'needs_watering_soon'] = 1
+
+        return sensor_df
+
+    def add_time_features(self, df):
+        &quot;&quot;&quot;Add time-based features.&quot;&quot;&quot;
+        df['hour'] = df['timestamp'].dt.hour
+        df['day_of_week'] = df['timestamp'].dt.dayofweek
+        df['is_daytime'] = ((df['hour'] &gt;= 6) &amp; (df['hour'] &lt;= 18)).astype(int)
+        df['is_hot_hours'] = ((df['hour'] &gt;= 10) &amp; (df['hour'] &lt;= 16)).astype(int)
+
+        return df
+
+    def add_derivative_features(self, df):
+        &quot;&quot;&quot;Add rate of change features.&quot;&quot;&quot;
+        df = df.sort_values('timestamp').reset_index(drop=True)
+
+        # Moisture change rate (% per hour)
+        df['moisture_change_1h'] = df['soil_moisture'].diff() / \
+                                    df['timestamp'].diff().dt.total_seconds() * 3600
+
+        # Rolling averages (last 6 readings = ~1.5 hours at 15min intervals)
+        df['moisture_rolling_mean'] = df['soil_moisture'].rolling(window=6, min_periods=1).mean()
+        df['temp_rolling_mean'] = df['temperature'].rolling(window=6, min_periods=1).mean()
+
+        # Fill NaN values
+        df['moisture_change_1h'].fillna(0, inplace=True)
+
+        return df
+
+    def export_training_data(self, output_file='training_data.csv', 
+                            prediction_window_hours=24):
+        &quot;&quot;&quot;
+        Export complete dataset for ML training.
+
+        Args:
+            output_file: CSV filename
+            prediction_window_hours: Prediction horizon
+
+        Returns:
+            DataFrame ready for ML training
+        &quot;&quot;&quot;
+        print(&quot;📥 Loading sensor data...&quot;)
+        sensor_df = self.load_sensor_data()
+        print(f&quot;   Loaded {len(sensor_df)} sensor readings&quot;)
+
+        print(&quot;💧 Loading watering events...&quot;)
+        watering_df = self.load_watering_events()
+        print(f&quot;   Loaded {len(watering_df)} watering events&quot;)
+
+        print(&quot;🏷️  Creating labels...&quot;)
+        df = self.create_training_labels(sensor_df, watering_df, 
+                                         prediction_window_hours)
+
+        print(&quot;⏰ Adding time features...&quot;)
+        df = self.add_time_features(df)
+
+        print(&quot;📈 Adding derivative features...&quot;)
+        df = self.add_derivative_features(df)
+
+        # Select features for training
+        feature_columns = [
+            'soil_moisture',
+            'temperature',
+            'humidity',
+            'hour',
+            'day_of_week',
+            'is_daytime',
+            'is_hot_hours',
+            'moisture_change_1h',
+            'moisture_rolling_mean',
+            'temp_rolling_mean',
+            'needs_watering_soon'  # Label
+        ]
+
+        training_df = df[feature_columns].copy()
+
+        # Remove any rows with NaN
+        training_df = training_df.dropna()
+
+        # Save to CSV
+        training_df.to_csv(output_file, index=False)
+
+        # Print statistics
+        print(f&quot;\n✅ Training dataset saved: {output_file}&quot;)
+        print(f&quot;📊 Total samples: {len(training_df)}&quot;)
+        print(f&quot;💧 Positive samples (needs watering): {training_df['needs_watering_soon'].sum()}&quot;)
+        print(f&quot;✓ Negative samples (no watering): {len(training_df) - training_df['needs_watering_soon'].sum()}&quot;)
+        print(f&quot;\nClass balance: {training_df['needs_watering_soon'].mean():.1%} positive&quot;)
+
+        # Feature correlation with label
+        print(&quot;\n🔍 Feature correlation with 'needs_watering_soon':&quot;)
+        correlations = training_df.corr()['needs_watering_soon'].sort_values(ascending=False)
+        for feature, corr in correlations.items():
+            if feature != 'needs_watering_soon':
+                print(f&quot;   {feature:25s}: {corr:+.3f}&quot;)
+
+        return training_df
+
+
+# Usage
+if __name__ == &quot;__main__&quot;:
+    collector = DataCollector('pwos_simulation.db')
+    df = collector.export_training_data(prediction_window_hours=24)
+
+    print(&quot;\n📋 First few rows:&quot;)
+    print(df.head(10))
+</code></pre>
+<p><strong>Run this:</strong></p>
+<pre><code class="language-bash">cd src/backend/models
+python data_collector.py
+</code></pre>
+<p><strong>Expected Output:</strong></p>
+<pre><code>📥 Loading sensor data...
+   Loaded 10823 sensor readings
+💧 Loading watering events...
+   Loaded 42 watering events
+🏷️  Creating labels...
+⏰ Adding time features...
+📈 Adding derivative features...
+
+✅ Training dataset saved: training_data.csv
+📊 Total samples: 10823
+💧 Positive samples (needs watering): 1245
+✓ Negative samples (no watering): 9578
+
+Class balance: 11.5% positive
+
+🔍 Feature correlation with 'needs_watering_soon':
+   soil_moisture            : -0.892  ← Strong predictor!
+   moisture_rolling_mean    : -0.885
+   moisture_change_1h       : +0.234
+   ...
+</code></pre>
+<hr />
+<h3>PHASE 6: MODEL TRAINING (1-2 hours)</h3>
+<h4>Task 9.3: Create Training Script</h4>
+<p><strong>File:</strong> <code>src/backend/models/train_model.py</code></p>
+<pre><code class="language-python">import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import (classification_report, confusion_matrix, 
+                             accuracy_score, precision_score, recall_score, f1_score)
+import joblib
+import json
+from datetime import datetime
+
+class MLModelTrainer:
+    &quot;&quot;&quot;Train Random Forest model for P-WOS watering predictions.&quot;&quot;&quot;
+
+    def __init__(self, data_path='training_data.csv'):
+        self.data_path = data_path
+        self.model = None
+        self.feature_names = None
+        self.label_name = 'needs_watering_soon'
+
+    def load_data(self):
+        &quot;&quot;&quot;Load training data.&quot;&quot;&quot;
+        print(&quot;📚 Loading training data...&quot;)
+        df = pd.read_csv(self.data_path)
+
+        # Separate features and labels
+        X = df.drop(self.label_name, axis=1)
+        y = df[self.label_name]
+
+        self.feature_names = list(X.columns)
+
+        print(f&quot;   Features: {len(self.feature_names)}&quot;)
+        print(f&quot;   Samples: {len(X)}&quot;)
+        print(f&quot;   Positive class: {y.sum()} ({y.mean():.1%})&quot;)
+
+        return X, y
+
+    def train(self, test_size=0.2, random_state=42):
+        &quot;&quot;&quot;Train Random Forest classifier.&quot;&quot;&quot;
+
+        X, y = self.load_data()
+
+        # Split data
+        print(f&quot;\n🔪 Splitting data (train={1-test_size:.0%}, test={test_size:.0%})...&quot;)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=test_size, random_state=random_state, 
+            stratify=y  # Maintain class balance
+        )
+
+        print(f&quot;   Training set: {len(X_train)} samples&quot;)
+        print(f&quot;   Test set: {len(X_test)} samples&quot;)
+
+        # Train Random Forest
+        print(&quot;\n🌲 Training Random Forest...&quot;)
+        self.model = RandomForestClassifier(
+            n_estimators=100,          # Number of trees
+            max_depth=15,              # Prevent overfitting
+            min_samples_split=10,      # Minimum samples to split node
+            min_samples_leaf=5,        # Minimum samples in leaf
+            random_state=random_state,
+            class_weight='balanced',   # Handle class imbalance
+            n_jobs=-1                  # Use all CPU cores
+        )
+
+        self.model.fit(X_train, y_train)
+        print(&quot;   ✅ Training complete!&quot;)
+
+        # Evaluate on training set
+        print(&quot;\n📊 Training Set Performance:&quot;)
+        y_train_pred = self.model.predict(X_train)
+        train_acc = accuracy_score(y_train, y_train_pred)
+        print(f&quot;   Accuracy: {train_acc:.2%}&quot;)
+
+        # Evaluate on test set
+        print(&quot;\n📊 Test Set Performance:&quot;)
+        y_test_pred = self.model.predict(X_test)
+
+        test_acc = accuracy_score(y_test, y_test_pred)
+        test_prec = precision_score(y_test, y_test_pred)
+        test_rec = recall_score(y_test, y_test_pred)
+        test_f1 = f1_score(y_test, y_test_pred)
+
+        print(f&quot;   Accuracy:  {test_acc:.2%}&quot;)
+        print(f&quot;   Precision: {test_prec:.2%}&quot;)
+        print(f&quot;   Recall:    {test_rec:.2%}&quot;)
+        print(f&quot;   F1 Score:  {test_f1:.2%}&quot;)
+
+        # Detailed classification report
+        print(&quot;\n📋 Classification Report:&quot;)
+        print(classification_report(y_test, y_test_pred, 
+                                   target_names=['No Water', 'Water Soon']))
+
+        # Confusion matrix
+        print(&quot;\n🔲 Confusion Matrix:&quot;)
+        cm = confusion_matrix(y_test, y_test_pred)
+        print(f&quot;   True Negatives:  {cm[0,0]:4d}  (Correctly predicted no watering needed)&quot;)
+        print(f&quot;   False Positives: {cm[0,1]:4d}  (False alarms)&quot;)
+        print(f&quot;   False Negatives: {cm[1,0]:4d}  (Missed watering needs)&quot;)
+        print(f&quot;   True Positives:  {cm[1,1]:4d}  (Correctly predicted watering needed)&quot;)
+
+        # Feature importance
+        print(&quot;\n🔍 Feature Importance:&quot;)
+        importance_df = pd.DataFrame({
+            'feature': self.feature_names,
+            'importance': self.model.feature_importances_
+        }).sort_values('importance', ascending=False)
+
+        for idx, row in importance_df.iterrows():
+            print(f&quot;   {row['feature']:25s}: {row['importance']:.3f}&quot;)
+
+        # Cross-validation
+        print(&quot;\n🔄 Cross-Validation (5-fold):&quot;)
+        cv_scores = cross_val_score(self.model, X, y, cv=5, scoring='f1')
+        print(f&quot;   F1 Scores: {cv_scores}&quot;)
+        print(f&quot;   Mean: {cv_scores.mean():.2%} (+/- {cv_scores.std() * 2:.2%})&quot;)
+
+        return {
+            'train_accuracy': train_acc,
+            'test_accuracy': test_acc,
+            'test_precision': test_prec,
+            'test_recall': test_rec,
+            'test_f1': test_f1,
+            'feature_importance': importance_df.to_dict('records'),
+            'cv_scores': cv_scores.tolist()
+        }
+
+    def save_model(self, model_path='trained_model.pkl', 
+                   metadata_path='model_metadata.json'):
+        &quot;&quot;&quot;Save trained model and metadata.&quot;&quot;&quot;
+
+        if self.model is None:
+            raise ValueError(&quot;No model to save. Train first!&quot;)
+
+        # Save model
+        joblib.dump(self.model, model_path)
+        print(f&quot;\n✅ Model saved: {model_path}&quot;)
+
+        # Save metadata
+        metadata = {
+            'model_type': 'RandomForestClassifier',
+            'n_estimators': self.model.n_estimators,
+            'max_depth': self.model.max_depth,
+            'feature_names': self.feature_names,
+            'label_name': self.label_name,
+            'trained_date': datetime.now().isoformat(),
+            'training_samples': len(pd.read_csv(self.data_path))
+        }
+
+        with open(metadata_path, 'w') as f:
+            json.dump(metadata, f, indent=2)
+
+        print(f&quot;✅ Metadata saved: {metadata_path}&quot;)
+
+
+# Usage
+if __name__ == &quot;__main__&quot;:
+    trainer = MLModelTrainer('training_data.csv')
+
+    # Train
+    results = trainer.train(test_size=0.2)
+
+    # Save
+    trainer.save_model()
+
+    print(&quot;\n&quot; + &quot;=&quot;*60)
+    print(&quot;🎉 MODEL TRAINING COMPLETE!&quot;)
+    print(&quot;=&quot;*60)
+    print(f&quot;Test Accuracy: {results['test_accuracy']:.2%}&quot;)
+    print(f&quot;Test F1 Score: {results['test_f1']:.2%}&quot;)
+    print(&quot;\nNext step: Deploy model to API (ml_predictor.py)&quot;)
+</code></pre>
+<p><strong>Run this:</strong></p>
+<pre><code class="language-bash">python train_model.py
+</code></pre>
+<hr />
+<h3>PHASE 7: MODEL DEPLOYMENT (1 hour)</h3>
+<h4>Task 10.1: Create ML Predictor</h4>
+<p><strong>File:</strong> <code>src/backend/models/ml_predictor.py</code></p>
+<pre><code class="language-python">import joblib
+import numpy as np
+import json
+from datetime import datetime
+
+class MLPredictor:
+    &quot;&quot;&quot;Production ML predictor for P-WOS.&quot;&quot;&quot;
+
+    def __init__(self, model_path='trained_model.pkl', 
+                 metadata_path='model_metadata.json'):
+        # Load model
+        self.model = joblib.load(model_path)
+
+        # Load metadata
+        with open(metadata_path, 'r') as f:
+            self.metadata = json.load(f)
+
+        self.feature_names = self.metadata['feature_names']
+
+        print(f&quot;✅ ML Model loaded&quot;)
+        print(f&quot;   Trained: {self.metadata['trained_date']}&quot;)
+        print(f&quot;   Features: {len(self.feature_names)}&quot;)
+
+    def prepare_features(self, sensor_data, historical_moisture=None):
+        &quot;&quot;&quot;
+        Prepare features for prediction.
+
+        Args:
+            sensor_data: Latest sensor reading dict
+            historical_moisture: List of recent moisture readings for rolling avg
+
+        Returns:
+            Feature array ready for model
+        &quot;&quot;&quot;
+        # Time features
+        timestamp = datetime.fromisoformat(sensor_data['timestamp'])
+        hour = timestamp.hour
+        day_of_week = timestamp.weekday()
+        is_daytime = 1 if 6 &lt;= hour &lt;= 18 else 0
+        is_hot_hours = 1 if 10 &lt;= hour &lt;= 16 else 0
+
+        # Current readings
+        moisture = sensor_data['soil_moisture']
+        temp = sensor_data['temperature']
+        humidity = sensor_data['humidity']
+
+        # Derivative features (approximations if no history)
+        if historical_moisture and len(historical_moisture) &gt;= 2:
+            moisture_change = (moisture - historical_moisture[-2]) # Per reading interval
+        else:
+            moisture_change = 0
+
+        if historical_moisture and len(historical_moisture) &gt;= 6:
+            moisture_rolling = np.mean(historical_moisture[-6:])
+            # Use last 6 temp readings if available (simplified - use current for now)
+            temp_rolling = temp
+        else:
+            moisture_rolling = moisture
+            temp_rolling = temp
+
+        # Features in same order as training
+        features = [
+            moisture,
+            temp,
+            humidity,
+            hour,
+            day_of_week,
+            is_daytime,
+            is_hot_hours,
+            moisture_change,
+            moisture_rolling,
+            temp_rolling
+        ]
+
+        return np.array([features])
+
+    def predict(self, sensor_data, historical_moisture=None):
+        &quot;&quot;&quot;
+        Predict if watering will be needed soon.
+
+        Returns:
+            dict with prediction, confidence, reasoning
+        &quot;&quot;&quot;
+        # Prepare features
+        X = self.prepare_features(sensor_data, historical_moisture)
+
+        # Get prediction
+        prediction = self.model.predict(X)[0]
+        probabilities = self.model.predict_proba(X)[0]
+
+        # Confidence is probability of predicted class
+        confidence = probabilities[prediction]
+
+        # Generate reasoning
+        moisture = sensor_data['soil_moisture']
+
+        if prediction == 1:  # Needs watering soon
+            reasoning = f&quot;ML model predicts watering needed within 24h. &quot;
+            reasoning += f&quot;Current moisture: {moisture:.1f}%. &quot;
+            reasoning += f&quot;Confidence: {confidence:.0%}&quot;
+        else:  # No watering needed
+            reasoning = f&quot;ML model predicts no watering needed within 24h. &quot;
+            reasoning += f&quot;Current moisture: {moisture:.1f}%. &quot;
+            reasoning += f&quot;Confidence: {confidence:.0%}&quot;
+
+        return {
+            'needs_watering_soon': bool(prediction),
+            'confidence': float(confidence),
+            'reasoning': reasoning,
+            'probabilities': {
+                'no_water': float(probabilities[0]),
+                'water_soon': float(probabilities[1])
+            },
+            'model_version': self.metadata['trained_date']
+        }
+
+
+# Test the predictor
+if __name__ == &quot;__main__&quot;:
+    predictor = MLPredictor()
+
+    # Test case 1: Low moisture
+    sensor = {
+        'soil_moisture': 32.0,
+        'temperature': 27.5,
+        'humidity': 45.0,
+        'timestamp': '2026-02-07T14:00:00'
+    }
+
+    result = predictor.predict(sensor)
+    print(&quot;\nTest 1 (Low moisture at 2 PM):&quot;)
+    print(f&quot;  Needs water: {result['needs_watering_soon']}&quot;)
+    print(f&quot;  Confidence: {result['confidence']:.0%}&quot;)
+    print(f&quot;  {result['reasoning']}&quot;)
+
+    # Test case 2: High moisture
+    sensor['soil_moisture'] = 65.0
+    result = predictor.predict(sensor)
+    print(&quot;\nTest 2 (High moisture):&quot;)
+    print(f&quot;  Needs water: {result['needs_watering_soon']}&quot;)
+    print(f&quot;  Confidence: {result['confidence']:.0%}&quot;)
+</code></pre>
+<hr />
+<h4>Task 10.2: Update API</h4>
+<p><strong>File:</strong> <code>src/backend/app.py</code> (modify prediction endpoint)</p>
+<pre><code class="language-python"># Add at top of app.py
+try:
+    from models.ml_predictor import MLPredictor
+    ml_predictor = MLPredictor('models/trained_model.pkl', 'models/model_metadata.json')
+    print(&quot;✅ ML Model loaded successfully&quot;)
+    USE_ML_MODEL = True
+except Exception as e:
+    print(f&quot;⚠️  ML Model not available: {e}&quot;)
+    print(&quot;   Using rule-based fallback&quot;)
+    USE_ML_MODEL = False
+
+# Update /api/predict-next-watering endpoint
+@app.route('/api/predict-next-watering', methods=['GET'])
+def predict_next_watering():
+    &quot;&quot;&quot;Predict if watering is needed (ML or rule-based).&quot;&quot;&quot;
+
+    # Get latest sensor data
+    latest = get_latest_reading()
+    if not latest:
+        return jsonify({&quot;error&quot;: &quot;No sensor data&quot;}), 404
+
+    if USE_ML_MODEL:
+        # Use ML predictor
+        # Get historical moisture for rolling average
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(&quot;&quot;&quot;
+            SELECT soil_moisture FROM sensor_readings 
+            ORDER BY timestamp DESC LIMIT 10
+        &quot;&quot;&quot;)
+        hist_moisture = [row[0] for row in cursor.fetchall()]
+        conn.close()
+
+        prediction = ml_predictor.predict(latest, hist_moisture)
+
+        return jsonify({
+            &quot;needs_water&quot;: prediction['needs_watering_soon'],
+            &quot;confidence&quot;: prediction['confidence'],
+            &quot;current_moisture&quot;: latest['soil_moisture'],
+            &quot;recommendation&quot;: &quot;Water soon&quot; if prediction['needs_watering_soon'] else &quot;No action needed&quot;,
+            &quot;note&quot;: prediction['reasoning'],
+            &quot;model_type&quot;: &quot;ML (Random Forest)&quot;,
+            &quot;probabilities&quot;: prediction['probabilities']
+        })
+
+    else:
+        # Fallback to rule-based
+        moisture = latest['soil_moisture']
+        needs_water = moisture &lt; 40
+        confidence = 0.7 if needs_water else 0.8
+
+        return jsonify({
+            &quot;needs_water&quot;: needs_water,
+            &quot;confidence&quot;: confidence,
+            &quot;current_moisture&quot;: moisture,
+            &quot;recommendation&quot;: &quot;Water now&quot; if needs_water else &quot;No action needed&quot;,
+            &quot;note&quot;: &quot;Using simple threshold logic (ML model not available)&quot;,
+            &quot;model_type&quot;: &quot;Rule-based&quot;
+        })
+</code></pre>
+<hr />
+<h3>PHASE 8: TESTING (30 minutes)</h3>
+<h4>Test ML Predictions</h4>
+<pre><code class="language-bash"># Start your API
+python src/backend/app.py
+
+# In another terminal, test predictions
+curl http://localhost:5000/api/predict-next-watering
+
+# Expected response:
+{
+  &quot;needs_water&quot;: false,
+  &quot;confidence&quot;: 0.94,
+  &quot;current_moisture&quot;: 55.2,
+  &quot;recommendation&quot;: &quot;No action needed&quot;,
+  &quot;note&quot;: &quot;ML model predicts no watering needed within 24h. Current moisture: 55.2%. Confidence: 94%&quot;,
+  &quot;model_type&quot;: &quot;ML (Random Forest)&quot;,
+  &quot;probabilities&quot;: {
+    &quot;no_water&quot;: 0.94,
+    &quot;water_soon&quot;: 0.06
+  }
+}
+</code></pre>
+<hr />
+<h2>📈 EXPECTED RESULTS</h2>
+<p>Based on your data characteristics:</p>
+<h3>Model Performance Targets:</h3>
+<ul>
+<li><strong>Accuracy:</strong> 85-92% (soil_moisture has -0.892 correlation!)</li>
+<li><strong>Precision:</strong> 75-85% (minimize false alarms)</li>
+<li><strong>Recall:</strong> 90-95% (don't miss watering needs)</li>
+<li><strong>F1 Score:</strong> 80-90%</li>
+</ul>
+<h3>Most Important Features (Predicted):</h3>
+<ol>
+<li><code>soil_moisture</code> - Primary indicator</li>
+<li><code>moisture_rolling_mean</code> - Trend confirmation</li>
+<li><code>moisture_change_1h</code> - Rate of decline</li>
+<li><code>is_hot_hours</code> - Evaporation context</li>
+<li><code>hour</code> - Time of day pattern</li>
+</ol>
+<hr />
+<h2>✅ COMPLETION CHECKLIST</h2>
+<ul>
+<li>[ ] Run <code>data_collector.py</code> → Get <code>training_data.csv</code></li>
+<li>[ ] Run <code>train_model.py</code> → Get <code>trained_model.pkl</code></li>
+<li>[ ] Test <code>ml_predictor.py</code> standalone</li>
+<li>[ ] Update <code>app.py</code> with ML integration</li>
+<li>[ ] Restart API and test predictions</li>
+<li>[ ] Compare ML vs rule-based decisions</li>
+<li>[ ] Document model performance in final report</li>
+</ul>
+<hr />
+<h2>🎯 NEXT STEPS AFTER ML DEPLOYMENT</h2>
+<ol>
+<li><strong>A/B Testing:</strong> Run ML for 1 week, log water usage</li>
+<li><strong>Model Monitoring:</strong> Track prediction accuracy over time</li>
+<li><strong>Retraining:</strong> Add new data monthly, retrain model</li>
+<li><strong>Feature Engineering:</strong> Try adding weather forecast if available</li>
+<li><strong>Hyperparameter Tuning:</strong> Optimize n_estimators, max_depth</li>
+</ol>
+<hr />
+<p><strong>You're ready to build a production ML model! Your synthetic data is perfect for this. Start with Phase 5 (data_collector.py) and work through systematically.</strong> 🚀</p>
+                            </div>
+                        </article>
+
+                        <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
+                            <a href="index.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Back to Index</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <aside class="hidden lg:block w-56 shrink-0 border-l border-slate-200 dark:border-slate-800/80 pl-6">
+                        <div class="sticky top-0">
+                            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5 mb-4">
+                                <i data-lucide="list-ordered" class="w-3.5 h-3.5 text-emerald-500"></i> On This Page
+                            </h4>
+                            <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                            <a href="index.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                                <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                                <span>Back to Home</span>
+                            </a>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const docs = [{"category": "Getting Started", "icon": "rocket", "pages": [{"title": "Project Overview", "file": "PROJECT_OVERVIEW.html"}, {"title": "Quickstart Guide", "file": "QUICKSTART.html"}, {"title": "Project Roadmap", "file": "PROJECT_ROADMAP.html"}]}, {"category": "System Architecture", "icon": "cpu", "pages": [{"title": "System Overview", "file": "system_overview.html"}, {"title": "Dataflow", "file": "dataflow.html"}, {"title": "Analytics Reference", "file": "analytics_reference.html"}, {"title": "Crop Profiles", "file": "crop_profiles.html"}, {"title": "Edge Cases & Scenarios", "file": "edge_cases_and_scenarios.html"}, {"title": "ML Model Deep Dive", "file": "ml_model_deep_dive.html"}, {"title": "VPD & Weather Engine", "file": "vpd_and_weather_engine.html"}]}, {"category": "Core Guides", "icon": "book-open", "pages": [{"title": "Installation Guide", "file": "installation_guide.html"}, {"title": "Backend API", "file": "backend_guide.html"}, {"title": "Database Guide", "file": "database_guide.html"}, {"title": "Firmware Guide", "file": "firmware_guide.html"}, {"title": "Simulation Guide", "file": "simulation_guide.html"}, {"title": "ML Model Guide", "file": "ml_model_guide.html"}, {"title": "Performance Guide", "file": "performance_guide.html"}, {"title": "Troubleshooting", "file": "troubleshooting.html"}, {"title": "Tests Reference", "file": "tests.html"}, {"title": "Analytics Dashboard", "file": "analytics_dashboard.html"}, {"title": "Main Dashboard", "file": "main_dashboard.html"}, {"title": "Mobile Guide", "file": "mobile_guide.html"}]}, {"category": "Hardware Engineering", "icon": "circuit-board", "pages": [{"title": "Hardware Architecture", "file": "hardware_architecture.html"}, {"title": "Breadboard Assembly", "file": "breadboard_assembly.html"}, {"title": "Breadboard Guide", "file": "breadboard.html"}, {"title": "Hardware Setup", "file": "hardware_setup.html"}, {"title": "Shopping List", "file": "hardware_shopping_list.html"}, {"title": "Migration Plan", "file": "hardware_migration_plan.html"}, {"title": "Testing Report", "file": "testing_report.html"}, {"title": "Hardware Progress", "file": "hardware_progress.html"}, {"title": "Phase 1 Report", "file": "phase1_report.html"}]}, {"category": "Scientific Research", "icon": "microscope", "pages": [{"title": "Codebase Analysis", "file": "codebase_analysis.html"}, {"title": "Codebase Audit", "file": "codebase_audit.html"}, {"title": "Crop Integration Plan", "file": "crop_integration_plan.html"}]}, {"category": "Technical Reference", "icon": "code", "pages": [{"title": "API Reference", "file": "api_reference.html"}, {"title": "MQTT Topics", "file": "mqtt_topics.html"}, {"title": "Coding Guidelines", "file": "coding_guidelines.html"}, {"title": "Project Structure", "file": "project_structure.html"}, {"title": "VPD Scenarios", "file": "vpd_scenarios.html"}]}, {"category": "Deployment & Operations", "icon": "cloud", "pages": [{"title": "Cloud ML Deployment", "file": "cloud_ml_deployment.html"}, {"title": "Local Implementation", "file": "local_implementation.html"}, {"title": "ML Roadmap", "file": "ml_implementation_roadmap.html"}]}, {"category": "Reports & Validation", "icon": "bar-chart-3", "pages": [{"title": "Final Report", "file": "final_report.html"}, {"title": "Validation Report", "file": "validation_report.html"}, {"title": "Simulation Analysis", "file": "simulation_analysis.html"}, {"title": "Moisture Analysis", "file": "moisture_analysis.html"}, {"title": "Phase 1 Setup Report", "file": "phase_01_setup_report.html"}, {"title": "Phase 5 ML Report", "file": "phase_05_ml_report.html"}, {"title": "Phase 6 Frontend Report", "file": "phase_06_frontend_report.html"}]}];
+
+        let expandedGroups = {};
+
+        function initTheme() {
+            const saved = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(saved);
+        }
+
+        function setTheme(theme) {
+            document.body.classList.remove('theme-light', 'theme-dark');
+            document.documentElement.classList.remove('dark');
+            const hljsLight = document.getElementById('hljs-light-theme');
+            const hljsDark = document.getElementById('hljs-dark-theme');
+            if (theme === 'dark') {
+                document.body.classList.add('theme-dark');
+                document.documentElement.classList.add('dark');
+                if (hljsLight) hljsLight.disabled = true;
+                if (hljsDark) hljsDark.disabled = false;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'moon');
+            } else {
+                document.body.classList.add('theme-light');
+                if (hljsLight) hljsLight.disabled = false;
+                if (hljsDark) hljsDark.disabled = true;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'sun');
+            }
+            localStorage.setItem('pwos-theme', theme);
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            const current = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(current === 'light' ? 'dark' : 'light');
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        function renderSidebar(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = docs.map(function(group, gi) {
+                const isOpen = expandedGroups[gi] || false;
+                return '<div class="sidebar-group">' +
+                    '<button onclick="toggleGroup(' + gi + ')" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' +
+                        '<span class="flex items-center gap-2"><i data-lucide="' + group.icon + '" class="w-4 h-4"></i><span>' + group.category + '</span></span>' +
+                        '<i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ' + (isOpen ? 'rotate-0' : '-rotate-90') + '"></i>' +
+                    '</button>' +
+                    '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
+                        '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
+                            group.pages.map(function(page) {
+                                return '<li><a href="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                            }).join('') +
+                        '</ul>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function toggleGroup(idx) {
+            expandedGroups[idx] = !expandedGroups[idx];
+            renderSidebar('sidebarGroups');
+            renderSidebar('mobileSidebarGroups');
+        }
+
+        function setupSearch(inputId, containerId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('input', function(e) {
+                const q = e.target.value.toLowerCase().trim();
+                document.querySelectorAll('#' + containerId + ' .sidebar-group').forEach(function(el) {
+                    el.style.display = q === '' || el.textContent.toLowerCase().includes(q) ? '' : 'none';
+                });
+            });
+        }
+
+        setupSearch('docSearch', 'sidebarGroups');
+        setupSearch('mobileDocSearch', 'mobileSidebarGroups');
+
+        function openMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            sidebar.classList.remove('hidden');
+            setTimeout(function() { panel.classList.remove('-translate-x-full'); }, 10);
+        }
+
+        function closeMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            panel.classList.add('-translate-x-full');
+            setTimeout(function() { sidebar.classList.add('hidden'); }, 300);
+        }
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', openMobileNav);
+        document.getElementById('closeMobileNav').addEventListener('click', closeMobileNav);
+        document.getElementById('navOverlay').addEventListener('click', closeMobileNav);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const output = document.getElementById('markdownOutput');
+            if (!output) return;
+
+            output.querySelectorAll('pre code').forEach(function(block) { hljs.highlightElement(block); });
+
+            try {
+                renderMathInElement(output, {
+                    delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}],
+                    throwOnError: false
+                });
+            } catch(e) {}
+
+            try {
+                mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+                mermaid.run({ nodes: output.querySelectorAll('.mermaid') });
+            } catch(e) {}
+
+            buildTOC(output);
+        });
+
+        function buildTOC(container) {
+            const list = document.getElementById('tocList');
+            if (!list) return;
+            list.innerHTML = '';
+            const headings = container.querySelectorAll('h2, h3');
+            if (headings.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'text-slate-400 italic';
+                li.textContent = 'No sub-headers on page';
+                list.appendChild(li);
+                return;
+            }
+            headings.forEach(function(heading, idx) {
+                const anchorId = 'toc-anchor-' + idx;
+                heading.setAttribute('id', anchorId);
+                const li = document.createElement('li');
+                const isSub = heading.tagName.toLowerCase() === 'h3';
+                li.className = 'transition-colors duration-150 ' + (isSub ? 'pl-3 border-l border-slate-100 dark:border-slate-800 ml-1 py-0.5' : 'font-medium py-1');
+                const link = document.createElement('a');
+                link.href = '#' + anchorId;
+                link.className = 'hover:text-emerald-500 block truncate transition-colors';
+                link.textContent = heading.textContent;
+                link.onclick = function(e) { e.preventDefault(); heading.scrollIntoView({ behavior: 'smooth' }); };
+                li.appendChild(link);
+                list.appendChild(li);
+            });
+        }
+
+        window.addEventListener('scroll', function() {
+            const main = document.querySelector('main');
+            if (!main) return;
+            const scrollTop = main.scrollTop;
+            const scrollHeight = main.scrollHeight - main.clientHeight;
+            document.getElementById('readingProgress').style.width = (scrollTop / Math.max(scrollHeight, 1)) * 100 + '%';
+        });
+
+        const copyBtn = document.getElementById('copyDocBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                const content = document.getElementById('markdownOutput')?.innerText;
+                if (!content) return;
+                navigator.clipboard.writeText(content).then(function() {
+                    copyBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>';
+                    lucide.createIcons();
+                    setTimeout(function() {
+                        copyBtn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
+                        lucide.createIcons();
+                    }, 1500);
+                });
+            });
+        }
+
+        initTheme();
+        renderSidebar('sidebarGroups');
+        renderSidebar('mobileSidebarGroups');
+    </script>
+</body>
+</html>

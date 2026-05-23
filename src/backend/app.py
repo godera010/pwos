@@ -16,7 +16,8 @@ import random
 # Add project root to Python path so we can import 'src'
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from src.backend.models.ml_predictor import MLPredictor
+from src.config import CORS_ORIGINS, FLASK_DEBUG
+from src.backend.models.ml_predictor import MLPredictor, CROP_PARAMS
 from src.backend.utils.vpd_calculator import calculate_vpd
 
 import logging
@@ -24,7 +25,10 @@ from logging.handlers import RotatingFileHandler
 import time
 
 app = Flask(__name__)
-CORS(app)
+if FLASK_DEBUG:
+    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
+else:
+    CORS(app, origins=CORS_ORIGINS)
 
 # --- Logging Setup ---
 # Get project root (2 levels up from src/backend/app.py)
@@ -70,6 +74,12 @@ predictor = MLPredictor()
 
 # Global state for latest sensor data (thread-safe ideally, but simple dict for now)
 latest_sensor_data = {'weather_source': 'initializing'}
+
+system_state = {
+    'mode': 'AUTO',
+    'pump_active': False,
+    'hardware_status': 'OFFLINE',
+}
 
 client_id = f"PWOS_API_{random.randint(1000, 9999)}"
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id)
@@ -361,9 +371,7 @@ def control_pump():
             )
             
             # Schedule moisture_after capture (read 60s after watering completes)
-            def capture_moisture_after(eid, delay_s):
-                import time as _time
-                _time.sleep(delay_s)
+            def capture_moisture_after(eid):
                 try:
                     readings = db.get_recent_readings(limit=1)
                     if readings:
@@ -374,9 +382,10 @@ def control_pump():
                     app.logger.error(f"moisture_after capture failed: {ex}")
             
             import threading
-            # Wait for pump duration + 60s settling time
+            # Wait for pump duration + 60s settling time using a lightweight Timer thread
             total_delay = duration + 60
-            t = threading.Thread(target=capture_moisture_after, args=(event_id, total_delay), daemon=True)
+            t = threading.Timer(total_delay, capture_moisture_after, args=[event_id])
+            t.daemon = True
             t.start()
         
         # Update in-memory pump state
@@ -494,8 +503,23 @@ def predict_next_watering():
         
 
 
-        # Run ML Prediction (Includes Rules & Safety Checks)
-        ml_result = predictor.predict_next_watering(sensor_data)
+        # Fetch sensor history (last 5 readings)
+        try:
+            readings = db.get_recent_readings(limit=5)
+            if readings:
+                readings.reverse()
+                import pandas as pd
+                columns = ['id', 'timestamp', 'soil_moisture', 'temperature', 'humidity', 'device_id', 
+                           'forecast_minutes', 'wind_speed', 'precipitation_chance', 'vpd']
+                history_df = pd.DataFrame(readings, columns=columns)
+            else:
+                history_df = None
+        except Exception as e:
+            app.logger.warning(f"Failed to query recent readings for ML prediction history: {e}")
+            history_df = None
+
+        # Run ML Prediction (Includes Rules & Safety Checks - bypasses disk reads with cached settings)
+        ml_result = predictor.predict_next_watering(sensor_data, history_df=history_df, active_settings=operational_settings)
 
         # Log ML decision to database
         try:
@@ -538,12 +562,6 @@ def predict_next_watering():
     except Exception as e:
         app.logger.error(f"[PREDICT ERROR] {e}")
         return jsonify({'error': str(e)}), 500
-
-system_state = {
-    'mode': 'AUTO',
-    'pump_active': False,
-    'hardware_status': 'OFFLINE',
-}
 
 @app.route('/api/system/state', methods=['GET', 'POST'])
 def get_system_state():
@@ -662,7 +680,168 @@ def get_watering_events():
     
     return jsonify(data)
 
-# In-memory operational settings (persisted per server session)
+@app.route('/api/ml-decisions', methods=['GET'])
+def get_ml_decisions():
+    """Get recent ML decision audit log"""
+    limit = request.args.get('limit', 100, type=int)
+    limit = max(1, min(limit, 500))  # Clamp between 1 and 500
+    try:
+        rows = db.get_ml_decisions(limit=limit)
+        data = []
+        for row in rows:
+            data.append({
+                'id': row['id'],
+                'timestamp': row['timestamp'].isoformat() if hasattr(row['timestamp'], 'isoformat') else str(row['timestamp']),
+                'soil_moisture': row['soil_moisture'],
+                'temperature': row['temperature'],
+                'humidity': row['humidity'],
+                'vpd': row['vpd'],
+                'forecast_minutes': row['forecast_minutes'],
+                'precipitation_chance': row['precipitation_chance'],
+                'wind_speed': row['wind_speed'],
+                'rain_intensity': row['rain_intensity'],
+                'decay_rate': row['decay_rate'],
+                'decision': row['decision'],
+                'confidence': row['confidence'],
+                'reason': row['reason'],
+                'recommended_duration': row['recommended_duration'],
+                'features_json': row['features_json'],
+            })
+        return jsonify(data)
+    except Exception as e:
+        app.logger.error(f"Failed to fetch ML decisions: {e}")
+        return jsonify([])
+
+
+@app.route('/api/model-versions', methods=['GET'])
+def get_model_versions():
+    """Get model version registry"""
+    try:
+        conn = db.get_connection()
+        from psycopg2.extras import RealDictCursor
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute('SELECT * FROM model_versions ORDER BY id DESC')
+        rows = cursor.fetchall()
+        conn.close()
+        data = []
+        for row in rows:
+            data.append({
+                'id': row['id'],
+                'timestamp': row['timestamp'].isoformat() if hasattr(row['timestamp'], 'isoformat') else str(row['timestamp']),
+                'version_tag': row['version_tag'],
+                'accuracy': row['accuracy'],
+                'precision': row['precision'],
+                'recall': row['recall'],
+                'f1_score': row['f1_score'],
+                'training_samples': row['training_samples'],
+                'model_path': row['model_path'],
+                'is_active': row['is_active'],
+            })
+        return jsonify(data)
+    except Exception as e:
+        app.logger.error(f"Failed to fetch model versions: {e}")
+        return jsonify([])
+
+
+@app.route('/api/efficiency/summary', methods=['GET'])
+def get_efficiency_summary():
+    """Compute irrigation efficiency and water conservation metrics"""
+    hours = request.args.get('hours', 168, type=int)  # Default 7 days
+    hours = max(1, min(hours, 8760))  # Clamp 1h to 1 year
+    try:
+        conn = db.get_connection()
+        from psycopg2.extras import RealDictCursor
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+        # --- Watering event stats ---
+        cursor.execute('''
+            SELECT
+                COUNT(*) AS total_events,
+                COALESCE(SUM(duration_seconds), 0) AS total_duration,
+                COUNT(CASE WHEN trigger_type != 'MANUAL' THEN 1 END) AS ai_events,
+                COALESCE(SUM(CASE WHEN trigger_type != 'MANUAL' THEN duration_seconds ELSE 0 END), 0) AS ai_duration,
+                COUNT(CASE WHEN trigger_type = 'MANUAL' THEN 1 END) AS manual_events,
+                COALESCE(SUM(CASE WHEN trigger_type = 'MANUAL' THEN duration_seconds ELSE 0 END), 0) AS manual_duration,
+                COALESCE(AVG(CASE WHEN moisture_before IS NOT NULL THEN moisture_before END), 0) AS avg_moisture_before,
+                COALESCE(AVG(CASE WHEN moisture_after IS NOT NULL THEN moisture_after END), 0) AS avg_moisture_after
+            FROM watering_events
+            WHERE timestamp > NOW() - make_interval(hours => %s)
+        ''', (hours,))
+        stats = cursor.fetchone()
+
+        # --- Last 20 events for delta chart ---
+        cursor.execute('''
+            SELECT
+                id,
+                timestamp,
+                duration_seconds,
+                trigger_type,
+                moisture_before,
+                moisture_after
+            FROM watering_events
+            WHERE timestamp > NOW() - make_interval(hours => %s)
+              AND moisture_before IS NOT NULL
+            ORDER BY timestamp DESC
+            LIMIT 20
+        ''', (hours,))
+        recent_events = cursor.fetchall()
+
+        conn.close()
+
+        # Convert recent events
+        events_list = []
+        for e in recent_events:
+            events_list.append({
+                'id': e['id'],
+                'timestamp': e['timestamp'].isoformat() if hasattr(e['timestamp'], 'isoformat') else str(e['timestamp']),
+                'duration_seconds': e['duration_seconds'],
+                'trigger_type': e['trigger_type'],
+                'moisture_before': e['moisture_before'],
+                'moisture_after': e['moisture_after'],
+                'moisture_delta': round((e['moisture_after'] - e['moisture_before']), 2) if e['moisture_after'] is not None else None,
+            })
+
+        # Water saved estimate: assume AI skips ~30s of irrigation per skipped decision
+        # (ratio of manual events baseline to AI events, times median duration)
+        total_events = int(stats['total_events'])
+        ai_events = int(stats['ai_events'])
+        manual_events = int(stats['manual_events'])
+        total_duration = int(stats['total_duration'])
+        ai_duration = int(stats['ai_duration'])
+        manual_duration = int(stats['manual_duration'])
+
+        # Estimate: if all events were manual they'd water as frequently as manual ones,
+        # water saved = ai_events * median_manual_duration - ai_duration (AI used less)
+        median_manual_dur = (manual_duration // manual_events) if manual_events > 0 else 45
+        ai_water_saved_seconds = max(0, (ai_events * median_manual_dur) - ai_duration)
+
+        ai_pct = round((ai_events / total_events * 100), 1) if total_events > 0 else 0
+        savings_pct = round((ai_water_saved_seconds / (ai_duration + ai_water_saved_seconds) * 100), 1) if (ai_duration + ai_water_saved_seconds) > 0 else 0
+
+        return jsonify({
+            'period_hours': hours,
+            'total_events': total_events,
+            'total_duration_seconds': total_duration,
+            'ai_events': ai_events,
+            'ai_duration_seconds': ai_duration,
+            'manual_events': manual_events,
+            'manual_duration_seconds': manual_duration,
+            'ai_percentage': ai_pct,
+            'avg_moisture_before': round(float(stats['avg_moisture_before']), 2),
+            'avg_moisture_after': round(float(stats['avg_moisture_after']), 2),
+            'estimated_water_saved_seconds': ai_water_saved_seconds,
+            'estimated_savings_percent': savings_pct,
+            'recent_events': events_list,
+        })
+    except Exception as e:
+        app.logger.error(f"Failed to compute efficiency summary: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# Persistent operational settings path
+SETTINGS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'operational_settings.json')
+
+# Operational settings with defaults
 operational_settings = {
     'moisture_threshold': 30,
     'moisture_max': 75,
@@ -671,7 +850,49 @@ operational_settings = {
     'max_duration': 45,
     'latitude': -20.1492,
     'longitude': 28.5833,
+    'active_crop': 'maize',
+    'active_region': 'matabeleland'
 }
+
+def resolve_region_from_coordinates(lat, lon):
+    """Geographic bounding boxes for Zimbabwe agricultural regions."""
+    # Matabeleland / Bulawayo bounding check
+    if -22.5 <= lat <= -19.0 and 25.0 <= lon <= 30.0:
+        return 'matabeleland'
+    # Manicaland / Eastern Highlands bounding check
+    elif -21.0 <= lat <= -17.5 and 32.0 <= lon <= 34.0:
+        return 'manicaland'
+    # Default: Mashonaland / Harare
+    else:
+        return 'mashonaland'
+
+def load_settings():
+    global operational_settings
+    if os.path.exists(SETTINGS_FILE):
+        try:
+            with open(SETTINGS_FILE, 'r') as f:
+                saved = json.load(f)
+                for k, v in saved.items():
+                    if k in ('latitude', 'longitude'):
+                        operational_settings[k] = float(v)
+                    elif k in ('active_crop', 'active_region'):
+                        operational_settings[k] = str(v)
+                    else:
+                        operational_settings[k] = int(v)
+            app.logger.info("Loaded persisted operational settings successfully")
+        except Exception as e:
+            app.logger.error(f"Failed to load operational settings: {e}")
+
+def save_settings():
+    try:
+        with open(SETTINGS_FILE, 'w') as f:
+            json.dump(operational_settings, f, indent=4)
+        app.logger.info("Persisted operational settings successfully")
+    except Exception as e:
+        app.logger.error(f"Failed to persist operational settings: {e}")
+
+# Load settings at startup
+load_settings()
 
 @app.route('/api/settings', methods=['GET', 'POST'])
 def api_settings():
@@ -682,21 +903,60 @@ def api_settings():
             'moisture_threshold', 'moisture_max',
             'temp_min', 'temp_max',
             'max_duration',
-            'latitude', 'longitude'
+            'latitude', 'longitude',
+            'active_crop'
         ]
         for key in updatable_keys:
             if key in data:
-                operational_settings[key] = float(data[key]) if key in ('latitude', 'longitude') else int(data[key])
+                if key in ('latitude', 'longitude'):
+                    try:
+                        val = float(data[key])
+                        if key == 'latitude' and not (-90.0 <= val <= 90.0):
+                            return jsonify({"error": "Latitude must be between -90 and 90"}), 400
+                        if key == 'longitude' and not (-180.0 <= val <= 180.0):
+                            return jsonify({"error": "Longitude must be between -180 and 180"}), 400
+                        operational_settings[key] = val
+                    except (ValueError, TypeError):
+                        return jsonify({"error": f"Invalid format for coordinate: {key}"}), 400
+                elif key == 'active_crop':
+                    operational_settings[key] = str(data[key])
+                else:
+                    try:
+                        operational_settings[key] = int(data[key])
+                    except (ValueError, TypeError):
+                        return jsonify({"error": f"Invalid integer format for key: {key}"}), 400
+        
+        # Recalculate and save active region from coordinates
+        lat = operational_settings.get('latitude', -20.1492)
+        lon = operational_settings.get('longitude', 28.5833)
+        operational_settings['active_region'] = resolve_region_from_coordinates(lat, lon)
+        
+        save_settings()
         
         add_log(
             f"Settings updated: threshold={operational_settings['moisture_threshold']}%, "
             f"max={operational_settings['moisture_max']}%, "
-            f"duration={operational_settings['max_duration']}s",
+            f"duration={operational_settings['max_duration']}s, "
+            f"crop={operational_settings['active_crop']}, "
+            f"region={operational_settings['active_region']}",
             category="ACTION"
         )
-        return jsonify({"status": "success", "settings": operational_settings})
+        
+        response_data = operational_settings.copy()
+        crop = operational_settings.get('active_crop', 'maize')
+        if crop in CROP_PARAMS:
+            response_data['crop_critical_moisture'] = CROP_PARAMS[crop]['critical']
+            response_data['crop_target_moisture'] = CROP_PARAMS[crop]['target']
+            response_data['crop_high_threshold'] = CROP_PARAMS[crop]['high']
+        return jsonify({"status": "success", "settings": response_data})
     
-    return jsonify(operational_settings)
+    response_data = operational_settings.copy()
+    crop = operational_settings.get('active_crop', 'maize')
+    if crop in CROP_PARAMS:
+        response_data['crop_critical_moisture'] = CROP_PARAMS[crop]['critical']
+        response_data['crop_target_moisture'] = CROP_PARAMS[crop]['target']
+        response_data['crop_high_threshold'] = CROP_PARAMS[crop]['high']
+    return jsonify(response_data)
 
 if __name__ == '__main__':
     print("\n" + "=" * 60)

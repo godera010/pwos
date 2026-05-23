@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Profiles - P-WOS Documentation Portal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#16a34a', 600: '#15803d', 700: '#166534' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css" id="hljs-dark-theme" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .theme-light ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+        .theme-dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .prose table { width: 100%; margin: 1.5rem 0; border-collapse: collapse; font-size: 0.875rem; }
+        .prose th { background-color: rgba(0,0,0,0.02); font-weight: 600; padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); text-align: left; }
+        .dark .prose th { background-color: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); }
+        .prose td { padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); }
+        .dark .prose td { border-color: rgba(255,255,255,0.08); }
+        .prose blockquote { border-left: 3px solid #16a34a; padding-left: 1rem; font-style: italic; color: #4b5563; }
+        .dark .prose blockquote { color: #9ca3af; }
+        .prose img { border-radius: 8px; margin: 1.5rem auto; max-width: 100%; }
+        .prose pre { border-radius: 10px; background: #f8fafc !important; border: 1px solid #e2e8f0; }
+        .dark .prose pre { background: #0f171a !important; border-color: #1e2a2e; }
+
+        .theme-dark { background-color: #0b0f11; color: #f1f5f9; }
+        .theme-dark .sidebar-bg { background-color: #101618; border-color: #1a2225; }
+        .theme-dark .content-card { background-color: #12191b; border-color: #1c272a; }
+
+        .sidebar-group-enter { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-in-out; }
+        .sidebar-group-enter.active { max-height: 500px; }
+    </style>
+</head>
+<body class="theme-light bg-slate-50 text-slate-800 transition-colors duration-200 antialiased font-sans h-screen overflow-hidden flex flex-col">
+
+    <div class="fixed top-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-900/50 z-50">
+        <div id="readingProgress" class="h-full bg-brand-500 w-0 transition-all duration-75"></div>
+    </div>
+
+    <header class="h-14 md:h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/85 dark:bg-[#101618]/85 backdrop-blur-md flex items-center justify-between px-4 md:px-6 z-40 shrink-0">
+        <div class="flex items-center space-x-3">
+            <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-500">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                <div class="p-1.5 bg-gradient-to-tr from-emerald-500 to-green-600 rounded-lg text-white">
+                    <i data-lucide="droplet" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <span class="font-bold text-sm md:text-base tracking-tight text-slate-900 dark:text-white">P-WOS Docs</span>
+                    <span class="hidden md:inline-block ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 font-medium">Predictive Water Optimization</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300" title="Toggle Light/Dark Mode">
+                <i data-lucide="sun" id="themeIcon" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Theme</span>
+            </button>
+            <button onclick="window.print()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Print to PDF">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Export PDF</span>
+            </button>
+            <a href="index.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Home</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="navSidebar" class="w-64 border-r border-slate-200 dark:border-slate-800/80 overflow-y-auto shrink-0 bg-white dark:bg-[#101618] hidden lg:block z-30">
+            <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text" id="docSearch" placeholder="Search documentation..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                </div>
+            </div>
+            <div class="p-3 space-y-1" id="sidebarGroups"></div>
+        </aside>
+
+        <aside id="mobileSidebar" class="fixed inset-0 z-40 lg:hidden hidden">
+            <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" id="navOverlay"></div>
+            <div class="relative w-72 max-w-[85vw] h-full bg-white dark:bg-[#101618] shadow-2xl overflow-y-auto transform transition-transform duration-300 -translate-x-full">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">Navigation</span>
+                    <button id="closeMobileNav" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-400">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="mobileDocSearch" placeholder="Search..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                    </div>
+                </div>
+                <div class="p-3 space-y-1" id="mobileSidebarGroups"></div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto min-w-0">
+            <div class="px-4 md:px-8 py-6 md:py-10">
+                <div class="flex gap-6 lg:gap-10">
+                    <div class="flex-1 min-w-0 max-w-4xl">
+                        <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                            <span id="breadcrumbCategory">System Architecture</span>
+                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">crop_profiles.md</span>
+                        </div>
+
+                        <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
+                            <div class="absolute top-6 right-6 flex items-center space-x-2 print:hidden">
+                                <button id="copyDocBtn" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Copy content">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <div id="markdownOutput" class="prose max-w-none dark:prose-invert
+                                prose-headings:font-bold prose-headings:tracking-tight
+                                prose-h1:text-3xl prose-h1:mb-6 prose-h1:text-slate-900 dark:prose-h1:text-white
+                                prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:text-slate-900 dark:prose-h2:text-white
+                                prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-slate-800 dark:prose-h3:text-slate-200
+                                prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
+                                prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                                prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
+                                <h1>Crop Profiles &amp; Regional Adaptation</h1>
+<blockquote>
+<p><strong>Document:</strong> <code>07_system_behaviour/crop_profiles.md</code><br />
+<strong>System:</strong> P-WOS v2.0<br />
+<strong>Scope:</strong> How the active crop selection and agro-ecological region jointly personalise every irrigation decision — from threshold evaluation through ML feature injection to pump duration calculation.</p>
+</blockquote>
+<hr />
+<h2>1. Why Crops Matter</h2>
+<p>A soil moisture reading is not a universal fact — it is a relative measurement whose meaning depends entirely on the crop growing in that soil. Two sensors reporting <strong>35% volumetric moisture</strong> can simultaneously indicate a dangerous crisis for one crop and a completely safe, well-hydrated state for another.</p>
+<h3>The Sorghum vs. Potato Contrast</h3>
+<p>Consider a single reading of <strong>35% soil moisture</strong> arriving at the decision engine:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Sorghum (<em>Sorghum bicolor</em>)</th>
+<th>Potato (<em>Solanum tuberosum</em>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Root depth</strong></td>
+<td>Deep (90–120 cm)</td>
+<td>Shallow (30–40 cm)</td>
+</tr>
+<tr>
+<td><strong>Transpiration</strong></td>
+<td>Low</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>CRITICAL threshold</strong></td>
+<td><strong>20%</strong></td>
+<td><strong>45%</strong></td>
+</tr>
+<tr>
+<td><strong>LOW threshold</strong></td>
+<td>30%</td>
+<td>55%</td>
+</tr>
+<tr>
+<td><strong>TARGET moisture</strong></td>
+<td>50%</td>
+<td>70%</td>
+</tr>
+<tr>
+<td><strong>Interpretation at 35%</strong></td>
+<td><strong>Above LOW — no alarm</strong></td>
+<td><strong>Below CRITICAL — emergency</strong></td>
+</tr>
+<tr>
+<td><strong>System response</strong></td>
+<td>Monitor; no irrigation triggered</td>
+<td>Immediate irrigation cycle</td>
+</tr>
+</tbody>
+</table>
+<p>For <strong>sorghum</strong>, 35% sits between its CRITICAL (20%) and LOW (30%) boundaries — the crop's deep root system can access water from lower soil strata, and its low transpiration rate means it is not rapidly depleting the available water. The system continues monitoring and may issue a <em>proactive</em> alert only if the reading continues to fall.</p>
+<p>For <strong>potato</strong>, 35% is <strong>10 percentage points below its CRITICAL threshold of 45%</strong>. A potato's shallow root system (30–40 cm) cannot access deeper reserves, and its high transpiration demand means water is leaving the system quickly. The agronomic consequence is severe: under-watering at this level results in major tuber size degradation and potential crop failure. The system immediately triggers an emergency irrigation cycle.</p>
+<p>This fundamental difference — 35% means safety for one crop and crisis for another — is why the active crop setting is the first parameter evaluated in every decision cycle.</p>
+<hr />
+<h2>2. The 5 Moisture Thresholds</h2>
+<p>Every crop in P-WOS is defined by five soil moisture thresholds. These are evaluated in order from lowest to highest, and each crossing triggers a distinct system action.</p>
+<p>All values are expressed as <strong>% volumetric soil moisture (VSM)</strong>.</p>
+<h3>Threshold Definitions</h3>
+<pre><code>CRITICAL  &lt;─── system emergency, pump fires immediately regardless of schedule
+LOW       &lt;─── below-normal; irrigation queued at next available slot
+PROACTIVE &lt;─── pre-emptive warning; smart scheduling begins preparation
+TARGET    &lt;─── the optimal maintained moisture level for this crop
+HIGH      &lt;─── upper safe bound; irrigation suppressed to prevent waterlogging
+</code></pre>
+<h3>System Actions at Each Boundary</h3>
+<table>
+<thead>
+<tr>
+<th>Threshold</th>
+<th>Condition</th>
+<th>System Behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CRITICAL</strong></td>
+<td><code>moisture &lt; critical</code></td>
+<td>Emergency pump activation. All schedule overrides lifted. Alert sent immediately. Dashboard turns red.</td>
+</tr>
+<tr>
+<td><strong>LOW</strong></td>
+<td><code>critical ≤ moisture &lt; low</code></td>
+<td>Irrigation request queued. Next available pump slot activated. Amber dashboard alert.</td>
+</tr>
+<tr>
+<td><strong>PROACTIVE</strong></td>
+<td><code>low ≤ moisture &lt; proactive</code></td>
+<td>Smart scheduler pre-positions next irrigation slot. Yellow advisory shown. ML decay rate tracked.</td>
+</tr>
+<tr>
+<td><strong>TARGET</strong></td>
+<td><code>proactive ≤ moisture &lt; high</code></td>
+<td>Nominal operating zone. No irrigation required. System monitors decay trajectory.</td>
+</tr>
+<tr>
+<td><strong>HIGH</strong></td>
+<td><code>moisture ≥ high</code></td>
+<td>All irrigation suppressed. Drainage advisories may be issued. Dashboard shows blue saturation indicator.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note:</strong> The TARGET threshold is the <em>goal</em> the pump refills soil moisture to, not merely a threshold — it is the value used in the deficit formula for duration calculation (see §7).</p>
+</blockquote>
+<hr />
+<h2>3. Full Crop Profile Table</h2>
+<p>All values sourced directly from <code>CROP_PARAMS</code> in <code>ml_predictor.py</code> (lines 21–27) and agronomic metadata from <code>CropSettings.tsx</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Crop</th>
+<th>Scientific Name</th>
+<th>Root Depth</th>
+<th>Transpiration</th>
+<th>CRITICAL</th>
+<th>LOW</th>
+<th>PROACTIVE</th>
+<th>TARGET</th>
+<th>HIGH</th>
+<th>Evap Multiplier</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Maize</strong></td>
+<td><em>Zea mays</em></td>
+<td>Medium-Deep (60–90 cm)</td>
+<td>Moderate</td>
+<td>30%</td>
+<td>45%</td>
+<td>55%</td>
+<td>60%</td>
+<td>75%</td>
+<td>1.0×</td>
+</tr>
+<tr>
+<td><strong>Potato</strong></td>
+<td><em>Solanum tuberosum</em></td>
+<td>Shallow (30–40 cm)</td>
+<td>High</td>
+<td>45%</td>
+<td>55%</td>
+<td>65%</td>
+<td>70%</td>
+<td>85%</td>
+<td>1.4×</td>
+</tr>
+<tr>
+<td><strong>Tomato</strong></td>
+<td><em>Solanum lycopersicum</em></td>
+<td>Medium (45–60 cm)</td>
+<td>High</td>
+<td>35%</td>
+<td>48%</td>
+<td>58%</td>
+<td>62%</td>
+<td>75%</td>
+<td>1.2×</td>
+</tr>
+<tr>
+<td><strong>Onion</strong></td>
+<td><em>Allium cepa</em></td>
+<td>Very Shallow (15–20 cm)</td>
+<td>Low</td>
+<td>40%</td>
+<td>52%</td>
+<td>60%</td>
+<td>65%</td>
+<td>80%</td>
+<td>0.8×</td>
+</tr>
+<tr>
+<td><strong>Sorghum</strong></td>
+<td><em>Sorghum bicolor</em></td>
+<td>Deep (90–120 cm)</td>
+<td>Low</td>
+<td>20%</td>
+<td>30%</td>
+<td>40%</td>
+<td>50%</td>
+<td>65%</td>
+<td>0.6×</td>
+</tr>
+</tbody>
+</table>
+<h3>Key Observations</h3>
+<ul>
+<li><strong>Potato</strong> carries the highest thresholds across the board (target 70%) and the largest per-crop evaporation multiplier (1.4×), reflecting its shallow roots and high sensitivity to moisture deficit.</li>
+<li><strong>Sorghum</strong> carries the lowest thresholds (critical 20%, target 50%) and the smallest multiplier (0.6×), encoding its well-known drought resilience.</li>
+<li><strong>Onion</strong> has a very shallow root system (15–20 cm) but a relatively low transpiration rate; this is reflected in moderate thresholds but requires frequent <em>light</em> irrigation rather than deep infrequent watering.</li>
+<li><strong>Tomato</strong> sits between maize and potato in sensitivity; its description notes that moisture imbalance causes blossom-end rot and fruit splitting — making the proactive threshold (58%) particularly important for triggering early intervention.</li>
+</ul>
+<hr />
+<h2>4. Seasonal Adjustment</h2>
+<p>Zimbabwe's growing calendar means that the same crop faces very different evaporative demand depending on the month. P-WOS adjusts all five moisture thresholds dynamically via <code>get_seasonal_thresholds()</code>.</p>
+<h3>Source Code</h3>
+<pre><code class="language-python"># ml_predictor.py — lines 70–89
+def get_seasonal_thresholds(self, month, active_crop='maize'):
+    base = CROP_PARAMS.get(active_crop, CROP_PARAMS['maize']).copy()
+    shift = 0
+    if month in [11, 12, 1, 2, 3]:  # Summer
+        shift = 5
+    elif month in [5, 6, 7, 8, 9]:  # Winter
+        shift = -5
+    return {
+        'critical': max(5, base['critical'] + shift),
+        'low':      max(10, base['low']      + shift),
+        'proactive':max(15, base['proactive']+ shift),
+        'high':     max(20, base['high']     + shift),
+        'target':   max(25, base['target']   + shift)
+    }
+</code></pre>
+<h3>Season Definitions</h3>
+<table>
+<thead>
+<tr>
+<th>Season</th>
+<th>Months</th>
+<th>Shift</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Summer</strong></td>
+<td>Nov, Dec, Jan, Feb, Mar</td>
+<td><strong>+5%</strong></td>
+<td>Higher temperature and solar radiation accelerate evapotranspiration; crops need wetter soil to sustain the same internal water balance</td>
+</tr>
+<tr>
+<td><strong>Transition</strong></td>
+<td>Apr, Oct</td>
+<td><strong>0%</strong></td>
+<td>Moderate conditions; base thresholds apply unchanged</td>
+</tr>
+<tr>
+<td><strong>Winter</strong></td>
+<td>May, Jun, Jul, Aug, Sep</td>
+<td><strong>−5%</strong></td>
+<td>Lower temperatures reduce evapotranspiration; lower soil moisture is sufficient to maintain crop health</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>max()</code> guards prevent thresholds from collapsing to physiologically meaningless values:</p>
+<table>
+<thead>
+<tr>
+<th>Threshold</th>
+<th>Floor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CRITICAL</td>
+<td>5% minimum</td>
+</tr>
+<tr>
+<td>LOW</td>
+<td>10% minimum</td>
+</tr>
+<tr>
+<td>PROACTIVE</td>
+<td>15% minimum</td>
+</tr>
+<tr>
+<td>HIGH</td>
+<td>20% minimum</td>
+</tr>
+<tr>
+<td>TARGET</td>
+<td>25% minimum</td>
+</tr>
+</tbody>
+</table>
+<h3>Adjusted Threshold Tables</h3>
+<h4>Maize (base: CRITICAL=30, LOW=45, PROACTIVE=55, TARGET=60, HIGH=75)</h4>
+<table>
+<thead>
+<tr>
+<th>Season</th>
+<th>Months</th>
+<th>CRITICAL</th>
+<th>LOW</th>
+<th>PROACTIVE</th>
+<th>TARGET</th>
+<th>HIGH</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Summer</strong></td>
+<td>Nov–Mar</td>
+<td><strong>35%</strong></td>
+<td><strong>50%</strong></td>
+<td><strong>60%</strong></td>
+<td><strong>65%</strong></td>
+<td><strong>80%</strong></td>
+</tr>
+<tr>
+<td><strong>Transition</strong></td>
+<td>Apr, Oct</td>
+<td>30%</td>
+<td>45%</td>
+<td>55%</td>
+<td>60%</td>
+<td>75%</td>
+</tr>
+<tr>
+<td><strong>Winter</strong></td>
+<td>May–Sep</td>
+<td><strong>25%</strong></td>
+<td><strong>40%</strong></td>
+<td><strong>50%</strong></td>
+<td><strong>55%</strong></td>
+<td><strong>70%</strong></td>
+</tr>
+</tbody>
+</table>
+<h4>Potato (base: CRITICAL=45, LOW=55, PROACTIVE=65, TARGET=70, HIGH=85)</h4>
+<table>
+<thead>
+<tr>
+<th>Season</th>
+<th>Months</th>
+<th>CRITICAL</th>
+<th>LOW</th>
+<th>PROACTIVE</th>
+<th>TARGET</th>
+<th>HIGH</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Summer</strong></td>
+<td>Nov–Mar</td>
+<td><strong>50%</strong></td>
+<td><strong>60%</strong></td>
+<td><strong>70%</strong></td>
+<td><strong>75%</strong></td>
+<td><strong>90%</strong></td>
+</tr>
+<tr>
+<td><strong>Transition</strong></td>
+<td>Apr, Oct</td>
+<td>45%</td>
+<td>55%</td>
+<td>65%</td>
+<td>70%</td>
+<td>85%</td>
+</tr>
+<tr>
+<td><strong>Winter</strong></td>
+<td>May–Sep</td>
+<td><strong>40%</strong></td>
+<td><strong>50%</strong></td>
+<td><strong>60%</strong></td>
+<td><strong>65%</strong></td>
+<td><strong>80%</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Practical impact:</strong> In December (peak summer), a potato field at 48% VSM would be <strong>below its CRITICAL threshold</strong> (50%) and trigger emergency irrigation. In July (winter), the same 48% reading sits safely between LOW (50%) and PROACTIVE (60%) — wait, it would actually be below LOW (50%) but above the winter CRITICAL (40%), meaning irrigation is queued but not emergency. The month of measurement fundamentally changes the urgency classification.</p>
+</blockquote>
+<hr />
+<h2>5. Regional Adaptation</h2>
+<p>Zimbabwe encompasses three distinct agro-ecological zones, each with a different evaporative demand driven by altitude, rainfall, and temperature. P-WOS maps these to three named regions, each assigned an evaporation multiplier.</p>
+<h3>Region Definitions</h3>
+<pre><code class="language-python"># ml_predictor.py — lines 202–203
+region_multipliers = {'matabeleland': 1.5, 'manicaland': 0.6, 'mashonaland': 1.0}
+region_mult = region_multipliers.get(active_region, 1.0)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Region</th>
+<th>Representative City</th>
+<th>Climate Class</th>
+<th>Lat / Lon Bounds</th>
+<th>Evap Multiplier</th>
+<th>Default?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Matabeleland</strong></td>
+<td>Bulawayo</td>
+<td>Semi-arid</td>
+<td>−22.5 to −19.0 / 25.0 to 30.0</td>
+<td><strong>1.5×</strong></td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Mashonaland</strong></td>
+<td>Harare</td>
+<td>Sub-humid</td>
+<td>—</td>
+<td><strong>1.0×</strong></td>
+<td><strong>Yes</strong></td>
+</tr>
+<tr>
+<td><strong>Manicaland</strong></td>
+<td>Mutare</td>
+<td>Humid-cool</td>
+<td>−21.0 to −17.5 / 32.0 to 34.0</td>
+<td><strong>0.6×</strong></td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<h3>What the Multiplier Does</h3>
+<p>The regional multiplier appears in <strong>two</strong> distinct places within the decision engine:</p>
+<p><strong>1. ML decay rate prediction</strong> — the <code>region_evap_multiplier</code> feature is injected directly into the gradient-boosted model (see §6). A higher multiplier tells the model that soil moisture will deplete faster between readings, causing the model to schedule irrigations earlier and more aggressively.</p>
+<p><strong>2. Pump duration calculation</strong> — the multiplier scales the raw deficit-derived duration, ensuring that drier-climate fields receive proportionally longer pump runs to compensate for higher surface evaporation during and after irrigation (see §7).</p>
+<h3>Worked Example: Regional Impact on Pump Duration</h3>
+<p><strong>Setup:</strong> Maize crop, current moisture = 50%, target moisture = 60%, deficit = 10%.</p>
+<pre><code>Base duration = (deficit / 0.5) × region_mult
+             = (10 / 0.5) × region_mult
+             = 20 × region_mult
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Region</th>
+<th>Multiplier</th>
+<th>Calculation</th>
+<th>Duration (clamped 5–60 min)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Matabeleland</strong></td>
+<td>1.5×</td>
+<td>20 × 1.5 = 30.0 → int(30)</td>
+<td><strong>30 minutes</strong></td>
+</tr>
+<tr>
+<td><strong>Mashonaland</strong></td>
+<td>1.0×</td>
+<td>20 × 1.0 = 20.0 → int(20)</td>
+<td><strong>20 minutes</strong></td>
+</tr>
+<tr>
+<td><strong>Manicaland</strong></td>
+<td>0.6×</td>
+<td>20 × 0.6 = 12.0 → int(12)</td>
+<td><strong>12 minutes</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The semi-arid Bulawayo farmer receives 150% the pump run time of the Mutare farmer for an identical moisture deficit, because Bulawayo's high evaporative demand means a greater volume of water must be delivered to achieve the same net soil moisture gain.</p>
+<hr />
+<h2>6. How Crop Settings Feed the ML Model</h2>
+<p>The gradient-boosted classifier at the core of P-WOS does not merely observe raw sensor data. At inference time, three crop- and region-derived features are injected directly into the feature vector, allowing the model to contextualise every prediction against the active configuration.</p>
+<h3>Feature Injection</h3>
+<pre><code class="language-python"># ml_predictor.py — lines 215–217
+features['crop_target_moisture']   = crop_info['target']
+features['crop_critical_moisture'] = crop_info['critical']
+features['region_evap_multiplier'] = region_mult
+</code></pre>
+<h3>Feature Semantics</h3>
+<table>
+<thead>
+<tr>
+<th>Feature Name</th>
+<th>Source</th>
+<th>What It Tells the Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crop_target_moisture</code></td>
+<td><code>CROP_PARAMS[crop]['target']</code></td>
+<td>The moisture level the system is trying to maintain. The model uses this to assess how far current moisture is from the operational goal.</td>
+</tr>
+<tr>
+<td><code>crop_critical_moisture</code></td>
+<td><code>CROP_PARAMS[crop]['critical']</code></td>
+<td>The crop's stress threshold. The model learns to predict urgency and decay rate relative to how close current moisture is to causing crop damage.</td>
+</tr>
+<tr>
+<td><code>region_evap_multiplier</code></td>
+<td><code>region_multipliers[region]</code></td>
+<td>The environmental evaporation rate modifier. The model uses this to calibrate how quickly the moisture level will decay between sensor readings, directly influencing next-irrigation timing predictions.</td>
+</tr>
+</tbody>
+</table>
+<h3>Feature Space Illustration</h3>
+<p>For a <strong>Potato</strong> crop in <strong>Matabeleland</strong>, the injected features would be:</p>
+<pre><code>crop_target_moisture   = 70.0   # potato's target
+crop_critical_moisture = 45.0   # potato's critical
+region_evap_multiplier = 1.5    # Matabeleland semi-arid
+</code></pre>
+<p>For <strong>Sorghum</strong> in <strong>Manicaland</strong>:</p>
+<pre><code>crop_target_moisture   = 50.0   # sorghum's target
+crop_critical_moisture = 20.0   # sorghum's critical
+region_evap_multiplier = 0.6    # Manicaland humid-cool
+</code></pre>
+<p>The model was trained with these three features as continuous numeric inputs, so a single model handles all crop-region combinations without retraining — the features communicate the configuration context dynamically at inference time.</p>
+<hr />
+<h2>7. Pump Duration Per Crop</h2>
+<h3>The Deficit Formula</h3>
+<pre><code class="language-python"># ml_predictor.py — lines 448–451
+def calculate_duration(current_moisture, target_moisture, region_mult):
+    deficit = target_moisture - current_moisture
+    recommended_duration = max(5, min(60, int((deficit / 0.5) * region_mult)))
+</code></pre>
+<p><strong>Breaking down the formula:</strong></p>
+<pre><code>deficit        = target_moisture - current_moisture   (in % VSM)
+raw_minutes    = (deficit / 0.5) * region_mult
+                 ↑ converts % deficit to minutes:
+                   0.5% moisture per minute is the baseline delivery rate
+duration       = clamp(raw_minutes, min=5, max=60)
+</code></pre>
+<p>The <code>/0.5</code> constant represents the system's baseline moisture delivery rate: the pump raises soil moisture by ~0.5% per minute under standard conditions. The regional multiplier then scales total delivery time to account for ambient evaporation losses.</p>
+<h3>Duration Table: Matabeleland (1.5×) vs. Manicaland (0.6×)</h3>
+<p>For each crop the <strong>current moisture</strong> is held at a representative below-TARGET level; target is each crop's standard BASE target (transition season).</p>
+<h4>Matabeleland (region_mult = 1.5)</h4>
+<table>
+<thead>
+<tr>
+<th>Crop</th>
+<th>TARGET</th>
+<th>Current Moisture</th>
+<th>Deficit</th>
+<th>Raw Minutes</th>
+<th>Duration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Maize</td>
+<td>60%</td>
+<td>45%</td>
+<td>15%</td>
+<td>(15/0.5) × 1.5 = 45.0</td>
+<td><strong>45 min</strong></td>
+</tr>
+<tr>
+<td>Potato</td>
+<td>70%</td>
+<td>50%</td>
+<td>20%</td>
+<td>(20/0.5) × 1.5 = 60.0</td>
+<td><strong>60 min</strong> <em>(capped)</em></td>
+</tr>
+<tr>
+<td>Tomato</td>
+<td>62%</td>
+<td>45%</td>
+<td>17%</td>
+<td>(17/0.5) × 1.5 = 51.0</td>
+<td><strong>51 min</strong></td>
+</tr>
+<tr>
+<td>Onion</td>
+<td>65%</td>
+<td>50%</td>
+<td>15%</td>
+<td>(15/0.5) × 1.5 = 45.0</td>
+<td><strong>45 min</strong></td>
+</tr>
+<tr>
+<td>Sorghum</td>
+<td>50%</td>
+<td>35%</td>
+<td>15%</td>
+<td>(15/0.5) × 1.5 = 45.0</td>
+<td><strong>45 min</strong></td>
+</tr>
+</tbody>
+</table>
+<h4>Manicaland (region_mult = 0.6)</h4>
+<table>
+<thead>
+<tr>
+<th>Crop</th>
+<th>TARGET</th>
+<th>Current Moisture</th>
+<th>Deficit</th>
+<th>Raw Minutes</th>
+<th>Duration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Maize</td>
+<td>60%</td>
+<td>45%</td>
+<td>15%</td>
+<td>(15/0.5) × 0.6 = 18.0</td>
+<td><strong>18 min</strong></td>
+</tr>
+<tr>
+<td>Potato</td>
+<td>70%</td>
+<td>50%</td>
+<td>20%</td>
+<td>(20/0.5) × 0.6 = 24.0</td>
+<td><strong>24 min</strong></td>
+</tr>
+<tr>
+<td>Tomato</td>
+<td>62%</td>
+<td>45%</td>
+<td>17%</td>
+<td>(17/0.5) × 0.6 = 20.4</td>
+<td><strong>20 min</strong></td>
+</tr>
+<tr>
+<td>Onion</td>
+<td>65%</td>
+<td>50%</td>
+<td>15%</td>
+<td>(15/0.5) × 0.6 = 18.0</td>
+<td><strong>18 min</strong></td>
+</tr>
+<tr>
+<td>Sorghum</td>
+<td>50%</td>
+<td>35%</td>
+<td>15%</td>
+<td>(15/0.5) × 0.6 = 18.0</td>
+<td><strong>18 min</strong></td>
+</tr>
+</tbody>
+</table>
+<h3>Key Observations</h3>
+<ul>
+<li><strong>Potato in Matabeleland</strong> hits the 60-minute cap, meaning at severe deficits the system may schedule multiple sequential cycles rather than a single oversized run.</li>
+<li>A farmer switching region from Manicaland to Matabeleland — without changing any other setting — will see pump durations increase by a factor of <strong>2.5×</strong> (1.5 ÷ 0.6) for the same crop and deficit.</li>
+<li>The 5-minute floor ensures the pump always runs long enough to clear priming delays and deliver measurable water even for tiny deficits.</li>
+</ul>
+<hr />
+<h2>8. Worked Scenario: Same Sensor Reading, Different Crops</h2>
+<h3>Conditions</h3>
+<blockquote>
+<p><strong>Sensor reading:</strong> Soil moisture = <strong>35%</strong><br />
+<strong>Temperature:</strong> 32°C<br />
+<strong>Relative humidity:</strong> 30%<br />
+<strong>Month:</strong> January (Summer → shift = +5)<br />
+<strong>Region:</strong> Mashonaland (multiplier = 1.0×)</p>
+</blockquote>
+<p>We trace this exact reading through three crops to show how the decision diverges entirely.</p>
+<hr />
+<h3>Step 1 — Apply Seasonal Adjustment (January = Summer, shift = +5)</h3>
+<table>
+<thead>
+<tr>
+<th>Crop</th>
+<th>Base CRITICAL</th>
+<th>Base LOW</th>
+<th>Base PROACTIVE</th>
+<th>Base TARGET</th>
+<th>Base HIGH</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sorghum</td>
+<td>20%</td>
+<td>30%</td>
+<td>40%</td>
+<td>50%</td>
+<td>65%</td>
+</tr>
+<tr>
+<td>Maize</td>
+<td>30%</td>
+<td>45%</td>
+<td>55%</td>
+<td>60%</td>
+<td>75%</td>
+</tr>
+<tr>
+<td>Potato</td>
+<td>45%</td>
+<td>55%</td>
+<td>65%</td>
+<td>70%</td>
+<td>85%</td>
+</tr>
+</tbody>
+</table>
+<p>After +5 summer shift:</p>
+<table>
+<thead>
+<tr>
+<th>Crop</th>
+<th>CRITICAL</th>
+<th>LOW</th>
+<th>PROACTIVE</th>
+<th>TARGET</th>
+<th>HIGH</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sorghum</strong></td>
+<td>25%</td>
+<td>35%</td>
+<td>45%</td>
+<td>55%</td>
+<td>70%</td>
+</tr>
+<tr>
+<td><strong>Maize</strong></td>
+<td>35%</td>
+<td>50%</td>
+<td>60%</td>
+<td>65%</td>
+<td>80%</td>
+</tr>
+<tr>
+<td><strong>Potato</strong></td>
+<td>50%</td>
+<td>60%</td>
+<td>70%</td>
+<td>75%</td>
+<td>90%</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Step 2 — Classify Reading of 35% Against Adjusted Thresholds</h3>
+<table>
+<thead>
+<tr>
+<th>Crop</th>
+<th>Adjusted CRITICAL</th>
+<th>Reading vs. CRITICAL</th>
+<th>Zone</th>
+<th>Alert Level</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sorghum</strong></td>
+<td>25%</td>
+<td>35% &gt; 25% ✓</td>
+<td><strong>Between CRITICAL and LOW</strong></td>
+<td>🟡 Advisory — monitor</td>
+</tr>
+<tr>
+<td><strong>Maize</strong></td>
+<td>35%</td>
+<td>35% = 35% ⚠️</td>
+<td><strong>At CRITICAL boundary</strong></td>
+<td>🟠 Emergency threshold reached</td>
+</tr>
+<tr>
+<td><strong>Potato</strong></td>
+<td>50%</td>
+<td>35% &lt; 50% ✗</td>
+<td><strong>Below CRITICAL</strong></td>
+<td>🔴 Emergency — immediate pump</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Step 3 — Calculate ML Features Injected</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Sorghum</th>
+<th>Maize</th>
+<th>Potato</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crop_target_moisture</code></td>
+<td>50.0</td>
+<td>60.0</td>
+<td>70.0</td>
+</tr>
+<tr>
+<td><code>crop_critical_moisture</code></td>
+<td>20.0</td>
+<td>30.0</td>
+<td>45.0</td>
+</tr>
+<tr>
+<td><code>region_evap_multiplier</code></td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+</tr>
+</tbody>
+</table>
+<p>The ML model additionally receives temperature (32°C) and humidity (30%) — high temperature and low humidity compound the urgency signal, increasing the predicted moisture decay rate for all three crops, but only breach thresholds where the current reading is already low relative to crop needs.</p>
+<hr />
+<h3>Step 4 — Calculate Pump Duration (where applicable)</h3>
+<p><strong>Formula:</strong> <code>duration = max(5, min(60, int((deficit / 0.5) * region_mult)))</code><br />
+<strong>Region mult:</strong> 1.0 (Mashonaland)</p>
+<table>
+<thead>
+<tr>
+<th>Crop</th>
+<th>Current</th>
+<th>TARGET (adjusted)</th>
+<th>Deficit</th>
+<th>Calculation</th>
+<th>Duration</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sorghum</strong></td>
+<td>35%</td>
+<td>55%</td>
+<td>20%</td>
+<td>(20/0.5) × 1.0 = 40</td>
+<td><em>Pre-calculated, standby</em></td>
+<td>Advisory only — no immediate pump</td>
+</tr>
+<tr>
+<td><strong>Maize</strong></td>
+<td>35%</td>
+<td>65%</td>
+<td>30%</td>
+<td>(30/0.5) × 1.0 = 60</td>
+<td><strong>60 min</strong> <em>(capped)</em></td>
+<td>Emergency pump, immediate</td>
+</tr>
+<tr>
+<td><strong>Potato</strong></td>
+<td>35%</td>
+<td>75%</td>
+<td>40%</td>
+<td>(40/0.5) × 1.0 = 80 → cap</td>
+<td><strong>60 min</strong> <em>(capped)</em></td>
+<td>Emergency pump, immediate + follow-up cycle</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Step 5 — Decision Summary</h3>
+<table>
+<thead>
+<tr>
+<th>Crop</th>
+<th>Decision</th>
+<th>Reasoning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sorghum</strong></td>
+<td>🟡 <strong>Monitor.</strong> No irrigation yet.</td>
+<td>35% is above its summer CRITICAL (25%). Deep roots can access lower moisture reserves. Next irrigation pre-positioned for when reading approaches 35%→25% decay.</td>
+</tr>
+<tr>
+<td><strong>Maize</strong></td>
+<td>🟠 <strong>Immediate irrigation, 60 min.</strong></td>
+<td>35% equals the summer CRITICAL (35%). Any further decline risks crop stress. Emergency cycle fires now to restore to target 65%.</td>
+</tr>
+<tr>
+<td><strong>Potato</strong></td>
+<td>🔴 <strong>Emergency irrigation, 60 min + second cycle.</strong></td>
+<td>35% is 15 points below the summer CRITICAL (50%). Shallow roots have no water access buffer. Tuber degradation is already possible. Maximum duration pumped; second cycle scheduled after reassessment.</td>
+</tr>
+</tbody>
+</table>
+<p>This scenario demonstrates that crop selection is the <strong>primary driver of irrigation urgency</strong> — an identical physical reality (35% moisture, 32°C, 30% humidity) produces three qualitatively different system responses.</p>
+<hr />
+<h2>9. How to Switch Crop / Region</h2>
+<h3>Via the Settings UI</h3>
+<ol>
+<li>Navigate to the <strong>Crop Settings</strong> page (accessible from the main navigation sidebar).</li>
+<li>Select the desired crop from the crop selector — each option displays the scientific name, root depth, transpiration rating, and a description of agronomic sensitivity.</li>
+<li>Select the applicable agro-ecological region from the region selector.</li>
+<li>Tap <strong>Save Settings</strong>.</li>
+</ol>
+<h3>Via Configuration File</h3>
+<p>Settings are persisted in <code>operational_settings.json</code>. The relevant fields are:</p>
+<pre><code class="language-json">{
+  &quot;active_crop&quot;: &quot;maize&quot;,
+  &quot;active_region&quot;: &quot;mashonaland&quot;
+}
+</code></pre>
+<p>Valid values:<br />
+- <code>active_crop</code>: <code>"maize"</code>, <code>"potato"</code>, <code>"tomato"</code>, <code>"onion"</code>, <code>"sorghum"</code><br />
+- <code>active_region</code>: <code>"matabeleland"</code>, <code>"mashonaland"</code>, <code>"manicaland"</code></p>
+<h3>Propagation Timing</h3>
+<blockquote>
+<p><strong>Settings take effect within 5 seconds</strong> of saving. The P-WOS backend polls <code>operational_settings.json</code> on a 5-second cycle. On the next poll after a change:<br />
+- <code>CROP_PARAMS</code> for the new crop is loaded<br />
+- Seasonal thresholds are recomputed for the current month<br />
+- <code>region_mult</code> is updated<br />
+- All three ML features (<code>crop_target_moisture</code>, <code>crop_critical_moisture</code>, <code>region_evap_multiplier</code>) are refreshed<br />
+- The next sensor reading is classified against the new thresholds</p>
+</blockquote>
+<p>No system restart is required. The change is atomic: the system either reads the old configuration or the new one — it never operates in a partially-updated state.</p>
+<blockquote>
+<p>[!IMPORTANT]<br />
+Changing crop mid-season is supported but should be done with care. If transitioning from a low-threshold crop (e.g., sorghum) to a high-threshold crop (e.g., potato), the system will immediately re-evaluate existing moisture readings against the new thresholds. A reading that was in the SAFE zone for sorghum may immediately trigger an emergency alert for potato. Ensure the field has been prepared and planted with the new crop before changing the setting.</p>
+</blockquote>
+<hr />
+<p><em>P-WOS v2.0 | System Behaviour — Crop Profiles &amp; Regional Adaptation</em></p>
+                            </div>
+                        </article>
+
+                        <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
+                            <a href="index.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Back to Index</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <aside class="hidden lg:block w-56 shrink-0 border-l border-slate-200 dark:border-slate-800/80 pl-6">
+                        <div class="sticky top-0">
+                            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5 mb-4">
+                                <i data-lucide="list-ordered" class="w-3.5 h-3.5 text-emerald-500"></i> On This Page
+                            </h4>
+                            <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                            <a href="index.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                                <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                                <span>Back to Home</span>
+                            </a>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const docs = [{"category": "Getting Started", "icon": "rocket", "pages": [{"title": "Project Overview", "file": "PROJECT_OVERVIEW.html"}, {"title": "Quickstart Guide", "file": "QUICKSTART.html"}, {"title": "Project Roadmap", "file": "PROJECT_ROADMAP.html"}]}, {"category": "System Architecture", "icon": "cpu", "pages": [{"title": "System Overview", "file": "system_overview.html"}, {"title": "Dataflow", "file": "dataflow.html"}, {"title": "Analytics Reference", "file": "analytics_reference.html"}, {"title": "Crop Profiles", "file": "crop_profiles.html"}, {"title": "Edge Cases & Scenarios", "file": "edge_cases_and_scenarios.html"}, {"title": "ML Model Deep Dive", "file": "ml_model_deep_dive.html"}, {"title": "VPD & Weather Engine", "file": "vpd_and_weather_engine.html"}]}, {"category": "Core Guides", "icon": "book-open", "pages": [{"title": "Installation Guide", "file": "installation_guide.html"}, {"title": "Backend API", "file": "backend_guide.html"}, {"title": "Database Guide", "file": "database_guide.html"}, {"title": "Firmware Guide", "file": "firmware_guide.html"}, {"title": "Simulation Guide", "file": "simulation_guide.html"}, {"title": "ML Model Guide", "file": "ml_model_guide.html"}, {"title": "Performance Guide", "file": "performance_guide.html"}, {"title": "Troubleshooting", "file": "troubleshooting.html"}, {"title": "Tests Reference", "file": "tests.html"}, {"title": "Analytics Dashboard", "file": "analytics_dashboard.html"}, {"title": "Main Dashboard", "file": "main_dashboard.html"}, {"title": "Mobile Guide", "file": "mobile_guide.html"}]}, {"category": "Hardware Engineering", "icon": "circuit-board", "pages": [{"title": "Hardware Architecture", "file": "hardware_architecture.html"}, {"title": "Breadboard Assembly", "file": "breadboard_assembly.html"}, {"title": "Breadboard Guide", "file": "breadboard.html"}, {"title": "Hardware Setup", "file": "hardware_setup.html"}, {"title": "Shopping List", "file": "hardware_shopping_list.html"}, {"title": "Migration Plan", "file": "hardware_migration_plan.html"}, {"title": "Testing Report", "file": "testing_report.html"}, {"title": "Hardware Progress", "file": "hardware_progress.html"}, {"title": "Phase 1 Report", "file": "phase1_report.html"}]}, {"category": "Scientific Research", "icon": "microscope", "pages": [{"title": "Codebase Analysis", "file": "codebase_analysis.html"}, {"title": "Codebase Audit", "file": "codebase_audit.html"}, {"title": "Crop Integration Plan", "file": "crop_integration_plan.html"}]}, {"category": "Technical Reference", "icon": "code", "pages": [{"title": "API Reference", "file": "api_reference.html"}, {"title": "MQTT Topics", "file": "mqtt_topics.html"}, {"title": "Coding Guidelines", "file": "coding_guidelines.html"}, {"title": "Project Structure", "file": "project_structure.html"}, {"title": "VPD Scenarios", "file": "vpd_scenarios.html"}]}, {"category": "Deployment & Operations", "icon": "cloud", "pages": [{"title": "Cloud ML Deployment", "file": "cloud_ml_deployment.html"}, {"title": "Local Implementation", "file": "local_implementation.html"}, {"title": "ML Roadmap", "file": "ml_implementation_roadmap.html"}]}, {"category": "Reports & Validation", "icon": "bar-chart-3", "pages": [{"title": "Final Report", "file": "final_report.html"}, {"title": "Validation Report", "file": "validation_report.html"}, {"title": "Simulation Analysis", "file": "simulation_analysis.html"}, {"title": "Moisture Analysis", "file": "moisture_analysis.html"}, {"title": "Phase 1 Setup Report", "file": "phase_01_setup_report.html"}, {"title": "Phase 5 ML Report", "file": "phase_05_ml_report.html"}, {"title": "Phase 6 Frontend Report", "file": "phase_06_frontend_report.html"}]}];
+
+        let expandedGroups = {};
+
+        function initTheme() {
+            const saved = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(saved);
+        }
+
+        function setTheme(theme) {
+            document.body.classList.remove('theme-light', 'theme-dark');
+            document.documentElement.classList.remove('dark');
+            const hljsLight = document.getElementById('hljs-light-theme');
+            const hljsDark = document.getElementById('hljs-dark-theme');
+            if (theme === 'dark') {
+                document.body.classList.add('theme-dark');
+                document.documentElement.classList.add('dark');
+                if (hljsLight) hljsLight.disabled = true;
+                if (hljsDark) hljsDark.disabled = false;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'moon');
+            } else {
+                document.body.classList.add('theme-light');
+                if (hljsLight) hljsLight.disabled = false;
+                if (hljsDark) hljsDark.disabled = true;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'sun');
+            }
+            localStorage.setItem('pwos-theme', theme);
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            const current = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(current === 'light' ? 'dark' : 'light');
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        function renderSidebar(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = docs.map(function(group, gi) {
+                const isOpen = expandedGroups[gi] || false;
+                return '<div class="sidebar-group">' +
+                    '<button onclick="toggleGroup(' + gi + ')" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' +
+                        '<span class="flex items-center gap-2"><i data-lucide="' + group.icon + '" class="w-4 h-4"></i><span>' + group.category + '</span></span>' +
+                        '<i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ' + (isOpen ? 'rotate-0' : '-rotate-90') + '"></i>' +
+                    '</button>' +
+                    '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
+                        '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
+                            group.pages.map(function(page) {
+                                return '<li><a href="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                            }).join('') +
+                        '</ul>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function toggleGroup(idx) {
+            expandedGroups[idx] = !expandedGroups[idx];
+            renderSidebar('sidebarGroups');
+            renderSidebar('mobileSidebarGroups');
+        }
+
+        function setupSearch(inputId, containerId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('input', function(e) {
+                const q = e.target.value.toLowerCase().trim();
+                document.querySelectorAll('#' + containerId + ' .sidebar-group').forEach(function(el) {
+                    el.style.display = q === '' || el.textContent.toLowerCase().includes(q) ? '' : 'none';
+                });
+            });
+        }
+
+        setupSearch('docSearch', 'sidebarGroups');
+        setupSearch('mobileDocSearch', 'mobileSidebarGroups');
+
+        function openMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            sidebar.classList.remove('hidden');
+            setTimeout(function() { panel.classList.remove('-translate-x-full'); }, 10);
+        }
+
+        function closeMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            panel.classList.add('-translate-x-full');
+            setTimeout(function() { sidebar.classList.add('hidden'); }, 300);
+        }
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', openMobileNav);
+        document.getElementById('closeMobileNav').addEventListener('click', closeMobileNav);
+        document.getElementById('navOverlay').addEventListener('click', closeMobileNav);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const output = document.getElementById('markdownOutput');
+            if (!output) return;
+
+            output.querySelectorAll('pre code').forEach(function(block) { hljs.highlightElement(block); });
+
+            try {
+                renderMathInElement(output, {
+                    delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}],
+                    throwOnError: false
+                });
+            } catch(e) {}
+
+            try {
+                mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+                mermaid.run({ nodes: output.querySelectorAll('.mermaid') });
+            } catch(e) {}
+
+            buildTOC(output);
+        });
+
+        function buildTOC(container) {
+            const list = document.getElementById('tocList');
+            if (!list) return;
+            list.innerHTML = '';
+            const headings = container.querySelectorAll('h2, h3');
+            if (headings.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'text-slate-400 italic';
+                li.textContent = 'No sub-headers on page';
+                list.appendChild(li);
+                return;
+            }
+            headings.forEach(function(heading, idx) {
+                const anchorId = 'toc-anchor-' + idx;
+                heading.setAttribute('id', anchorId);
+                const li = document.createElement('li');
+                const isSub = heading.tagName.toLowerCase() === 'h3';
+                li.className = 'transition-colors duration-150 ' + (isSub ? 'pl-3 border-l border-slate-100 dark:border-slate-800 ml-1 py-0.5' : 'font-medium py-1');
+                const link = document.createElement('a');
+                link.href = '#' + anchorId;
+                link.className = 'hover:text-emerald-500 block truncate transition-colors';
+                link.textContent = heading.textContent;
+                link.onclick = function(e) { e.preventDefault(); heading.scrollIntoView({ behavior: 'smooth' }); };
+                li.appendChild(link);
+                list.appendChild(li);
+            });
+        }
+
+        window.addEventListener('scroll', function() {
+            const main = document.querySelector('main');
+            if (!main) return;
+            const scrollTop = main.scrollTop;
+            const scrollHeight = main.scrollHeight - main.clientHeight;
+            document.getElementById('readingProgress').style.width = (scrollTop / Math.max(scrollHeight, 1)) * 100 + '%';
+        });
+
+        const copyBtn = document.getElementById('copyDocBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                const content = document.getElementById('markdownOutput')?.innerText;
+                if (!content) return;
+                navigator.clipboard.writeText(content).then(function() {
+                    copyBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>';
+                    lucide.createIcons();
+                    setTimeout(function() {
+                        copyBtn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
+                        lucide.createIcons();
+                    }, 1500);
+                });
+            });
+        }
+
+        initTheme();
+        renderSidebar('sidebarGroups');
+        renderSidebar('mobileSidebarGroups');
+    </script>
+</body>
+</html>

@@ -1,0 +1,2049 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edge Cases And Scenarios - P-WOS Documentation Portal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#16a34a', 600: '#15803d', 700: '#166534' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css" id="hljs-dark-theme" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .theme-light ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+        .theme-dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .prose table { width: 100%; margin: 1.5rem 0; border-collapse: collapse; font-size: 0.875rem; }
+        .prose th { background-color: rgba(0,0,0,0.02); font-weight: 600; padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); text-align: left; }
+        .dark .prose th { background-color: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); }
+        .prose td { padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); }
+        .dark .prose td { border-color: rgba(255,255,255,0.08); }
+        .prose blockquote { border-left: 3px solid #16a34a; padding-left: 1rem; font-style: italic; color: #4b5563; }
+        .dark .prose blockquote { color: #9ca3af; }
+        .prose img { border-radius: 8px; margin: 1.5rem auto; max-width: 100%; }
+        .prose pre { border-radius: 10px; background: #f8fafc !important; border: 1px solid #e2e8f0; }
+        .dark .prose pre { background: #0f171a !important; border-color: #1e2a2e; }
+
+        .theme-dark { background-color: #0b0f11; color: #f1f5f9; }
+        .theme-dark .sidebar-bg { background-color: #101618; border-color: #1a2225; }
+        .theme-dark .content-card { background-color: #12191b; border-color: #1c272a; }
+
+        .sidebar-group-enter { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-in-out; }
+        .sidebar-group-enter.active { max-height: 500px; }
+    </style>
+</head>
+<body class="theme-light bg-slate-50 text-slate-800 transition-colors duration-200 antialiased font-sans h-screen overflow-hidden flex flex-col">
+
+    <div class="fixed top-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-900/50 z-50">
+        <div id="readingProgress" class="h-full bg-brand-500 w-0 transition-all duration-75"></div>
+    </div>
+
+    <header class="h-14 md:h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/85 dark:bg-[#101618]/85 backdrop-blur-md flex items-center justify-between px-4 md:px-6 z-40 shrink-0">
+        <div class="flex items-center space-x-3">
+            <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-500">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                <div class="p-1.5 bg-gradient-to-tr from-emerald-500 to-green-600 rounded-lg text-white">
+                    <i data-lucide="droplet" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <span class="font-bold text-sm md:text-base tracking-tight text-slate-900 dark:text-white">P-WOS Docs</span>
+                    <span class="hidden md:inline-block ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 font-medium">Predictive Water Optimization</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300" title="Toggle Light/Dark Mode">
+                <i data-lucide="sun" id="themeIcon" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Theme</span>
+            </button>
+            <button onclick="window.print()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Print to PDF">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Export PDF</span>
+            </button>
+            <a href="index.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Home</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="navSidebar" class="w-64 border-r border-slate-200 dark:border-slate-800/80 overflow-y-auto shrink-0 bg-white dark:bg-[#101618] hidden lg:block z-30">
+            <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text" id="docSearch" placeholder="Search documentation..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                </div>
+            </div>
+            <div class="p-3 space-y-1" id="sidebarGroups"></div>
+        </aside>
+
+        <aside id="mobileSidebar" class="fixed inset-0 z-40 lg:hidden hidden">
+            <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" id="navOverlay"></div>
+            <div class="relative w-72 max-w-[85vw] h-full bg-white dark:bg-[#101618] shadow-2xl overflow-y-auto transform transition-transform duration-300 -translate-x-full">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">Navigation</span>
+                    <button id="closeMobileNav" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-400">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="mobileDocSearch" placeholder="Search..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                    </div>
+                </div>
+                <div class="p-3 space-y-1" id="mobileSidebarGroups"></div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto min-w-0">
+            <div class="px-4 md:px-8 py-6 md:py-10">
+                <div class="flex gap-6 lg:gap-10">
+                    <div class="flex-1 min-w-0 max-w-4xl">
+                        <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                            <span id="breadcrumbCategory">System Architecture</span>
+                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">edge_cases_and_scenarios.md</span>
+                        </div>
+
+                        <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
+                            <div class="absolute top-6 right-6 flex items-center space-x-2 print:hidden">
+                                <button id="copyDocBtn" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Copy content">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <div id="markdownOutput" class="prose max-w-none dark:prose-invert
+                                prose-headings:font-bold prose-headings:tracking-tight
+                                prose-h1:text-3xl prose-h1:mb-6 prose-h1:text-slate-900 dark:prose-h1:text-white
+                                prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:text-slate-900 dark:prose-h2:text-white
+                                prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-slate-800 dark:prose-h3:text-slate-200
+                                prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
+                                prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                                prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
+                                <h1>Edge Cases &amp; Scenario Handbook</h1>
+<blockquote>
+<p><strong>P-WOS v2.0 — System Behaviour Reference</strong><br />
+Complete reference for what P-WOS does in unusual, extreme, or borderline situations.</p>
+</blockquote>
+<hr />
+<h2>1. Scenario Walkthrough Table</h2>
+<p>This master table summarises every documented edge-case scenario. Use it as a quick reference before consulting the detailed traces in §2.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Scenario Name</th>
+<th>Conditions</th>
+<th>System Decision</th>
+<th>Status Code</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>Critically dry in MANUAL</td>
+<td>moisture=8%, Maize/Matabeleland/Summer, MANUAL mode</td>
+<td>Force AUTO → <code>NOW</code></td>
+<td><code>CRITICAL</code></td>
+<td>Safety override: moisture below critical limit</td>
+</tr>
+<tr>
+<td>B</td>
+<td>Saturated in MANUAL</td>
+<td>moisture=92%, pump active, MANUAL mode</td>
+<td>Kill pump → Force AUTO → <code>STOP</code></td>
+<td><code>SATURATED</code></td>
+<td>Safety override: flood-risk pump cutoff</td>
+</tr>
+<tr>
+<td>C</td>
+<td>Emergency cutoff during watering</td>
+<td>moisture hits 85% at t=25s of 60s cycle</td>
+<td>Pump OFF immediately → break loop</td>
+<td><code>EMERGENCY_CUTOFF</code></td>
+<td>Real-time saturation detected mid-cycle</td>
+</tr>
+<tr>
+<td>D</td>
+<td>Watering cooldown</td>
+<td>30s after watering ended, system returns <code>NOW</code></td>
+<td><code>STALL</code></td>
+<td><code>WATERING_COOLDOWN</code></td>
+<td>15-minute post-water buffer not elapsed</td>
+</tr>
+<tr>
+<td>E</td>
+<td>Sensor disconnected</td>
+<td>moisture=0.3%</td>
+<td><code>STOP</code></td>
+<td><code>SENSOR_ERROR</code></td>
+<td>Reading below 1.0% validity floor</td>
+</tr>
+<tr>
+<td>F</td>
+<td>Sensor flatline</td>
+<td>5 readings of exactly 45.00%</td>
+<td><code>STOP</code></td>
+<td><code>SENSOR_ERROR</code></td>
+<td>std(last 4) &lt; 0.0001 — sensor stuck</td>
+</tr>
+<tr>
+<td>G</td>
+<td>False dry</td>
+<td>wind=28 km/h, humidity=32%, rate=−3%/hr</td>
+<td><code>MONITOR</code></td>
+<td><code>FALSE_DRY_CHECK</code></td>
+<td>Evaporative depression masking true soil state</td>
+</tr>
+<tr>
+<td>H</td>
+<td>VPD delay → PREHEAT</td>
+<td>VPD=3.1 kPa at 13:00, then 05:00 next day</td>
+<td><code>STALL</code> then <code>NOW</code></td>
+<td><code>VPD_DELAY</code> → <code>PREHEAT</code></td>
+<td>Midday heat blocked; preheat window triggered</td>
+</tr>
+<tr>
+<td>I</td>
+<td>Rain override (STALL)</td>
+<td>Rain in 90 min, moisture=48%, non-critical</td>
+<td><code>STALL</code></td>
+<td><code>RAIN_EXPECTED</code></td>
+<td>Upcoming rain sufficient, no urgency</td>
+</tr>
+<tr>
+<td>J</td>
+<td>Rain override (EMERGENCY)</td>
+<td>Rain in 3 hr, moisture=27%, critical=35%</td>
+<td><code>NOW</code></td>
+<td><code>EMERGENCY</code></td>
+<td>Critical drought overrides rain forecast</td>
+</tr>
+<tr>
+<td>K</td>
+<td>9-day heavy rain</td>
+<td>Continuous rain, soil saturated throughout</td>
+<td><code>STOP</code> (41%) / <code>MONITOR</code> (59%)</td>
+<td><code>RAIN_ACTIVE</code> / <code>OPTIMAL</code></td>
+<td>System correctly idle; 0 autonomous water triggers</td>
+</tr>
+<tr>
+<td>L</td>
+<td>Potato 25% — Matabeleland summer</td>
+<td>critical=50% (45+5), moisture=25% &lt; 50%</td>
+<td><code>NOW</code></td>
+<td><code>CRITICAL</code> / <code>EMERGENCY</code></td>
+<td>Critical threshold exceeded</td>
+</tr>
+<tr>
+<td>M</td>
+<td>Sorghum 25% — Matabeleland summer</td>
+<td>critical=25% (20+5), moisture=25%, NOT &lt; critical</td>
+<td><code>NOW</code></td>
+<td><code>DRY_TRIGGER</code></td>
+<td>Falls below LOW=35% (30+5)</td>
+</tr>
+<tr>
+<td>N</td>
+<td>Weather API down</td>
+<td>Source = 'stale' / 'fallback' / 'none'</td>
+<td>Decision reverts to sensor-only</td>
+<td><em>(inherited)</em></td>
+<td>Weather features zeroed; ML recomputes</td>
+</tr>
+<tr>
+<td>O</td>
+<td>Hardware OFFLINE</td>
+<td>No ESP32 heartbeat</td>
+<td><code>STOP</code></td>
+<td><code>HARDWARE_OFFLINE</code></td>
+<td>No reliable sensor stream</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>2. Detailed Scenario Traces</h2>
+<p>Each trace below follows the same structure:</p>
+<ul>
+<li><strong>Starting Conditions</strong> — exact numeric values</li>
+<li><strong>Code Path</strong> — which checks fire, in priority order</li>
+<li><strong>Decision</strong> — what the engine returns</li>
+<li><strong>Dashboard</strong> — what the operator sees</li>
+<li><strong>Log Entry</strong> — what is written to the system log</li>
+</ul>
+<hr />
+<h3>2a. Critically Dry in MANUAL Mode</h3>
+<p><strong>Scenario:</strong> Moisture is dangerously low while the operator has locked the system into MANUAL mode. The safety override must fire unconditionally.</p>
+<h4>Starting Conditions</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Crop</td>
+<td>Maize</td>
+</tr>
+<tr>
+<td>Region</td>
+<td>Matabeleland (1.5× multiplier)</td>
+</tr>
+<tr>
+<td>Season</td>
+<td>Summer (+5 shift)</td>
+</tr>
+<tr>
+<td>Base critical threshold</td>
+<td>30%</td>
+</tr>
+<tr>
+<td>Effective critical threshold</td>
+<td>30 × 1.5 + 5 = <strong>50%</strong> <em>(note: region multiplier applied to threshold, not moisture)</em></td>
+</tr>
+<tr>
+<td>Observed moisture</td>
+<td><strong>8%</strong></td>
+</tr>
+<tr>
+<td>System mode</td>
+<td><strong>MANUAL</strong></td>
+</tr>
+<tr>
+<td>Pump state</td>
+<td>OFF</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Threshold derivation:</strong> Maize base critical = 30. Matabeleland summer shift applies as: <code>critical = floor(30 × 1.5) + 5 = 45 + 5 = 50%</code>. The effective critical threshold for this crop/region/season combination is <strong>50%</strong>.</p>
+</blockquote>
+<h4>Code Path</h4>
+<pre><code>automation_controller.py :: main_loop()
+
+1. GET /api/system/state          → mode = MANUAL
+2. GET /api/sensor-data/latest    → moisture = 8%
+
+3. Safety override check (lines 113-150):
+   critical_limit = 50   (crop_critical_moisture from settings)
+   moisture (8) &lt; critical_limit (50) → TRUE
+
+4. POST /api/system/state { mode: AUTO }   ← force mode change
+5. Continue loop iteration (do NOT return; fall through to decision engine)
+
+Decision engine (ml_predictor.py lines 360-443):
+   Priority 1: is_raining?       → NO
+   Priority 2: is_saturated?     → NO  (8% &lt;&lt; 85%)
+   Priority 3: is_high_wind?     → NO
+   Priority 4: should_wait_rain? → NO
+   Priority 5: is_false_dry?     → NO
+   Priority 6: moisture &lt; CRITICAL (50%)? → YES (8 &lt; 50)
+   → Decision: NOW / CRITICAL → escalated to EMERGENCY due to MANUAL override context
+</code></pre>
+<h4>Decision</h4>
+<pre><code>action  : NOW
+reason  : CRITICAL
+urgency : EMERGENCY
+</code></pre>
+<h4>Dashboard</h4>
+<pre><code>⚠️  SAFETY OVERRIDE ACTIVATED
+Mode forcibly changed: MANUAL → AUTO
+Moisture: 8%  |  Critical threshold: 50%
+Recommendation: WATER NOW — CRITICAL
+</code></pre>
+<h4>Log Entry</h4>
+<pre><code>[WARN]  [automation_controller] MANUAL mode override: moisture=8.0% below critical=50.0%. Forcing AUTO.
+[INFO]  POST /api/system/state { mode: AUTO } → 200 OK
+[WARN]  [ml_predictor] Decision: NOW | Reason: CRITICAL | Moisture: 8.0% | Threshold: 50.0%
+[INFO]  Autonomous watering cycle initiated.
+</code></pre>
+<hr />
+<h3>2b. Saturated in MANUAL Mode</h3>
+<p><strong>Scenario:</strong> Soil is over-saturated and the pump is already running in MANUAL mode. The system must kill the pump immediately and reclaim control.</p>
+<h4>Starting Conditions</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Crop</td>
+<td>Potato</td>
+</tr>
+<tr>
+<td>Region</td>
+<td>any</td>
+</tr>
+<tr>
+<td>Observed moisture</td>
+<td><strong>92%</strong></td>
+</tr>
+<tr>
+<td>high_limit (crop_high_threshold)</td>
+<td>85%</td>
+</tr>
+<tr>
+<td>System mode</td>
+<td><strong>MANUAL</strong></td>
+</tr>
+<tr>
+<td>Pump state</td>
+<td><strong>ON (running)</strong></td>
+</tr>
+</tbody>
+</table>
+<h4>Code Path</h4>
+<pre><code>automation_controller.py :: main_loop()
+
+1. GET /api/system/state          → mode = MANUAL
+2. GET /api/sensor-data/latest    → moisture = 92%
+
+3. Safety override check (lines 113-150):
+   critical_limit = 45 (potato base, no summer)
+   high_limit     = 85 (crop_high_threshold)
+
+   moisture (92) &lt; critical_limit?  → NO   (skip critical path)
+   moisture (92) &gt;= high_limit (85)? → YES
+
+4. POST /api/control/pump { action: OFF }   ← kill pump immediately
+5. POST /api/system/state { mode: AUTO }    ← force AUTO
+6. Continue loop
+
+Decision engine:
+   Priority 2: is_saturated (&gt;85%)? → YES (92 &gt; 85)
+   → Decision: STOP / SATURATED
+</code></pre>
+<h4>Decision</h4>
+<pre><code>action : STOP
+reason : SATURATED
+</code></pre>
+<h4>Dashboard</h4>
+<pre><code>🛑  PUMP FORCE-STOPPED
+Saturation safety override: moisture=92% exceeds 85% ceiling.
+Mode changed: MANUAL → AUTO
+Recommendation: STOP — soil is saturated.
+</code></pre>
+<h4>Log Entry</h4>
+<pre><code>[WARN]  [automation_controller] MANUAL mode override: moisture=92.0% &gt;= high_limit=85.0%. Killing pump.
+[INFO]  POST /api/control/pump { action: OFF } → 200 OK
+[INFO]  POST /api/system/state { mode: AUTO }  → 200 OK
+[INFO]  [ml_predictor] Decision: STOP | Reason: SATURATED | Moisture: 92.0%
+</code></pre>
+<hr />
+<h3>2c. Emergency Cutoff During Watering</h3>
+<p><strong>Scenario:</strong> A scheduled 60-second watering cycle is in progress. At the 25-second mark, a moisture poll detects that saturation has been reached. The pump must stop immediately.</p>
+<h4>Starting Conditions</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Watering duration</td>
+<td>60 seconds</td>
+</tr>
+<tr>
+<td>Elapsed time at detection</td>
+<td><strong>25 seconds</strong></td>
+</tr>
+<tr>
+<td>high_limit</td>
+<td>85%</td>
+</tr>
+<tr>
+<td>Moisture at t=0</td>
+<td>72%</td>
+</tr>
+<tr>
+<td>Moisture at t=25s</td>
+<td><strong>85%</strong> (hit ceiling)</td>
+</tr>
+</tbody>
+</table>
+<h4>Code Path</h4>
+<pre><code>automation_controller.py :: execute_watering() (lines 229-254)
+
+1. POST /api/control/pump { action: ON }
+2. start_time = time.now()
+3. Enter polling loop:
+
+   while time.time() - start_time &lt; (60 + 5):   # 65s window
+       time.sleep(5)                              # poll every 5s
+
+       Iteration 1 (t≈5s):  GET /api/sensor-data → moisture=74%  → 74 &lt; 85 → continue
+       Iteration 2 (t≈10s): GET /api/sensor-data → moisture=77%  → 77 &lt; 85 → continue
+       Iteration 3 (t≈15s): GET /api/sensor-data → moisture=80%  → 80 &lt; 85 → continue
+       Iteration 4 (t≈20s): GET /api/sensor-data → moisture=83%  → 83 &lt; 85 → continue
+       Iteration 5 (t≈25s): GET /api/sensor-data → moisture=85%  → 85 &gt;= 85 → EMERGENCY CUTOFF
+
+4. POST /api/control/pump { action: OFF }   ← immediate
+5. break                                    ← exit loop; remaining 35s NOT watered
+</code></pre>
+<h4>Decision</h4>
+<pre><code>action : STOP (pump OFF)
+reason : EMERGENCY_CUTOFF
+Remaining scheduled time: 35 seconds (abandoned)
+</code></pre>
+<h4>Dashboard</h4>
+<pre><code>⛔  EMERGENCY CUTOFF
+Watering halted at t=25s / 60s.
+Moisture reached saturation ceiling: 85%.
+35 seconds of scheduled watering were NOT executed.
+</code></pre>
+<h4>Log Entry</h4>
+<pre><code>[INFO]  Watering cycle started. Duration=60s. Moisture=72.0%
+[INFO]  Poll t=5s:  moisture=74.0% — continuing
+[INFO]  Poll t=10s: moisture=77.0% — continuing
+[INFO]  Poll t=15s: moisture=80.0% — continuing
+[INFO]  Poll t=20s: moisture=83.0% — continuing
+[WARN]  Poll t=25s: moisture=85.0% &gt;= high_limit=85.0% — EMERGENCY CUTOFF
+[INFO]  POST /api/control/pump { action: OFF } → 200 OK
+[INFO]  Watering loop exited early at t=25s. 35s of cycle abandoned.
+</code></pre>
+<hr />
+<h3>2d. Watering Cooldown</h3>
+<p><strong>Scenario:</strong> A watering cycle completed 30 seconds ago. The decision engine is polled again and returns <code>NOW</code>. The cooldown interlock must suppress the second cycle.</p>
+<h4>Starting Conditions</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Last watering end time</td>
+<td>30 seconds ago</td>
+</tr>
+<tr>
+<td>Cooldown period</td>
+<td>900 seconds (15 minutes)</td>
+</tr>
+<tr>
+<td>Time since end</td>
+<td><strong>30 seconds</strong></td>
+</tr>
+<tr>
+<td>ML decision</td>
+<td>NOW / DRY_TRIGGER</td>
+</tr>
+</tbody>
+</table>
+<h4>Code Path</h4>
+<pre><code>automation_controller.py :: main_loop() (lines 172-201)
+
+1. ml_predictor returns: action=NOW, reason=DRY_TRIGGER
+2. Cooldown check:
+   time_since_end = 30
+   30 &lt; 900 → TRUE
+
+3. Override:
+   action = &quot;STALL&quot;
+   reason = &quot;Watering in cooldown.&quot;
+
+4. Do NOT initiate watering.
+5. Return STALL to dashboard.
+</code></pre>
+<blockquote>
+<p><strong>Why 15 minutes?</strong> Moisture sensors have a diffusion lag: water applied at the root zone can take several minutes to be absorbed and reflected in capacitive sensor readings. Without cooldown, the system risks multiple rapid cycles that collectively over-saturate.</p>
+</blockquote>
+<h4>Decision</h4>
+<pre><code>action : STALL
+reason : WATERING_COOLDOWN
+original_ml_action : NOW
+</code></pre>
+<h4>Dashboard</h4>
+<pre><code>⏳  COOLDOWN ACTIVE
+Watering completed 30s ago. Cooldown: 870s remaining.
+ML recommended NOW — suppressed by interlock.
+</code></pre>
+<h4>Log Entry</h4>
+<pre><code>[INFO]  [ml_predictor] Decision: NOW | Reason: DRY_TRIGGER
+[INFO]  [automation_controller] Cooldown active: 30s elapsed of 900s. Overriding to STALL.
+[INFO]  Decision returned to dashboard: STALL / WATERING_COOLDOWN
+</code></pre>
+<hr />
+<h3>2e. Sensor Disconnected</h3>
+<p><strong>Scenario:</strong> The ESP32 is physically connected but the moisture sensor has failed or disconnected, returning a near-zero reading.</p>
+<h4>Starting Conditions</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reported moisture</td>
+<td><strong>0.3%</strong></td>
+</tr>
+<tr>
+<td>Validity floor</td>
+<td>1.0%</td>
+</tr>
+<tr>
+<td>Last valid reading</td>
+<td>52% (5 minutes ago)</td>
+</tr>
+</tbody>
+</table>
+<h4>Code Path</h4>
+<pre><code>ml_predictor.py :: validate_sensor() (lines 133-163)
+
+1. current_moisture = 0.3
+2. Check: moisture &lt; 1.0 → TRUE (0.3 &lt; 1.0)
+3. Return: STOP / SENSOR_ERROR
+4. Decision engine does NOT proceed further.
+</code></pre>
+<blockquote>
+<p><strong>Design rationale:</strong> A legitimate crop moisture reading below 1.0% is physically impossible in any soil used for agriculture. A reading at or near zero is an unambiguous indicator of an open-circuit or disconnected probe. The system stops rather than guessing.</p>
+</blockquote>
+<h4>Decision</h4>
+<pre><code>action : STOP
+reason : SENSOR_ERROR
+sub-reason: reading_below_floor (0.3% &lt; 1.0%)
+</code></pre>
+<h4>Dashboard</h4>
+<pre><code>🔴  SENSOR ERROR
+Moisture reading: 0.3% — below validity floor (1.0%).
+Possible cause: disconnected probe, wiring fault, or ADC failure.
+All automation suspended until sensor is restored.
+</code></pre>
+<h4>Log Entry</h4>
+<pre><code>[ERROR] [ml_predictor] Sensor validation failed: moisture=0.3% &lt; floor=1.0%
+[INFO]  Decision: STOP | Reason: SENSOR_ERROR | Sub: reading_below_floor
+[WARN]  All watering automation suspended. Manual inspection required.
+</code></pre>
+<hr />
+<h3>2f. Sensor Flatline</h3>
+<p><strong>Scenario:</strong> The moisture sensor is physically connected and returning a plausible value, but the reading has not changed across multiple samples — indicating a stuck or frozen sensor.</p>
+<h4>Starting Conditions</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reading 1</td>
+<td>45.0000%</td>
+</tr>
+<tr>
+<td>Reading 2</td>
+<td>45.0000%</td>
+</tr>
+<tr>
+<td>Reading 3</td>
+<td>45.0000%</td>
+</tr>
+<tr>
+<td>Reading 4</td>
+<td>45.0000%</td>
+</tr>
+<tr>
+<td>Reading 5</td>
+<td>45.0000%</td>
+</tr>
+<tr>
+<td>std(last 4)</td>
+<td><strong>0.00000</strong> (&lt; 0.0001)</td>
+</tr>
+<tr>
+<td>mean(last 3)</td>
+<td>45.0% (≥ 1.0%)</td>
+</tr>
+</tbody>
+</table>
+<h4>Code Path</h4>
+<pre><code>ml_predictor.py :: validate_sensor() (lines 133-163)
+
+1. current_moisture = 45.0
+2. Check: moisture &lt; 1.0? → NO  (passes floor check)
+3. Check: mean(last 3) &lt; 1.0? → NO (45.0 &gt;&gt; 1.0)
+4. Check: std(last 4 readings) &lt; 0.0001? → YES (std = 0.0)
+5. Return: STOP / SENSOR_ERROR (flatline detected)
+</code></pre>
+<blockquote>
+<p><strong>Why std &lt; 0.0001?</strong> Real capacitive soil sensors exhibit micro-fluctuations due to thermal noise, electrical interference, and natural soil dynamics. A perfectly constant reading across four polls is statistically impossible in normal operation and indicates the sensor's ADC is latched, the probe is not in soil, or the communication link is returning cached data.</p>
+</blockquote>
+<h4>Decision</h4>
+<pre><code>action : STOP
+reason : SENSOR_ERROR
+sub-reason: flatline_detected (std=0.0 &lt; 0.0001)
+</code></pre>
+<h4>Dashboard</h4>
+<pre><code>🔴  SENSOR ERROR — FLATLINE
+Moisture reading: 45.0% (unchanged across last 4 samples).
+Possible cause: stuck ADC, cached value, probe not in contact with soil.
+All automation suspended.
+</code></pre>
+<h4>Log Entry</h4>
+<pre><code>[ERROR] [ml_predictor] Sensor validation failed: std(last 4)=0.0 &lt; threshold=0.0001. Flatline detected.
+[INFO]  Readings: [45.0, 45.0, 45.0, 45.0]
+[INFO]  Decision: STOP | Reason: SENSOR_ERROR | Sub: flatline_detected
+[WARN]  Automation suspended. Check sensor wiring and ADC health.
+</code></pre>
+<hr />
+<h3>2g. False Dry</h3>
+<p><strong>Scenario:</strong> High wind and low humidity are causing the surface sensor to report a rapid moisture drop, but the actual root-zone soil may not be as dry as the reading implies. The system must flag this as a potential false alarm rather than immediately watering.</p>
+<h4>Starting Conditions</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Crop</td>
+<td>Maize</td>
+</tr>
+<tr>
+<td>Moisture at t−60min</td>
+<td>65%</td>
+</tr>
+<tr>
+<td>Moisture now</td>
+<td>55%</td>
+</tr>
+<tr>
+<td>Moisture change rate</td>
+<td>−3%/hr → <strong>−0.05%/min → rate &lt; −0.5%/hr</strong> ✓</td>
+</tr>
+<tr>
+<td>Wind speed</td>
+<td><strong>28 km/h</strong> (&gt; 20 km/h)</td>
+</tr>
+<tr>
+<td>Relative humidity</td>
+<td><strong>32%</strong> (&lt; 40%)</td>
+</tr>
+<tr>
+<td>Moisture level</td>
+<td>55% (above LOW threshold)</td>
+</tr>
+</tbody>
+</table>
+<h4>Code Path</h4>
+<pre><code>ml_predictor.py :: decision_engine() (lines 360-443)
+
+Priority 1: is_raining?       → NO
+Priority 2: is_saturated?     → NO  (55% &lt; 85%)
+Priority 3: is_high_wind?     → YES (28 &gt; 20) → but moisture NOT critical → check EMERGENCY bypass → NO → STALL?
+   ... however, false dry check (Priority 5) fires before this returns:
+
+Priority 4: should_wait_rain? → NO
+Priority 5: is_false_dry?
+   Condition: wind &gt; 20 km/h     → 28 &gt; 20  → TRUE
+   Condition: humidity &lt; 40%     → 32 &lt; 40  → TRUE
+   Condition: change_rate &lt; −0.5 → −3 &lt; −0.5 → TRUE (all three satisfied)
+   → Decision: MONITOR / FALSE_DRY_CHECK
+
+Note: Priority 5 fires before Priority 6 (CRITICAL check), so FALSE_DRY_CHECK
+is returned instead of DRY_TRIGGER because moisture (55%) is above LOW threshold.
+</code></pre>
+<h4>Decision</h4>
+<pre><code>action : MONITOR
+reason : FALSE_DRY_CHECK
+</code></pre>
+<h4>Dashboard</h4>
+<pre><code>🌬️  FALSE DRY DETECTED
+Wind: 28 km/h | Humidity: 32% | Rate: −3%/hr
+Sensor may be showing wind-evaporated surface dryness, not root-zone depletion.
+Action: MONITOR — system will re-evaluate when conditions stabilise.
+</code></pre>
+<h4>Log Entry</h4>
+<pre><code>[INFO]  [ml_predictor] False dry conditions detected:
+        wind=28 km/h &gt; 20, humidity=32% &lt; 40, rate=-3.0%/hr &lt; -0.5
+[INFO]  Decision: MONITOR | Reason: FALSE_DRY_CHECK
+[INFO]  No watering action taken. Monitoring sensor trend.
+</code></pre>
+<hr />
+<h3>2h. VPD Delay then PREHEAT</h3>
+<p><strong>Scenario:</strong> At 13:00, moisture is borderline low but VPD is extremely high. Watering midday under these conditions would cause excessive evaporation loss. The system stalls until pre-dawn, then waters during the optimal preheat window.</p>
+<h4>Starting Conditions</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Crop</td>
+<td>Maize</td>
+</tr>
+<tr>
+<td>Region</td>
+<td>Mashonaland (1.0×)</td>
+</tr>
+<tr>
+<td>Season</td>
+<td>Winter (−5 shift)</td>
+</tr>
+<tr>
+<td>Base low threshold</td>
+<td>45%</td>
+</tr>
+<tr>
+<td>Effective LOW (Mashonaland winter)</td>
+<td>45 × 1.0 − 5 = <strong>40%</strong></td>
+</tr>
+<tr>
+<td>Base proactive threshold</td>
+<td>55%</td>
+</tr>
+<tr>
+<td>Effective PROACTIVE</td>
+<td>55 × 1.0 − 5 = <strong>50%</strong></td>
+</tr>
+<tr>
+<td>Moisture at 13:00</td>
+<td><strong>42%</strong></td>
+</tr>
+<tr>
+<td>VPD at 13:00</td>
+<td><strong>3.1 kPa</strong> (&gt; 2.0 kPa)</td>
+</tr>
+<tr>
+<td>Time</td>
+<td>13:00</td>
+</tr>
+</tbody>
+</table>
+<h4>Phase 1 — 13:00 Decision</h4>
+<pre><code>ml_predictor.py :: decision_engine()
+
+Priority 1-5: all NO
+Priority 6: moisture (42) &lt; CRITICAL (25 − 5 = 20%)?  → NO (42 &gt; 20)
+Priority 7: moisture (42) &lt; LOW (40%)?
+   42 &lt; 40? → NO (42 is NOT below 40 — borderline)
+
+   *** IMPORTANT CORRECTION ***
+   42 &gt; 40, so Priority 7 does NOT fire for VPD_DELAY.
+   Fall through to Priority 9 (PROACTIVE):
+   moisture (42) &lt; PROACTIVE (50%)? → YES (42 &lt; 50)
+   Time window 04:00–06:00? → NO (currently 13:00)
+   Extreme VPD? → YES (3.1 &gt; 2.0)
+   But time window not met → fall to Priority 10
+
+Priority 10: moisture (42) &lt; PROACTIVE (50%)? → YES
+   → Decision: MONITOR / WATCHING
+
+(The PREHEAT path requires the 04:00-06:00 window to be active)
+</code></pre>
+<p><strong>Decision at 13:00:</strong></p>
+<pre><code>action : MONITOR
+reason : WATCHING
+</code></pre>
+<p><strong>Dashboard at 13:00:</strong></p>
+<pre><code>👁️  MONITORING
+Moisture: 42% (below proactive threshold: 50%)
+VPD: 3.1 kPa — high evaporation risk.
+Watching for optimal watering window.
+</code></pre>
+<h4>Phase 2 — 05:00 Next Morning</h4>
+<p>Overnight, moisture drifts down to <strong>44%</strong> (still below PROACTIVE=50%).</p>
+<pre><code>ml_predictor.py :: decision_engine()
+
+Priority 1-5: all NO
+Priority 6: 44 &lt; CRITICAL (20%)? → NO
+Priority 7: 44 &lt; LOW (40%)? → NO (44 &gt; 40)
+Priority 8: 44 &lt; LOW? → NO
+Priority 9: moisture (44) &lt; PROACTIVE (50%)? → YES
+   Time: 05:00 → within 04:00-06:00 window? → YES
+   Extreme VPD? → YES (morning VPD elevated)
+   → Decision: NOW / PREHEAT
+</code></pre>
+<p><strong>Decision at 05:00:</strong></p>
+<pre><code>action : NOW
+reason : PREHEAT
+</code></pre>
+<p><strong>Dashboard at 05:00:</strong></p>
+<pre><code>💧  PREHEAT WATERING
+Moisture: 44% | Proactive threshold: 50%
+Optimal pre-dawn window (04:00–06:00) active.
+Watering now to buffer heat-of-day demand.
+</code></pre>
+<h4>Log Entries</h4>
+<pre><code>[13:00] [ml_predictor] Decision: MONITOR | Reason: WATCHING | Moisture=42% | VPD=3.1 kPa
+[05:00] [ml_predictor] Decision: NOW | Reason: PREHEAT | Moisture=44% | Window: 04:00-06:00 | VPD=high
+[05:00] [automation_controller] Initiating preheat watering cycle.
+</code></pre>
+<hr />
+<h3>2i. Rain Override with STALL</h3>
+<p><strong>Scenario:</strong> Rain is forecast in 90 minutes. Soil moisture is below the LOW threshold but the system judges that incoming rain makes immediate watering wasteful.</p>
+<h4>Starting Conditions</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Crop</td>
+<td>Maize</td>
+</tr>
+<tr>
+<td>Season</td>
+<td>Summer (+5)</td>
+</tr>
+<tr>
+<td>Effective LOW threshold</td>
+<td>45 + 5 = <strong>50%</strong></td>
+</tr>
+<tr>
+<td>Effective CRITICAL</td>
+<td>30 + 5 = <strong>35%</strong></td>
+</tr>
+<tr>
+<td>Moisture</td>
+<td><strong>48%</strong></td>
+</tr>
+<tr>
+<td>Rain forecast</td>
+<td>90 minutes</td>
+</tr>
+<tr>
+<td><code>should_wait_rain</code> condition</td>
+<td>TRUE</td>
+</tr>
+</tbody>
+</table>
+<h4>Code Path</h4>
+<pre><code>ml_predictor.py :: decision_engine()
+
+Priority 1: is_raining? → NO (not raining yet)
+Priority 2: is_saturated? → NO
+Priority 3: is_high_wind? → NO
+Priority 4: should_wait_rain? → YES (rain in 90 min)
+   moisture &lt; CRITICAL (35%)? → NO (48 &gt; 35) → EMERGENCY bypass NOT triggered
+   → Decision: STALL / RAIN_EXPECTED
+</code></pre>
+<h4>Decision</h4>
+<pre><code>action : STALL
+reason : RAIN_EXPECTED
+</code></pre>
+<h4>Dashboard</h4>
+<pre><code>🌧️  STALL — RAIN EXPECTED
+Rain forecast: 90 minutes.
+Moisture: 48% | LOW threshold: 50%
+Watering suppressed. System will re-evaluate post-rainfall.
+</code></pre>
+<h4>Log Entry</h4>
+<pre><code>[INFO]  [ml_predictor] Rain expected in 90 min. Moisture=48%, CRITICAL=35%. Not critical — STALL.
+[INFO]  Decision: STALL | Reason: RAIN_EXPECTED
+</code></pre>
+<hr />
+<h3>2j. Rain Override EMERGENCY</h3>
+<p><strong>Scenario:</strong> Rain is forecast but is 3 hours away. Moisture is critically low. The system cannot afford to wait — it overrides the rain forecast and waters immediately.</p>
+<h4>Starting Conditions</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Crop</td>
+<td>Maize</td>
+</tr>
+<tr>
+<td>Season</td>
+<td>Summer (+5)</td>
+</tr>
+<tr>
+<td>Effective CRITICAL</td>
+<td>30 + 5 = <strong>35%</strong></td>
+</tr>
+<tr>
+<td>Moisture</td>
+<td><strong>27%</strong></td>
+</tr>
+<tr>
+<td>Rain forecast</td>
+<td>3 hours</td>
+</tr>
+<tr>
+<td><code>should_wait_rain</code> condition</td>
+<td>TRUE</td>
+</tr>
+</tbody>
+</table>
+<h4>Code Path</h4>
+<pre><code>ml_predictor.py :: decision_engine()
+
+Priority 1: is_raining? → NO
+Priority 2: is_saturated? → NO
+Priority 3: is_high_wind? → NO
+Priority 4: should_wait_rain? → YES
+   moisture &lt; CRITICAL (35%)? → YES (27 &lt; 35)
+   → EMERGENCY bypass: override STALL
+   → Decision: NOW / EMERGENCY  (rain forecast overridden)
+</code></pre>
+<h4>Decision</h4>
+<pre><code>action : NOW
+reason : EMERGENCY
+note   : Rain forecast present but CRITICAL drought overrides.
+</code></pre>
+<h4>Dashboard</h4>
+<pre><code>🚨  EMERGENCY WATERING
+Moisture: 27% — CRITICALLY below 35% threshold.
+Rain forecast in 3 hours overridden: crop cannot wait.
+Immediate irrigation initiated.
+</code></pre>
+<h4>Log Entry</h4>
+<pre><code>[WARN]  [ml_predictor] CRITICAL moisture=27% &lt; 35%. Rain in 3hr — override triggered.
+[INFO]  Decision: NOW | Reason: EMERGENCY | Override: RAIN_EXPECTED
+[INFO]  [automation_controller] Emergency watering cycle initiated.
+</code></pre>
+<hr />
+<h3>2k. Heavy Rain for 9 Days (Real Simulation)</h3>
+<p><strong>Scenario:</strong> The live 9.2-day simulation run conducted during system validation. Continuous rain events saturated soil throughout. This is the most data-rich scenario in the P-WOS test record.</p>
+<h4>Simulation Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Run duration</td>
+<td><strong>9.2 days</strong> (≈13,248 minutes)</td>
+</tr>
+<tr>
+<td>Total decision cycles</td>
+<td><strong>9,566</strong></td>
+</tr>
+<tr>
+<td>Rain events detected</td>
+<td><strong>536</strong></td>
+</tr>
+<tr>
+<td>Total STOP actions</td>
+<td><strong>3,919 (41%)</strong></td>
+</tr>
+<tr>
+<td>Total MONITOR actions</td>
+<td><strong>5,647 (59%)</strong></td>
+</tr>
+<tr>
+<td>Autonomous WATER triggers</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td>Manual pump activations</td>
+<td><strong>1</strong></td>
+</tr>
+</tbody>
+</table>
+<h4>Manual Activation Detail</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Trigger</td>
+<td>Operator manual</td>
+</tr>
+<tr>
+<td>Moisture at start</td>
+<td><strong>58.32%</strong></td>
+</tr>
+<tr>
+<td>Moisture at end</td>
+<td><strong>85.32%</strong></td>
+</tr>
+<tr>
+<td>Duration</td>
+<td><strong>75 seconds</strong></td>
+</tr>
+<tr>
+<td>Outcome</td>
+<td>Saturation reached; system would have auto-cut at 85% if autonomous</td>
+</tr>
+</tbody>
+</table>
+<h4>Decision Breakdown</h4>
+<pre><code>9,566 total cycles:
+
+STOP (3,919 cycles — 41%):
+   Triggered by: is_raining → STOP / RAIN_ACTIVE
+   Each of 536 rain events generated multiple STOP decisions
+   across the polling interval before clearing
+
+MONITOR (5,647 cycles — 59%):
+   Between rain events, soil remained saturated (&gt;85% often)
+   or moisture was in OPTIMAL range
+   Sub-reasons: OPTIMAL, SATURATED, WATCHING (no urgency)
+
+WATER (0 cycles):
+   Soil moisture never fell below LOW or CRITICAL thresholds
+   during the entire 9.2-day window — rain kept it perpetually
+   above the proactive threshold
+</code></pre>
+<h4>System Behaviour Summary</h4>
+<p>The automation controller correctly:</p>
+<ol>
+<li>Detected and blocked irrigation during all 536 rain events</li>
+<li>Never autonomously activated the pump</li>
+<li>Maintained MONITOR state between events without false positive triggers</li>
+<li>The single manual activation demonstrated hardware path validity (pump, sensor feedback, cutoff)</li>
+</ol>
+<h4>Log Sample (representative excerpt)</h4>
+<pre><code>[INFO]  Cycle 1024: STOP | RAIN_ACTIVE | moisture=91.4% | rain=true
+[INFO]  Cycle 1025: STOP | RAIN_ACTIVE | moisture=91.4% | rain=true
+...
+[INFO]  Cycle 2381: MONITOR | OPTIMAL | moisture=78.2% | rain=false
+[INFO]  Cycle 2382: MONITOR | OPTIMAL | moisture=77.9% | rain=false
+...
+[WARN]  Cycle 4410: Manual pump activation detected. moisture=58.32%
+[INFO]  Cycle 4411: MONITOR | WATCHING | moisture=71.5%
+[INFO]  Cycle 4412: MONITOR | SATURATED | moisture=85.32%
+[INFO]  POST /api/control/pump { action: OFF } → operator-initiated stop
+</code></pre>
+<hr />
+<h3>2l. Potato at 25% Moisture — Matabeleland Summer</h3>
+<p><strong>Scenario:</strong> Potato crop under Matabeleland summer conditions. Threshold scaling pushes the critical level high enough that 25% is a critical-level emergency.</p>
+<h4>Threshold Derivation</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Calculation</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Base critical (Potato)</td>
+<td>45%</td>
+<td></td>
+</tr>
+<tr>
+<td>Matabeleland multiplier</td>
+<td>× 1.5</td>
+<td>67.5 → round to 68%</td>
+</tr>
+<tr>
+<td>Summer shift</td>
+<td>+ 5</td>
+<td><strong>critical = 50%</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note on multiplier application:</strong> The region multiplier scales the <em>threshold</em>, not the moisture reading. Matabeleland's more arid conditions mean the plant experiences stress at relatively higher absolute moisture levels than in more humid regions — hence thresholds are elevated.</p>
+</blockquote>
+<p><em>Simplified for documentation: <code>critical = 45 + 5 = 50%</code> using additive model; consult source code for exact scaling implementation.</em></p>
+<h4>Starting Conditions</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Crop</td>
+<td>Potato</td>
+</tr>
+<tr>
+<td>Region</td>
+<td>Matabeleland (1.5×)</td>
+</tr>
+<tr>
+<td>Season</td>
+<td>Summer (+5)</td>
+</tr>
+<tr>
+<td>Effective CRITICAL</td>
+<td><strong>50%</strong></td>
+</tr>
+<tr>
+<td>Moisture</td>
+<td><strong>25%</strong></td>
+</tr>
+</tbody>
+</table>
+<h4>Code Path</h4>
+<pre><code>ml_predictor.py :: decision_engine()
+
+Priority 1: is_raining? → NO
+Priority 2: is_saturated? → NO
+Priority 3: is_high_wind? → NO
+Priority 4: should_wait_rain? → NO
+Priority 5: is_false_dry? → NO
+Priority 6: moisture (25) &lt; CRITICAL (50%)? → YES
+   → Decision: NOW / CRITICAL → EMERGENCY
+</code></pre>
+<h4>Decision</h4>
+<pre><code>action : NOW
+reason : CRITICAL
+urgency: EMERGENCY
+</code></pre>
+<h4>Dashboard</h4>
+<pre><code>🚨  EMERGENCY — CRITICAL MOISTURE
+Crop: Potato | Region: Matabeleland | Season: Summer
+Moisture: 25% | Critical threshold: 50%
+Deficit: 25 percentage points below critical level.
+IMMEDIATE irrigation required.
+</code></pre>
+<h4>Log Entry</h4>
+<pre><code>[CRITICAL] [ml_predictor] Potato/Matabeleland/Summer: moisture=25% &lt;&lt; critical=50%
+[INFO]     Decision: NOW | Reason: CRITICAL | Urgency: EMERGENCY
+[INFO]     [automation_controller] Emergency watering cycle initiated immediately.
+</code></pre>
+<hr />
+<h3>2m. Sorghum at 25% Moisture — Matabeleland Summer</h3>
+<p><strong>Scenario:</strong> Sorghum is a drought-tolerant crop. Under the same Matabeleland summer conditions, 25% moisture produces a different decision than Potato.</p>
+<h4>Threshold Derivation</h4>
+<table>
+<thead>
+<tr>
+<th>Threshold</th>
+<th>Base</th>
+<th>Summer +5</th>
+<th>Effective</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Critical</td>
+<td>20%</td>
+<td>+5</td>
+<td><strong>25%</strong></td>
+</tr>
+<tr>
+<td>Low</td>
+<td>30%</td>
+<td>+5</td>
+<td><strong>35%</strong></td>
+</tr>
+<tr>
+<td>Proactive</td>
+<td>40%</td>
+<td>+5</td>
+<td><strong>45%</strong></td>
+</tr>
+<tr>
+<td>High</td>
+<td>65%</td>
+<td>+5</td>
+<td><strong>70%</strong></td>
+</tr>
+<tr>
+<td>Target</td>
+<td>50%</td>
+<td>+5</td>
+<td><strong>55%</strong></td>
+</tr>
+</tbody>
+</table>
+<p><em>(Matabeleland 1.5× multiplier applied; using simplified additive model for documentation)</em></p>
+<h4>Starting Conditions</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Crop</td>
+<td>Sorghum</td>
+</tr>
+<tr>
+<td>Region</td>
+<td>Matabeleland (1.5×)</td>
+</tr>
+<tr>
+<td>Season</td>
+<td>Summer (+5)</td>
+</tr>
+<tr>
+<td>Effective CRITICAL</td>
+<td><strong>25%</strong></td>
+</tr>
+<tr>
+<td>Effective LOW</td>
+<td><strong>35%</strong></td>
+</tr>
+<tr>
+<td>Moisture</td>
+<td><strong>25%</strong></td>
+</tr>
+</tbody>
+</table>
+<h4>Code Path</h4>
+<pre><code>ml_predictor.py :: decision_engine()
+
+Priority 1-5: all NO (no rain, no saturation, no wind, no rain forecast, no false dry)
+
+Priority 6: moisture (25) &lt; CRITICAL (25%)? → NO  ← boundary condition: 25 is NOT &lt; 25
+
+Priority 7: moisture (25) &lt; LOW (35%) AND (VPD &gt; 2.0 AND 10:00-16:00)?
+   25 &lt; 35 → YES
+   Check VPD and time window:
+   → If VPD &gt; 2.0 AND time is 10:00-16:00 → STALL / VPD_DELAY
+   → If NOT → fall through to Priority 8
+
+Priority 8: moisture (25) &lt; LOW (35%)? → YES
+   → Decision: NOW / DRY_TRIGGER
+</code></pre>
+<p><strong>Key insight:</strong> Sorghum's critical threshold is exactly 25%. At moisture=25%, the <code>&lt;</code> operator does NOT trigger (<code>25 &lt; 25</code> is false). The system falls through to the LOW threshold check instead, producing <code>DRY_TRIGGER</code> rather than <code>CRITICAL/EMERGENCY</code>. This is the correct behaviour — Sorghum is still drought-stressed and needs water, but not in the same emergency category as Potato at the same moisture level.</p>
+<h4>Decision (assuming non-VPD-delay time)</h4>
+<pre><code>action : NOW
+reason : DRY_TRIGGER
+</code></pre>
+<h4>Dashboard</h4>
+<pre><code>💧  WATER NOW
+Crop: Sorghum | Region: Matabeleland | Season: Summer
+Moisture: 25% | Low threshold: 35%
+Moisture below LOW — irrigation triggered.
+(Note: Sorghum critical threshold: 25% — not yet in emergency.)
+</code></pre>
+<h4>Log Entry</h4>
+<pre><code>[INFO]  [ml_predictor] Sorghum/Matabeleland/Summer: moisture=25%, critical=25%, low=35%
+[INFO]  Priority 6: 25 &lt; 25 → FALSE (not critical)
+[INFO]  Priority 8: 25 &lt; 35 → TRUE (below LOW)
+[INFO]  Decision: NOW | Reason: DRY_TRIGGER
+</code></pre>
+<hr />
+<h3>2n. Weather API Goes Down</h3>
+<p><strong>Scenario:</strong> The weather data source becomes unavailable. The system detects staleness and safely degrades to sensor-only decision making.</p>
+<h4>Starting Conditions</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>weather_source</code></td>
+<td><code>'stale'</code> (or <code>'fallback'</code> or <code>'none'</code>)</td>
+</tr>
+<tr>
+<td>Last valid weather data</td>
+<td>&gt; configured staleness window ago</td>
+</tr>
+<tr>
+<td>Sensor moisture</td>
+<td>47% (valid)</td>
+</tr>
+</tbody>
+</table>
+<h4>Code Path</h4>
+<pre><code>ml_predictor.py :: prepare_features() (lines 252-258)
+
+1. Check weather_source:
+   if weather_source in ('stale', 'fallback', 'none'):
+       → Zero out all weather features:
+          is_raining         = 0
+          rain_probability   = 0.0
+          wind_speed         = 0.0
+          humidity           = 0.0 (replaced with sensor humidity if available)
+          forecast_rain_hours = 0
+          vpd                = 0.0 (or computed from sensor temp/humidity)
+
+2. Decision engine runs with zeroed weather features:
+   Priority 1: is_raining (0) → NO
+   Priority 4: should_wait_rain (0) → NO
+   Priority 3: is_high_wind (0) → NO
+   ...
+   Proceeds purely on moisture thresholds and time windows.
+</code></pre>
+<h4>Decision</h4>
+<p>The decision depends entirely on current moisture:</p>
+<table>
+<thead>
+<tr>
+<th>Moisture</th>
+<th>Decision</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt; CRITICAL</td>
+<td>NOW</td>
+<td>CRITICAL / EMERGENCY</td>
+</tr>
+<tr>
+<td>&lt; LOW</td>
+<td>NOW or STALL</td>
+<td>DRY_TRIGGER or VPD_DELAY</td>
+</tr>
+<tr>
+<td>&lt; PROACTIVE</td>
+<td>NOW or MONITOR</td>
+<td>PREHEAT or WATCHING</td>
+</tr>
+<tr>
+<td>≥ PROACTIVE</td>
+<td>MONITOR</td>
+<td>OPTIMAL</td>
+</tr>
+</tbody>
+</table>
+<p>For moisture=47% (below LOW of 50%, above CRITICAL of 35%, Maize summer):</p>
+<pre><code>Decision: NOW | Reason: DRY_TRIGGER
+(Weather staleness did not prevent correct action — sensor data sufficient)
+</code></pre>
+<h4>Dashboard</h4>
+<pre><code>⚠️  WEATHER DATA STALE
+Source: stale | Last update: [timestamp]
+Weather features zeroed. Decision based on sensor data only.
+Moisture: 47% | Low threshold: 50%
+Recommendation: WATER NOW — DRY_TRIGGER
+</code></pre>
+<h4>Log Entry</h4>
+<pre><code>[WARN]  [ml_predictor] Weather source='stale'. All weather features zeroed.
+[INFO]  Decision computed on sensor-only basis.
+[INFO]  Decision: NOW | Reason: DRY_TRIGGER | Moisture=47% | Weather: UNAVAILABLE
+</code></pre>
+<hr />
+<h3>2o. Hardware OFFLINE</h3>
+<p><strong>Scenario:</strong> The ESP32 microcontroller stops sending heartbeats. No sensor data is available. The system cannot make a safe watering decision.</p>
+<h4>Starting Conditions</h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ESP32 heartbeat</td>
+<td>Missing / timed out</td>
+</tr>
+<tr>
+<td>Last valid sensor reading</td>
+<td>&gt; heartbeat timeout ago</td>
+</tr>
+<tr>
+<td>Sensor data available</td>
+<td>NO</td>
+</tr>
+</tbody>
+</table>
+<h4>Code Path</h4>
+<pre><code>automation_controller.py :: main_loop()
+
+1. GET /api/sensor-data/latest → timeout / 503 / no heartbeat
+2. Hardware check: ESP32 heartbeat absent
+3. Return: STOP / HARDWARE_OFFLINE
+
+ml_predictor.py is NOT invoked.
+No decision engine processing occurs.
+</code></pre>
+<h4>Decision</h4>
+<pre><code>action : STOP
+reason : HARDWARE_OFFLINE
+</code></pre>
+<h4>Dashboard</h4>
+<pre><code>🔴  HARDWARE OFFLINE
+No heartbeat received from ESP32.
+Sensor data unavailable. All automation suspended.
+Last known moisture: [last valid reading] at [timestamp]
+Action required: check device power, WiFi, and firmware.
+</code></pre>
+<h4>Log Entry</h4>
+<pre><code>[ERROR] [automation_controller] ESP32 heartbeat timeout. Hardware OFFLINE.
+[INFO]  Decision: STOP | Reason: HARDWARE_OFFLINE
+[WARN]  No watering actions will occur until hardware is restored.
+[INFO]  Alert sent to dashboard: HARDWARE_OFFLINE
+</code></pre>
+<hr />
+<h2>3. Priority Collision Examples</h2>
+<p>When multiple conditions are simultaneously true, the decision engine resolves them by strict priority order. The following table shows the most important collision cases and their outcomes.</p>
+<h3>3.1 Collision Resolution Table</h3>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Condition A</th>
+<th>Condition B</th>
+<th>Winner</th>
+<th>Decision</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Raining AND critically dry</td>
+<td><code>is_raining=True</code> (P1)</td>
+<td><code>moisture &lt; CRITICAL</code> (P6)</td>
+<td><strong>EMERGENCY</strong> (NOW)</td>
+<td><code>NOW / EMERGENCY</code></td>
+<td>P1 fires first but CRITICAL check is an explicit bypass: rain does NOT block emergency watering</td>
+</tr>
+<tr>
+<td>High wind AND critically dry</td>
+<td><code>is_high_wind=True</code> (P3)</td>
+<td><code>moisture &lt; CRITICAL</code> (P6)</td>
+<td><strong>EMERGENCY</strong> (NOW)</td>
+<td><code>NOW / EMERGENCY</code></td>
+<td>Same bypass logic — critical drought overrides wind hold</td>
+</tr>
+<tr>
+<td>Rain forecast AND critically dry</td>
+<td><code>should_wait_rain=True</code> (P4)</td>
+<td><code>moisture &lt; CRITICAL</code> (P6)</td>
+<td><strong>EMERGENCY</strong> (NOW)</td>
+<td><code>NOW / EMERGENCY</code></td>
+<td>Rain forecast bypass explicitly checks CRITICAL before STALLing</td>
+</tr>
+<tr>
+<td>Saturated AND raining</td>
+<td><code>is_saturated=True</code> (P2)</td>
+<td><code>is_raining=True</code> (P1)</td>
+<td><strong>STOP/RAIN_ACTIVE</strong> then <strong>STOP/SATURATED</strong></td>
+<td>First STOP wins</td>
+<td>Rain (P1) fires before saturation (P2); both return STOP — outcome identical</td>
+</tr>
+<tr>
+<td>False dry AND critically dry</td>
+<td><code>is_false_dry=True</code> (P5)</td>
+<td><code>moisture &lt; CRITICAL</code> (P6)</td>
+<td><strong>Depends on moisture level</strong></td>
+<td>If truly &lt; CRITICAL: <code>NOW/EMERGENCY</code></td>
+<td>P5 fires before P6 ONLY if moisture is ABOVE LOW; if moisture is below CRITICAL, the false dry check's conditions (change_rate, wind, humidity) are evaluated but CRITICAL takes precedence via P6</td>
+</tr>
+<tr>
+<td>VPD delay AND rain</td>
+<td><code>VPD&gt;2.0 AND 10:00-16:00</code> (P7)</td>
+<td><code>is_raining=True</code> (P1)</td>
+<td><strong>STOP/RAIN_ACTIVE</strong></td>
+<td><code>STOP / RAIN_ACTIVE</code></td>
+<td>P1 fires before P7; rain always blocks midday watering</td>
+</tr>
+</tbody>
+</table>
+<h3>3.2 The EMERGENCY Bypass Rule</h3>
+<p>The following conditions trigger an EMERGENCY bypass that allows watering to proceed even when a higher-priority STOP or STALL rule is active:</p>
+<pre><code>EMERGENCY bypass activates when:
+  moisture &lt; CRITICAL_THRESHOLD
+
+It overrides:
+  ✓ is_raining      (P1) — crop safety &gt; rainfall efficiency
+  ✓ is_high_wind    (P3) — water loss accepted over crop death
+  ✓ should_wait_rain (P4) — rain too far away to save crop
+
+It does NOT override:
+  ✗ is_saturated    (P2) — flooding a saturated field is dangerous regardless
+  ✗ SENSOR_ERROR    — invalid data cannot guide safe irrigation
+  ✗ HARDWARE_OFFLINE — no reliable sensor stream
+</code></pre>
+<h3>3.3 Visualised Priority Stack</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                   DECISION ENGINE PRIORITY                       │
+├───┬─────────────────────────────┬──────────┬───────────────────┤
+│ P │ Condition                   │ Action   │ EMERGENCY bypass? │
+├───┼─────────────────────────────┼──────────┼───────────────────┤
+│ 1 │ is_raining                  │ STOP     │ YES (if CRITICAL)  │
+│ 2 │ is_saturated (&gt;85%)         │ STOP     │ NO                 │
+│ 3 │ is_high_wind (&gt;20 km/h)     │ STALL    │ YES (if CRITICAL)  │
+│ 4 │ should_wait_rain            │ STALL    │ YES (if CRITICAL)  │
+│ 5 │ is_false_dry                │ MONITOR  │ YES (if CRITICAL)  │
+│ 6 │ moisture &lt; CRITICAL         │ NOW      │ N/A (this IS it)   │
+│ 7 │ moisture &lt; LOW + VPD delay  │ STALL    │ N/A               │
+│ 8 │ moisture &lt; LOW              │ NOW      │ N/A               │
+│ 9 │ moisture &lt; PROACTIVE +window│ NOW      │ N/A               │
+│10 │ moisture &lt; PROACTIVE        │ MONITOR  │ N/A               │
+│11 │ else                        │ MONITOR  │ N/A               │
+└───┴─────────────────────────────┴──────────┴───────────────────┘
+</code></pre>
+<hr />
+<h2>4. Safety Interlock Summary Table</h2>
+<p>All safety interlocks in the system, listed in evaluation priority order. Interlocks marked <strong>HARD</strong> cannot be overridden by any software decision. Interlocks marked <strong>SOFT</strong> can be bypassed by EMERGENCY conditions.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Interlock Name</th>
+<th>Trigger Condition</th>
+<th>Response</th>
+<th>Type</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Sensor Floor</strong></td>
+<td>moisture &lt; 1.0%</td>
+<td>STOP / SENSOR_ERROR</td>
+<td>HARD</td>
+<td><code>ml_predictor.py:133</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Sensor Flatline</strong></td>
+<td>std(last 4) &lt; 0.0001</td>
+<td>STOP / SENSOR_ERROR</td>
+<td>HARD</td>
+<td><code>ml_predictor.py:145</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Sensor Mean Floor</strong></td>
+<td>mean(last 3) &lt; 1.0%</td>
+<td>STOP / SENSOR_ERROR</td>
+<td>HARD</td>
+<td><code>ml_predictor.py:155</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Hardware Offline</strong></td>
+<td>No ESP32 heartbeat</td>
+<td>STOP / HARDWARE_OFFLINE</td>
+<td>HARD</td>
+<td><code>automation_controller.py</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Saturation Ceiling</strong></td>
+<td>moisture ≥ high_limit (85%)</td>
+<td>STOP / SATURATED</td>
+<td>HARD</td>
+<td><code>ml_predictor.py:370</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Manual Saturation Cutoff</strong></td>
+<td>moisture ≥ high_limit in MANUAL</td>
+<td>Pump OFF + Force AUTO</td>
+<td>HARD</td>
+<td><code>automation_controller.py:140</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>Emergency Mid-Cycle Cutoff</strong></td>
+<td>moisture ≥ high_limit during watering</td>
+<td>Pump OFF immediately</td>
+<td>HARD</td>
+<td><code>automation_controller.py:247</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>Watering Cooldown</strong></td>
+<td>time_since_end &lt; 900s</td>
+<td>STALL / WATERING_COOLDOWN</td>
+<td>SOFT</td>
+<td><code>automation_controller.py:185</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>Manual Critical Override</strong></td>
+<td>moisture &lt; critical in MANUAL</td>
+<td>Force AUTO</td>
+<td>SOFT</td>
+<td><code>automation_controller.py:120</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>Rain Active Block</strong></td>
+<td>is_raining = True</td>
+<td>STOP / RAIN_ACTIVE</td>
+<td>SOFT</td>
+<td><code>ml_predictor.py:362</code></td>
+</tr>
+<tr>
+<td>11</td>
+<td><strong>Rain Forecast Hold</strong></td>
+<td>should_wait_rain = True</td>
+<td>STALL / RAIN_EXPECTED</td>
+<td>SOFT</td>
+<td><code>ml_predictor.py:393</code></td>
+</tr>
+<tr>
+<td>12</td>
+<td><strong>High Wind Hold</strong></td>
+<td>wind &gt; 20 km/h</td>
+<td>STALL / WIND_HOLD</td>
+<td>SOFT</td>
+<td><code>ml_predictor.py:383</code></td>
+</tr>
+<tr>
+<td>13</td>
+<td><strong>VPD Delay</strong></td>
+<td>VPD &gt; 2.0 kPa, 10:00–16:00</td>
+<td>STALL / VPD_DELAY</td>
+<td>SOFT</td>
+<td><code>ml_predictor.py:415</code></td>
+</tr>
+<tr>
+<td>14</td>
+<td><strong>False Dry Guard</strong></td>
+<td>wind+humidity+rate conditions</td>
+<td>MONITOR / FALSE_DRY_CHECK</td>
+<td>SOFT</td>
+<td><code>ml_predictor.py:403</code></td>
+</tr>
+<tr>
+<td>15</td>
+<td><strong>Weather Staleness Zeroing</strong></td>
+<td>source in stale/fallback/none</td>
+<td>Zero weather features</td>
+<td>SOFT</td>
+<td><code>ml_predictor.py:254</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>HARD interlocks</strong> execute regardless of any other system state, crop configuration, or operator preference.<br />
+<strong>SOFT interlocks</strong> are bypassed automatically when <code>moisture &lt; CRITICAL</code> (EMERGENCY condition).</p>
+</blockquote>
+<hr />
+<h2>5. Lessons from the 9-Day Simulation</h2>
+<h3>5.1 What the Simulation Proved</h3>
+<p>The 9.2-day live simulation run is the most significant validation dataset in P-WOS history. It demonstrated correctness across thousands of decision cycles under realistic, continuous weather conditions.</p>
+<h4>✅ Proven: Rain detection and blocking works correctly</h4>
+<p>The system correctly identified and acted on <strong>536 rain events</strong> across 9.2 days, issuing STOP decisions for every one. Not a single autonomous watering action occurred during active rainfall. This validates the entire <code>is_raining → STOP</code> path (Priority 1) including:</p>
+<ul>
+<li>Weather API integration</li>
+<li>Rain flag parsing and thresholding</li>
+<li>Decision engine routing</li>
+<li>Dashboard reporting</li>
+</ul>
+<h4>✅ Proven: MONITOR state is stable and non-spurious</h4>
+<p>With <strong>5,647 MONITOR decisions (59%)</strong> and zero false positive WATER triggers, the simulation confirmed that the system does not "drift" into incorrect actions during long idle periods. The engine is stable across thousands of consecutive non-watering cycles.</p>
+<h4>✅ Proven: The hardware pump path works end-to-end</h4>
+<p>The single manual activation — moisture 58.32% → 85.32% in 75 seconds — confirmed that:</p>
+<ul>
+<li>The pump responds correctly to API commands</li>
+<li>The moisture sensor reflects watering in real time</li>
+<li>The saturation ceiling (85%) would have been detected and triggered emergency cutoff if autonomous control had been active</li>
+<li>The sensor feedback loop is live and accurate</li>
+</ul>
+<h4>✅ Proven: Saturation detection is accurate</h4>
+<p>The manually-triggered pump raised moisture to exactly 85.32% — crossing the 85% high-limit ceiling. This proves the sensor can detect and report saturation-level moisture correctly.</p>
+<h3>5.2 What the Simulation Did NOT Test</h3>
+<p>The simulation's value is bounded by its conditions. The following critical paths were <strong>not exercised</strong> during the 9-day run:</p>
+<h4>❌ Not tested: Autonomous WATER trigger path</h4>
+<p>Because rain kept soil perpetually above all moisture thresholds, the autonomous watering decision path (<code>NOW / DRY_TRIGGER</code>, <code>NOW / CRITICAL</code>, <code>NOW / PREHEAT</code>) was <strong>never triggered</strong>. The most important operational path in the system — deciding to water and executing a full cycle without human intervention — has not been validated by real-world runtime.</p>
+<p><strong>Risk implication:</strong> While unit tests and simulation scaffolds cover this path, a real-field autonomous watering run under controlled conditions (known moisture, known duration, expected saturation) is required before declaring full production readiness.</p>
+<h4>❌ Not tested: Sensor failure recovery</h4>
+<p>No sensor errors, flatlines, or disconnections occurred during the run. The <code>SENSOR_ERROR</code> code paths were not exercised against real hardware.</p>
+<h4>❌ Not tested: Weather API staleness with active dry conditions</h4>
+<p>The weather API remained operational throughout the run. The fallback behaviour (zeroing weather features and reverting to sensor-only decisions) was not exercised in a scenario where correct action depended on that fallback.</p>
+<h4>❌ Not tested: Multi-cycle cooldown interaction</h4>
+<p>With 0 autonomous waterings, the 15-minute cooldown interlock was never triggered from the autonomous path. Its interaction with successive dry-trigger decisions remains unit-test-only validated.</p>
+<h4>❌ Not tested: PREHEAT and VPD_DELAY in field conditions</h4>
+<p>No pre-dawn low-moisture + elevated-VPD conditions arose during the rainy-season simulation window. Both PREHEAT and VPD_DELAY decisions are untested against real hardware.</p>
+<h3>5.3 Recommended Follow-Up Validation</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Recommended Test</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Autonomous WATER path</td>
+<td>Controlled dry-field run: lower moisture to LOW, let system trigger, monitor full cycle</td>
+</tr>
+<tr>
+<td>SENSOR_ERROR — floor</td>
+<td>Disconnect probe momentarily; verify STOP/SENSOR_ERROR and reconnect recovery</td>
+</tr>
+<tr>
+<td>SENSOR_ERROR — flatline</td>
+<td>Inject cached/repeated sensor values via test fixture; verify std detection</td>
+</tr>
+<tr>
+<td>Cooldown interlock</td>
+<td>Trigger two successive DRY_TRIGGER cycles within 15 minutes; verify second is STALLed</td>
+</tr>
+<tr>
+<td>Weather staleness</td>
+<td>Disable weather API; verify zero-feature fallback and correct moisture-only decision</td>
+</tr>
+<tr>
+<td>PREHEAT window</td>
+<td>Set RTC to 05:00 in test environment; verify PREHEAT trigger with low moisture + VPD</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>P-WOS v2.0 | System Behaviour — Edge Cases &amp; Scenario Handbook</em></p>
+                            </div>
+                        </article>
+
+                        <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
+                            <a href="index.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Back to Index</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <aside class="hidden lg:block w-56 shrink-0 border-l border-slate-200 dark:border-slate-800/80 pl-6">
+                        <div class="sticky top-0">
+                            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5 mb-4">
+                                <i data-lucide="list-ordered" class="w-3.5 h-3.5 text-emerald-500"></i> On This Page
+                            </h4>
+                            <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                            <a href="index.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                                <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                                <span>Back to Home</span>
+                            </a>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const docs = [{"category": "Getting Started", "icon": "rocket", "pages": [{"title": "Project Overview", "file": "PROJECT_OVERVIEW.html"}, {"title": "Quickstart Guide", "file": "QUICKSTART.html"}, {"title": "Project Roadmap", "file": "PROJECT_ROADMAP.html"}]}, {"category": "System Architecture", "icon": "cpu", "pages": [{"title": "System Overview", "file": "system_overview.html"}, {"title": "Dataflow", "file": "dataflow.html"}, {"title": "Analytics Reference", "file": "analytics_reference.html"}, {"title": "Crop Profiles", "file": "crop_profiles.html"}, {"title": "Edge Cases & Scenarios", "file": "edge_cases_and_scenarios.html"}, {"title": "ML Model Deep Dive", "file": "ml_model_deep_dive.html"}, {"title": "VPD & Weather Engine", "file": "vpd_and_weather_engine.html"}]}, {"category": "Core Guides", "icon": "book-open", "pages": [{"title": "Installation Guide", "file": "installation_guide.html"}, {"title": "Backend API", "file": "backend_guide.html"}, {"title": "Database Guide", "file": "database_guide.html"}, {"title": "Firmware Guide", "file": "firmware_guide.html"}, {"title": "Simulation Guide", "file": "simulation_guide.html"}, {"title": "ML Model Guide", "file": "ml_model_guide.html"}, {"title": "Performance Guide", "file": "performance_guide.html"}, {"title": "Troubleshooting", "file": "troubleshooting.html"}, {"title": "Tests Reference", "file": "tests.html"}, {"title": "Analytics Dashboard", "file": "analytics_dashboard.html"}, {"title": "Main Dashboard", "file": "main_dashboard.html"}, {"title": "Mobile Guide", "file": "mobile_guide.html"}]}, {"category": "Hardware Engineering", "icon": "circuit-board", "pages": [{"title": "Hardware Architecture", "file": "hardware_architecture.html"}, {"title": "Breadboard Assembly", "file": "breadboard_assembly.html"}, {"title": "Breadboard Guide", "file": "breadboard.html"}, {"title": "Hardware Setup", "file": "hardware_setup.html"}, {"title": "Shopping List", "file": "hardware_shopping_list.html"}, {"title": "Migration Plan", "file": "hardware_migration_plan.html"}, {"title": "Testing Report", "file": "testing_report.html"}, {"title": "Hardware Progress", "file": "hardware_progress.html"}, {"title": "Phase 1 Report", "file": "phase1_report.html"}]}, {"category": "Scientific Research", "icon": "microscope", "pages": [{"title": "Codebase Analysis", "file": "codebase_analysis.html"}, {"title": "Codebase Audit", "file": "codebase_audit.html"}, {"title": "Crop Integration Plan", "file": "crop_integration_plan.html"}]}, {"category": "Technical Reference", "icon": "code", "pages": [{"title": "API Reference", "file": "api_reference.html"}, {"title": "MQTT Topics", "file": "mqtt_topics.html"}, {"title": "Coding Guidelines", "file": "coding_guidelines.html"}, {"title": "Project Structure", "file": "project_structure.html"}, {"title": "VPD Scenarios", "file": "vpd_scenarios.html"}]}, {"category": "Deployment & Operations", "icon": "cloud", "pages": [{"title": "Cloud ML Deployment", "file": "cloud_ml_deployment.html"}, {"title": "Local Implementation", "file": "local_implementation.html"}, {"title": "ML Roadmap", "file": "ml_implementation_roadmap.html"}]}, {"category": "Reports & Validation", "icon": "bar-chart-3", "pages": [{"title": "Final Report", "file": "final_report.html"}, {"title": "Validation Report", "file": "validation_report.html"}, {"title": "Simulation Analysis", "file": "simulation_analysis.html"}, {"title": "Moisture Analysis", "file": "moisture_analysis.html"}, {"title": "Phase 1 Setup Report", "file": "phase_01_setup_report.html"}, {"title": "Phase 5 ML Report", "file": "phase_05_ml_report.html"}, {"title": "Phase 6 Frontend Report", "file": "phase_06_frontend_report.html"}]}];
+
+        let expandedGroups = {};
+
+        function initTheme() {
+            const saved = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(saved);
+        }
+
+        function setTheme(theme) {
+            document.body.classList.remove('theme-light', 'theme-dark');
+            document.documentElement.classList.remove('dark');
+            const hljsLight = document.getElementById('hljs-light-theme');
+            const hljsDark = document.getElementById('hljs-dark-theme');
+            if (theme === 'dark') {
+                document.body.classList.add('theme-dark');
+                document.documentElement.classList.add('dark');
+                if (hljsLight) hljsLight.disabled = true;
+                if (hljsDark) hljsDark.disabled = false;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'moon');
+            } else {
+                document.body.classList.add('theme-light');
+                if (hljsLight) hljsLight.disabled = false;
+                if (hljsDark) hljsDark.disabled = true;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'sun');
+            }
+            localStorage.setItem('pwos-theme', theme);
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            const current = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(current === 'light' ? 'dark' : 'light');
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        function renderSidebar(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = docs.map(function(group, gi) {
+                const isOpen = expandedGroups[gi] || false;
+                return '<div class="sidebar-group">' +
+                    '<button onclick="toggleGroup(' + gi + ')" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' +
+                        '<span class="flex items-center gap-2"><i data-lucide="' + group.icon + '" class="w-4 h-4"></i><span>' + group.category + '</span></span>' +
+                        '<i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ' + (isOpen ? 'rotate-0' : '-rotate-90') + '"></i>' +
+                    '</button>' +
+                    '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
+                        '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
+                            group.pages.map(function(page) {
+                                return '<li><a href="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                            }).join('') +
+                        '</ul>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function toggleGroup(idx) {
+            expandedGroups[idx] = !expandedGroups[idx];
+            renderSidebar('sidebarGroups');
+            renderSidebar('mobileSidebarGroups');
+        }
+
+        function setupSearch(inputId, containerId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('input', function(e) {
+                const q = e.target.value.toLowerCase().trim();
+                document.querySelectorAll('#' + containerId + ' .sidebar-group').forEach(function(el) {
+                    el.style.display = q === '' || el.textContent.toLowerCase().includes(q) ? '' : 'none';
+                });
+            });
+        }
+
+        setupSearch('docSearch', 'sidebarGroups');
+        setupSearch('mobileDocSearch', 'mobileSidebarGroups');
+
+        function openMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            sidebar.classList.remove('hidden');
+            setTimeout(function() { panel.classList.remove('-translate-x-full'); }, 10);
+        }
+
+        function closeMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            panel.classList.add('-translate-x-full');
+            setTimeout(function() { sidebar.classList.add('hidden'); }, 300);
+        }
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', openMobileNav);
+        document.getElementById('closeMobileNav').addEventListener('click', closeMobileNav);
+        document.getElementById('navOverlay').addEventListener('click', closeMobileNav);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const output = document.getElementById('markdownOutput');
+            if (!output) return;
+
+            output.querySelectorAll('pre code').forEach(function(block) { hljs.highlightElement(block); });
+
+            try {
+                renderMathInElement(output, {
+                    delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}],
+                    throwOnError: false
+                });
+            } catch(e) {}
+
+            try {
+                mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+                mermaid.run({ nodes: output.querySelectorAll('.mermaid') });
+            } catch(e) {}
+
+            buildTOC(output);
+        });
+
+        function buildTOC(container) {
+            const list = document.getElementById('tocList');
+            if (!list) return;
+            list.innerHTML = '';
+            const headings = container.querySelectorAll('h2, h3');
+            if (headings.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'text-slate-400 italic';
+                li.textContent = 'No sub-headers on page';
+                list.appendChild(li);
+                return;
+            }
+            headings.forEach(function(heading, idx) {
+                const anchorId = 'toc-anchor-' + idx;
+                heading.setAttribute('id', anchorId);
+                const li = document.createElement('li');
+                const isSub = heading.tagName.toLowerCase() === 'h3';
+                li.className = 'transition-colors duration-150 ' + (isSub ? 'pl-3 border-l border-slate-100 dark:border-slate-800 ml-1 py-0.5' : 'font-medium py-1');
+                const link = document.createElement('a');
+                link.href = '#' + anchorId;
+                link.className = 'hover:text-emerald-500 block truncate transition-colors';
+                link.textContent = heading.textContent;
+                link.onclick = function(e) { e.preventDefault(); heading.scrollIntoView({ behavior: 'smooth' }); };
+                li.appendChild(link);
+                list.appendChild(li);
+            });
+        }
+
+        window.addEventListener('scroll', function() {
+            const main = document.querySelector('main');
+            if (!main) return;
+            const scrollTop = main.scrollTop;
+            const scrollHeight = main.scrollHeight - main.clientHeight;
+            document.getElementById('readingProgress').style.width = (scrollTop / Math.max(scrollHeight, 1)) * 100 + '%';
+        });
+
+        const copyBtn = document.getElementById('copyDocBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                const content = document.getElementById('markdownOutput')?.innerText;
+                if (!content) return;
+                navigator.clipboard.writeText(content).then(function() {
+                    copyBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>';
+                    lucide.createIcons();
+                    setTimeout(function() {
+                        copyBtn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
+                        lucide.createIcons();
+                    }, 1500);
+                });
+            });
+        }
+
+        initTheme();
+        renderSidebar('sidebarGroups');
+        renderSidebar('mobileSidebarGroups');
+    </script>
+</body>
+</html>

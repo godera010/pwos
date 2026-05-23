@@ -68,6 +68,75 @@ class WeatherAPI:
         except Exception as e:
             logger.warning(f"Weather Simulator Connection Failed: {e}")
 
+    def _write_cache_to_file(self, data):
+        """Write weather data to shared cache file."""
+        if 'PYTEST_CURRENT_TEST' in os.environ:
+            return
+        try:
+            import json
+            import tempfile
+            cache_data = {
+                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'data': data
+            }
+            backend_dir = os.path.dirname(os.path.abspath(__file__))
+            project_root = os.path.dirname(os.path.dirname(backend_dir))
+            cache_path = os.path.join(project_root, 'logs', 'app', 'weather_cache.json')
+            cache_dir = os.path.dirname(cache_path)
+            os.makedirs(cache_dir, exist_ok=True)
+            
+            temp_name = None
+            try:
+                with tempfile.NamedTemporaryFile('w', dir=cache_dir, delete=False, suffix='.tmp') as tf:
+                    json.dump(cache_data, tf)
+                    temp_name = tf.name
+                os.replace(temp_name, cache_path)
+            except Exception as e:
+                if temp_name and os.path.exists(temp_name):
+                    try:
+                        os.unlink(temp_name)
+                    except:
+                        pass
+                raise e
+        except Exception as e:
+            logger.warning(f"Failed to write weather cache to file: {e}")
+
+    def _read_cache_from_file(self) -> dict:
+        """Read weather data from shared cache file if still fresh."""
+        if 'PYTEST_CURRENT_TEST' in os.environ:
+            return None
+        try:
+            import json
+            backend_dir = os.path.dirname(os.path.abspath(__file__))
+            project_root = os.path.dirname(os.path.dirname(backend_dir))
+            cache_path = os.path.join(project_root, 'logs', 'app', 'weather_cache.json')
+            if not os.path.exists(cache_path):
+                return None
+            
+            with open(cache_path, 'r') as f:
+                cache_data = json.load(f)
+            
+            cache_timestamp_str = cache_data.get('timestamp')
+            if not cache_timestamp_str:
+                return None
+                
+            cache_time = datetime.fromisoformat(cache_timestamp_str)
+            now = datetime.now(timezone.utc)
+            age = (now - cache_time).total_seconds()
+            
+            # Retrieve cached payload
+            data = cache_data.get('data')
+            if not data:
+                return None
+                
+            # If openweathermap mode, fresh for 10 min. Otherwise fresh for 60 seconds
+            valid_duration = self._cache_duration if data.get("source") == "openweathermap" else 60
+            if age < valid_duration:
+                return data
+        except Exception as e:
+            logger.warning(f"Failed to read weather cache from file: {e}")
+        return None
+
     def get_forecast(self) -> dict:
         """
         Get weather forecast.
@@ -80,14 +149,20 @@ class WeatherAPI:
     
     def _fetch_openweathermap(self) -> dict:
         """Fetch real weather data from OpenWeatherMap API."""
-        # Check cache (fresh)
-        now = datetime.now(timezone.utc)
+        # Check in-memory cache first to maintain unit test expectations
         if self._cache and self._cache_time:
+            now = datetime.now(timezone.utc)
             age = (now - self._cache_time).total_seconds()
-            # Standard 10 min cache for success, 60 seconds cooldown for failures
             valid_duration = self._cache_duration if self._cache.get("source") == "openweathermap" else 60
             if age < valid_duration:
                 return self._cache
+
+        # Check shared file cache next
+        cached_data = self._read_cache_from_file()
+        if cached_data:
+            self._cache = cached_data
+            self._cache_time = datetime.now(timezone.utc)
+            return cached_data
         
         try:
             params = {
@@ -114,7 +189,8 @@ class WeatherAPI:
                 
             result = self._parse_combined_data(curr_data, forecast_data)
             self._cache = result
-            self._cache_time = now
+            self._cache_time = datetime.now(timezone.utc)
+            self._write_cache_to_file(result)
             return result
             
         except Exception as e:
@@ -135,6 +211,7 @@ class WeatherAPI:
             result = self._simulate_weather()
             self._cache = result
             self._cache_time = now
+            self._write_cache_to_file(result)
             return result
             
     def _parse_combined_data(self, curr_data: dict, forecast_data: dict) -> dict:

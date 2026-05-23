@@ -37,6 +37,7 @@ class TestAPIEndpoints:
             'soil_moisture': 45.0, 'temperature': 25.0, 'humidity': 60.0,
             'weather_source': 'openweathermap'
         })
+        app_module.system_state['hardware_status'] = 'ONLINE'
         
         response = client.get('/api/predict-next-watering')
         assert response.status_code == 200

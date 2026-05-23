@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hardware Setup - P-WOS Documentation Portal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#16a34a', 600: '#15803d', 700: '#166534' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css" id="hljs-dark-theme" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .theme-light ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+        .theme-dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .prose table { width: 100%; margin: 1.5rem 0; border-collapse: collapse; font-size: 0.875rem; }
+        .prose th { background-color: rgba(0,0,0,0.02); font-weight: 600; padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); text-align: left; }
+        .dark .prose th { background-color: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); }
+        .prose td { padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); }
+        .dark .prose td { border-color: rgba(255,255,255,0.08); }
+        .prose blockquote { border-left: 3px solid #16a34a; padding-left: 1rem; font-style: italic; color: #4b5563; }
+        .dark .prose blockquote { color: #9ca3af; }
+        .prose img { border-radius: 8px; margin: 1.5rem auto; max-width: 100%; }
+        .prose pre { border-radius: 10px; background: #f8fafc !important; border: 1px solid #e2e8f0; }
+        .dark .prose pre { background: #0f171a !important; border-color: #1e2a2e; }
+
+        .theme-dark { background-color: #0b0f11; color: #f1f5f9; }
+        .theme-dark .sidebar-bg { background-color: #101618; border-color: #1a2225; }
+        .theme-dark .content-card { background-color: #12191b; border-color: #1c272a; }
+
+        .sidebar-group-enter { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-in-out; }
+        .sidebar-group-enter.active { max-height: 500px; }
+    </style>
+</head>
+<body class="theme-light bg-slate-50 text-slate-800 transition-colors duration-200 antialiased font-sans h-screen overflow-hidden flex flex-col">
+
+    <div class="fixed top-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-900/50 z-50">
+        <div id="readingProgress" class="h-full bg-brand-500 w-0 transition-all duration-75"></div>
+    </div>
+
+    <header class="h-14 md:h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/85 dark:bg-[#101618]/85 backdrop-blur-md flex items-center justify-between px-4 md:px-6 z-40 shrink-0">
+        <div class="flex items-center space-x-3">
+            <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-500">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                <div class="p-1.5 bg-gradient-to-tr from-emerald-500 to-green-600 rounded-lg text-white">
+                    <i data-lucide="droplet" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <span class="font-bold text-sm md:text-base tracking-tight text-slate-900 dark:text-white">P-WOS Docs</span>
+                    <span class="hidden md:inline-block ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 font-medium">Predictive Water Optimization</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300" title="Toggle Light/Dark Mode">
+                <i data-lucide="sun" id="themeIcon" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Theme</span>
+            </button>
+            <button onclick="window.print()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Print to PDF">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Export PDF</span>
+            </button>
+            <a href="index.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Home</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="navSidebar" class="w-64 border-r border-slate-200 dark:border-slate-800/80 overflow-y-auto shrink-0 bg-white dark:bg-[#101618] hidden lg:block z-30">
+            <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text" id="docSearch" placeholder="Search documentation..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                </div>
+            </div>
+            <div class="p-3 space-y-1" id="sidebarGroups"></div>
+        </aside>
+
+        <aside id="mobileSidebar" class="fixed inset-0 z-40 lg:hidden hidden">
+            <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" id="navOverlay"></div>
+            <div class="relative w-72 max-w-[85vw] h-full bg-white dark:bg-[#101618] shadow-2xl overflow-y-auto transform transition-transform duration-300 -translate-x-full">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">Navigation</span>
+                    <button id="closeMobileNav" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-400">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="mobileDocSearch" placeholder="Search..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                    </div>
+                </div>
+                <div class="p-3 space-y-1" id="mobileSidebarGroups"></div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto min-w-0">
+            <div class="px-4 md:px-8 py-6 md:py-10">
+                <div class="flex gap-6 lg:gap-10">
+                    <div class="flex-1 min-w-0 max-w-4xl">
+                        <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                            <span id="breadcrumbCategory">Hardware Engineering</span>
+                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">hardware_setup.md</span>
+                        </div>
+
+                        <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
+                            <div class="absolute top-6 right-6 flex items-center space-x-2 print:hidden">
+                                <button id="copyDocBtn" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Copy content">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <div id="markdownOutput" class="prose max-w-none dark:prose-invert
+                                prose-headings:font-bold prose-headings:tracking-tight
+                                prose-h1:text-3xl prose-h1:mb-6 prose-h1:text-slate-900 dark:prose-h1:text-white
+                                prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:text-slate-900 dark:prose-h2:text-white
+                                prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-slate-800 dark:prose-h3:text-slate-200
+                                prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
+                                prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                                prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
+                                <h1>Hardware Setup Guide</h1>
+<p>Step-by-step guide to setting up the ESP32 hardware for P-WOS.</p>
+<hr />
+<h2>Prerequisites</h2>
+<ul>
+<li>ESP32-WROOM-32 DevKit V1 (or compatible)</li>
+<li>DHT11 sensor, capacitive soil moisture sensor, 5V relay module</li>
+<li>USB cable (Micro-USB or USB-C depending on your board)</li>
+<li>See <a href="../planning/hardware_shopping_list.md">hardware_shopping_list.md</a> for the full BOM</li>
+</ul>
+<hr />
+<h2>1. Install Arduino IDE &amp; ESP32 Support</h2>
+<h3>Option A: Arduino IDE (GUI)</h3>
+<ol>
+<li>Download <a href="https://www.arduino.cc/en/software">Arduino IDE 2.x</a></li>
+<li>Open <strong>File → Preferences</strong></li>
+<li>In <strong>Additional Board Manager URLs</strong>, add:<br />
+<code>https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json</code></li>
+<li>Go to <strong>Tools → Board → Board Manager</strong></li>
+<li>Search <strong>"esp32"</strong> → Install <strong>"esp32 by Espressif Systems"</strong></li>
+</ol>
+<h3>Option B: Arduino CLI (Command Line)</h3>
+<pre><code class="language-bash"># Install Arduino CLI
+winget install Arduino.ArduinoCLI
+
+# Add ESP32 board support
+arduino-cli config add board_manager.additional_urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+arduino-cli core update-index
+arduino-cli core install esp32:esp32
+</code></pre>
+<hr />
+<h2>2. Install Required Libraries</h2>
+<h3>Arduino IDE</h3>
+<p>Go to <strong>Sketch → Include Library → Manage Libraries</strong> and install:</p>
+<table>
+<thead>
+<tr>
+<th>Library</th>
+<th>Author</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PubSubClient</strong></td>
+<td>Nick O'Leary</td>
+<td>MQTT communication</td>
+</tr>
+<tr>
+<td><strong>DHT sensor library</strong></td>
+<td>Adafruit</td>
+<td>DHT11 sensor</td>
+</tr>
+<tr>
+<td><strong>Adafruit Unified Sensor</strong></td>
+<td>Adafruit</td>
+<td>Dependency for DHT</td>
+</tr>
+<tr>
+<td><strong>ArduinoJson</strong></td>
+<td>Benoit Blanchon</td>
+<td>JSON serialization</td>
+</tr>
+</tbody>
+</table>
+<h3>Arduino CLI</h3>
+<pre><code class="language-bash">arduino-cli lib install &quot;PubSubClient&quot;
+arduino-cli lib install &quot;DHT sensor library&quot;
+arduino-cli lib install &quot;ArduinoJson&quot;
+arduino-cli lib install &quot;Adafruit Unified Sensor&quot;
+</code></pre>
+<hr />
+<h2>3. Wiring</h2>
+<p>Connect components to ESP32 as follows:</p>
+<pre><code>ESP32 Pin           Component
+────────────────────────────────────────
+GPIO 34 (ADC)   →   Soil Moisture Sensor (A0 / Analog Out)
+GPIO 25         →   DHT11 Data Pin
+GPIO 26         →   Relay IN (Pump Control)
+3.3V            →   DHT11 VCC, Soil Sensor VCC
+GND             →   All GNDs
+</code></pre>
+<h3>Pump Circuit (Separate Power!)</h3>
+<pre><code>Battery Pack (+) → Relay COM
+Relay NO         → Pump (+)
+Pump (-)         → Battery Pack (-)
+</code></pre>
+<blockquote>
+<p>⚠️ <strong>NEVER</strong> power the pump directly from ESP32 pins. Always use the relay with a separate power source.</p>
+</blockquote>
+<p>See <a href="../planning/hardware_shopping_list.md">hardware_shopping_list.md</a> for detailed wiring diagrams.</p>
+<hr />
+<h2>4. Configure Firmware</h2>
+<pre><code class="language-bash"># Navigate to firmware directory
+cd src/firmware/pwos_esp32
+
+# Create your config from template
+copy config.h.example config.h
+</code></pre>
+<h3>Choose Your Connection Mode</h3>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>When to Use</th>
+<th>Config</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>USB</strong></td>
+<td>No WiFi setup yet, testing hardware, calibrating sensors</td>
+<td><code>WIFI_ENABLED false</code></td>
+</tr>
+<tr>
+<td><strong>WiFi</strong></td>
+<td>ESP32 on your local network, full system operation</td>
+<td><code>WIFI_ENABLED true</code></td>
+</tr>
+</tbody>
+</table>
+<h3>USB Mode (No WiFi)</h3>
+<p>Edit <code>config.h</code> — only the mode flag matters:</p>
+<pre><code class="language-cpp">#define WIFI_ENABLED  false   // ← USB mode
+
+// WiFi/MQTT fields are ignored in USB mode
+// but keep them filled for when you switch later
+</code></pre>
+<p>The ESP32 outputs sensor JSON on serial. The <strong>serial bridge</strong> on your PC reads it and publishes to Mosquitto.</p>
+<h3>WiFi Mode</h3>
+<p>Edit <code>config.h</code> with your network details:</p>
+<pre><code class="language-cpp">#define WIFI_ENABLED  true    // ← WiFi mode
+
+#define WIFI_SSID     &quot;YourWiFiName&quot;
+#define WIFI_PASS     &quot;YourWiFiPassword&quot;
+#define MQTT_BROKER   &quot;192.168.1.100&quot;   // Your PC's LAN IP
+#define MQTT_PORT     1883
+</code></pre>
+<h4>Finding Your PC's IP Address</h4>
+<pre><code class="language-bash">ipconfig
+# Look for &quot;IPv4 Address&quot; under your WiFi adapter
+</code></pre>
+<hr />
+<h2>5. Flash Firmware</h2>
+<h3>Option A: Arduino IDE</h3>
+<ol>
+<li>Open <code>src/firmware/pwos_esp32/pwos_esp32.ino</code></li>
+<li><strong>Tools → Board</strong> → Select <strong>"ESP32 Dev Module"</strong></li>
+<li><strong>Tools → Port</strong> → Select your ESP32's COM port</li>
+<li>Click <strong>Upload</strong> (→ button)</li>
+</ol>
+<h3>Option B: Flash Script</h3>
+<pre><code class="language-bash">tools\flash_esp32.bat
+</code></pre>
+<h3>Option C: Arduino CLI</h3>
+<pre><code class="language-bash">arduino-cli compile --fqbn esp32:esp32:esp32 src/firmware/pwos_esp32
+arduino-cli upload -p COM3 --fqbn esp32:esp32:esp32 src/firmware/pwos_esp32
+</code></pre>
+<hr />
+<h2>6. Verify</h2>
+<h3>USB Mode Serial Output</h3>
+<p>Open Serial Monitor at <strong>115200 baud</strong>. You should see:</p>
+<pre><code>============================================
+  P-WOS ESP32 Firmware v1.1
+  Mode: USB (Serial bridge)
+============================================
+
+[INIT] DHT11 initialized
+[INIT] WiFi DISABLED — USB serial mode
+[INIT] Send JSON pump commands via serial:
+[INIT]   {&quot;action&quot;:&quot;ON&quot;,&quot;duration&quot;:30}
+
+[READY] P-WOS ESP32 Running
+[INFO]  Publish interval: 60s
+============================================
+
+[SERIAL] {&quot;device_id&quot;:&quot;ESP32_PWOS_001&quot;,&quot;soil_moisture&quot;:45.20,...}
+</code></pre>
+<p><strong>USB Serial Commands</strong> — type in Serial Monitor:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>STATUS</code></td>
+<td>Print current sensor readings</td>
+</tr>
+<tr>
+<td><code>PUMP ON</code></td>
+<td>Start pump for 30 seconds</td>
+</tr>
+<tr>
+<td><code>PUMP OFF</code></td>
+<td>Stop pump immediately</td>
+</tr>
+<tr>
+<td><code>READ</code></td>
+<td>Force a sensor reading now</td>
+</tr>
+<tr>
+<td><code>{"action":"ON","duration":15}</code></td>
+<td>JSON pump command (same as MQTT)</td>
+</tr>
+</tbody>
+</table>
+<h3>WiFi Mode Serial Output</h3>
+<pre><code>============================================
+  P-WOS ESP32 Firmware v1.1
+  Mode: WiFi (MQTT direct)
+============================================
+
+[INIT] DHT11 initialized
+[WiFi] Connecting to: YourWiFi......
+[WiFi] Connected! IP: 192.168.1.42
+[WiFi] RSSI: -45 dBm
+[MQTT] Connecting to 192.168.1.100:1883...
+[MQTT] Connected!
+[MQTT] Subscribed to: pwos/control/pump
+
+[READY] P-WOS ESP32 Running
+============================================
+
+[DATA] M:45.2% T:24.5C H:60.3% Pump:OFF
+</code></pre>
+<h3>Status LED Patterns</h3>
+<table>
+<thead>
+<tr>
+<th>LED Pattern</th>
+<th>USB Mode</th>
+<th>WiFi Mode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fast blink (10Hz)</td>
+<td>—</td>
+<td>No WiFi connection</td>
+</tr>
+<tr>
+<td>Medium blink (2Hz)</td>
+<td>—</td>
+<td>WiFi OK, no MQTT</td>
+</tr>
+<tr>
+<td>Quick pulse</td>
+<td>Pump running</td>
+<td>Pump running</td>
+</tr>
+<tr>
+<td>Slow blink (1Hz)</td>
+<td>Normal operation</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Solid ON</td>
+<td>—</td>
+<td>All connected</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>7. Calibrate Soil Sensor</h2>
+<ol>
+<li>Set <code>SAMPLE_INTERVAL</code> to <code>5000</code> in <code>config.h</code> (5 seconds for fast readings)</li>
+<li>Flash firmware</li>
+<li>Open Serial Monitor</li>
+<li><strong>Dry reading:</strong> Hold sensor in air → note the ADC value from serial output</li>
+<li><strong>Wet reading:</strong> Insert sensor in a glass of water → note the ADC value</li>
+<li>Update <code>config.h</code>:<br />
+<code>cpp
+   #define SOIL_DRY   3500   // Your dry reading
+   #define SOIL_WET   1500   // Your wet reading</code></li>
+<li>Set <code>SAMPLE_INTERVAL</code> back to <code>60000</code> (60 seconds)</li>
+<li>Re-flash firmware</li>
+</ol>
+<hr />
+<h2>8. Windows Firewall (WiFi Mode Only)</h2>
+<p>For the ESP32 to reach your PC's Mosquitto broker, allow port 1883:</p>
+<ol>
+<li>Open <strong>Windows Defender Firewall</strong> → <strong>Advanced Settings</strong></li>
+<li><strong>Inbound Rules</strong> → <strong>New Rule</strong></li>
+<li><strong>Port</strong> → <strong>TCP</strong> → <strong>1883</strong></li>
+<li><strong>Allow the connection</strong></li>
+<li>Name: "Mosquitto MQTT"</li>
+</ol>
+<blockquote>
+<p>Not needed for USB mode — the serial bridge runs on your PC and talks to localhost.</p>
+</blockquote>
+<hr />
+<h2>9. Run P-WOS with Hardware</h2>
+<h3>Using the Startup Script</h3>
+<pre><code class="language-bash">start_pwos.bat
+# Select [2] HARDWARE
+# Then select [A] USB or [B] WiFi
+</code></pre>
+<h3>Manual Launch — USB Mode</h3>
+<pre><code class="language-bash"># Terminal 1: MQTT Broker
+mosquitto -v
+
+# Terminal 2: Serial Bridge (reads ESP32 USB, publishes to MQTT)
+python src\hardware\serial_bridge.py
+
+# Terminal 3: Backend API (includes MQTT subscriber)
+cd src\backend &amp;&amp; python app.py
+
+# Terminal 4: React
+cd src\frontend &amp;&amp; npm run dev
+</code></pre>
+<h3>Manual Launch — WiFi Mode</h3>
+<pre><code class="language-bash"># Terminal 1: MQTT Broker
+mosquitto -v
+
+# Terminal 2: Backend API (includes MQTT subscriber)
+cd src\backend &amp;&amp; python app.py
+
+# Terminal 3: React
+cd src\frontend &amp;&amp; npm run dev
+
+# ESP32 publishes directly to Mosquitto — no bridge needed
+</code></pre>
+<hr />
+<h2>Troubleshooting</h2>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ESP32 not detected (no COM port)</td>
+<td>Install <a href="https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers">CP2102 driver</a> or <a href="http://www.wch.cn/downloads/CH341SER_EXE.html">CH340 driver</a></td>
+</tr>
+<tr>
+<td>WiFi won't connect</td>
+<td>Check SSID/password in config.h. ESP32 only supports 2.4GHz WiFi.</td>
+</tr>
+<tr>
+<td>MQTT won't connect</td>
+<td>Check your PC's IP in config.h. Ensure Mosquitto is running. Check firewall.</td>
+</tr>
+<tr>
+<td>Soil readings stuck at 0% or 100%</td>
+<td>Recalibrate SOIL_DRY and SOIL_WET values</td>
+</tr>
+<tr>
+<td>DHT11 read errors</td>
+<td>Check wiring. Try adding a 10kΩ pull-up resistor between Data and VCC.</td>
+</tr>
+<tr>
+<td>Relay clicks but pump doesn't run</td>
+<td>Check pump circuit wiring. Ensure battery is charged.</td>
+</tr>
+</tbody>
+</table>
+                            </div>
+                        </article>
+
+                        <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
+                            <a href="index.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Back to Index</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <aside class="hidden lg:block w-56 shrink-0 border-l border-slate-200 dark:border-slate-800/80 pl-6">
+                        <div class="sticky top-0">
+                            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5 mb-4">
+                                <i data-lucide="list-ordered" class="w-3.5 h-3.5 text-emerald-500"></i> On This Page
+                            </h4>
+                            <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                            <a href="index.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                                <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                                <span>Back to Home</span>
+                            </a>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const docs = [{"category": "Getting Started", "icon": "rocket", "pages": [{"title": "Project Overview", "file": "PROJECT_OVERVIEW.html"}, {"title": "Quickstart Guide", "file": "QUICKSTART.html"}, {"title": "Project Roadmap", "file": "PROJECT_ROADMAP.html"}]}, {"category": "System Architecture", "icon": "cpu", "pages": [{"title": "System Overview", "file": "system_overview.html"}, {"title": "Dataflow", "file": "dataflow.html"}, {"title": "Analytics Reference", "file": "analytics_reference.html"}, {"title": "Crop Profiles", "file": "crop_profiles.html"}, {"title": "Edge Cases & Scenarios", "file": "edge_cases_and_scenarios.html"}, {"title": "ML Model Deep Dive", "file": "ml_model_deep_dive.html"}, {"title": "VPD & Weather Engine", "file": "vpd_and_weather_engine.html"}]}, {"category": "Core Guides", "icon": "book-open", "pages": [{"title": "Installation Guide", "file": "installation_guide.html"}, {"title": "Backend API", "file": "backend_guide.html"}, {"title": "Database Guide", "file": "database_guide.html"}, {"title": "Firmware Guide", "file": "firmware_guide.html"}, {"title": "Simulation Guide", "file": "simulation_guide.html"}, {"title": "ML Model Guide", "file": "ml_model_guide.html"}, {"title": "Performance Guide", "file": "performance_guide.html"}, {"title": "Troubleshooting", "file": "troubleshooting.html"}, {"title": "Tests Reference", "file": "tests.html"}, {"title": "Analytics Dashboard", "file": "analytics_dashboard.html"}, {"title": "Main Dashboard", "file": "main_dashboard.html"}, {"title": "Mobile Guide", "file": "mobile_guide.html"}]}, {"category": "Hardware Engineering", "icon": "circuit-board", "pages": [{"title": "Hardware Architecture", "file": "hardware_architecture.html"}, {"title": "Breadboard Assembly", "file": "breadboard_assembly.html"}, {"title": "Breadboard Guide", "file": "breadboard.html"}, {"title": "Hardware Setup", "file": "hardware_setup.html"}, {"title": "Shopping List", "file": "hardware_shopping_list.html"}, {"title": "Migration Plan", "file": "hardware_migration_plan.html"}, {"title": "Testing Report", "file": "testing_report.html"}, {"title": "Hardware Progress", "file": "hardware_progress.html"}, {"title": "Phase 1 Report", "file": "phase1_report.html"}]}, {"category": "Scientific Research", "icon": "microscope", "pages": [{"title": "Codebase Analysis", "file": "codebase_analysis.html"}, {"title": "Codebase Audit", "file": "codebase_audit.html"}, {"title": "Crop Integration Plan", "file": "crop_integration_plan.html"}]}, {"category": "Technical Reference", "icon": "code", "pages": [{"title": "API Reference", "file": "api_reference.html"}, {"title": "MQTT Topics", "file": "mqtt_topics.html"}, {"title": "Coding Guidelines", "file": "coding_guidelines.html"}, {"title": "Project Structure", "file": "project_structure.html"}, {"title": "VPD Scenarios", "file": "vpd_scenarios.html"}]}, {"category": "Deployment & Operations", "icon": "cloud", "pages": [{"title": "Cloud ML Deployment", "file": "cloud_ml_deployment.html"}, {"title": "Local Implementation", "file": "local_implementation.html"}, {"title": "ML Roadmap", "file": "ml_implementation_roadmap.html"}]}, {"category": "Reports & Validation", "icon": "bar-chart-3", "pages": [{"title": "Final Report", "file": "final_report.html"}, {"title": "Validation Report", "file": "validation_report.html"}, {"title": "Simulation Analysis", "file": "simulation_analysis.html"}, {"title": "Moisture Analysis", "file": "moisture_analysis.html"}, {"title": "Phase 1 Setup Report", "file": "phase_01_setup_report.html"}, {"title": "Phase 5 ML Report", "file": "phase_05_ml_report.html"}, {"title": "Phase 6 Frontend Report", "file": "phase_06_frontend_report.html"}]}];
+
+        let expandedGroups = {};
+
+        function initTheme() {
+            const saved = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(saved);
+        }
+
+        function setTheme(theme) {
+            document.body.classList.remove('theme-light', 'theme-dark');
+            document.documentElement.classList.remove('dark');
+            const hljsLight = document.getElementById('hljs-light-theme');
+            const hljsDark = document.getElementById('hljs-dark-theme');
+            if (theme === 'dark') {
+                document.body.classList.add('theme-dark');
+                document.documentElement.classList.add('dark');
+                if (hljsLight) hljsLight.disabled = true;
+                if (hljsDark) hljsDark.disabled = false;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'moon');
+            } else {
+                document.body.classList.add('theme-light');
+                if (hljsLight) hljsLight.disabled = false;
+                if (hljsDark) hljsDark.disabled = true;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'sun');
+            }
+            localStorage.setItem('pwos-theme', theme);
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            const current = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(current === 'light' ? 'dark' : 'light');
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        function renderSidebar(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = docs.map(function(group, gi) {
+                const isOpen = expandedGroups[gi] || false;
+                return '<div class="sidebar-group">' +
+                    '<button onclick="toggleGroup(' + gi + ')" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' +
+                        '<span class="flex items-center gap-2"><i data-lucide="' + group.icon + '" class="w-4 h-4"></i><span>' + group.category + '</span></span>' +
+                        '<i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ' + (isOpen ? 'rotate-0' : '-rotate-90') + '"></i>' +
+                    '</button>' +
+                    '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
+                        '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
+                            group.pages.map(function(page) {
+                                return '<li><a href="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                            }).join('') +
+                        '</ul>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function toggleGroup(idx) {
+            expandedGroups[idx] = !expandedGroups[idx];
+            renderSidebar('sidebarGroups');
+            renderSidebar('mobileSidebarGroups');
+        }
+
+        function setupSearch(inputId, containerId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('input', function(e) {
+                const q = e.target.value.toLowerCase().trim();
+                document.querySelectorAll('#' + containerId + ' .sidebar-group').forEach(function(el) {
+                    el.style.display = q === '' || el.textContent.toLowerCase().includes(q) ? '' : 'none';
+                });
+            });
+        }
+
+        setupSearch('docSearch', 'sidebarGroups');
+        setupSearch('mobileDocSearch', 'mobileSidebarGroups');
+
+        function openMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            sidebar.classList.remove('hidden');
+            setTimeout(function() { panel.classList.remove('-translate-x-full'); }, 10);
+        }
+
+        function closeMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            panel.classList.add('-translate-x-full');
+            setTimeout(function() { sidebar.classList.add('hidden'); }, 300);
+        }
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', openMobileNav);
+        document.getElementById('closeMobileNav').addEventListener('click', closeMobileNav);
+        document.getElementById('navOverlay').addEventListener('click', closeMobileNav);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const output = document.getElementById('markdownOutput');
+            if (!output) return;
+
+            output.querySelectorAll('pre code').forEach(function(block) { hljs.highlightElement(block); });
+
+            try {
+                renderMathInElement(output, {
+                    delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}],
+                    throwOnError: false
+                });
+            } catch(e) {}
+
+            try {
+                mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+                mermaid.run({ nodes: output.querySelectorAll('.mermaid') });
+            } catch(e) {}
+
+            buildTOC(output);
+        });
+
+        function buildTOC(container) {
+            const list = document.getElementById('tocList');
+            if (!list) return;
+            list.innerHTML = '';
+            const headings = container.querySelectorAll('h2, h3');
+            if (headings.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'text-slate-400 italic';
+                li.textContent = 'No sub-headers on page';
+                list.appendChild(li);
+                return;
+            }
+            headings.forEach(function(heading, idx) {
+                const anchorId = 'toc-anchor-' + idx;
+                heading.setAttribute('id', anchorId);
+                const li = document.createElement('li');
+                const isSub = heading.tagName.toLowerCase() === 'h3';
+                li.className = 'transition-colors duration-150 ' + (isSub ? 'pl-3 border-l border-slate-100 dark:border-slate-800 ml-1 py-0.5' : 'font-medium py-1');
+                const link = document.createElement('a');
+                link.href = '#' + anchorId;
+                link.className = 'hover:text-emerald-500 block truncate transition-colors';
+                link.textContent = heading.textContent;
+                link.onclick = function(e) { e.preventDefault(); heading.scrollIntoView({ behavior: 'smooth' }); };
+                li.appendChild(link);
+                list.appendChild(li);
+            });
+        }
+
+        window.addEventListener('scroll', function() {
+            const main = document.querySelector('main');
+            if (!main) return;
+            const scrollTop = main.scrollTop;
+            const scrollHeight = main.scrollHeight - main.clientHeight;
+            document.getElementById('readingProgress').style.width = (scrollTop / Math.max(scrollHeight, 1)) * 100 + '%';
+        });
+
+        const copyBtn = document.getElementById('copyDocBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                const content = document.getElementById('markdownOutput')?.innerText;
+                if (!content) return;
+                navigator.clipboard.writeText(content).then(function() {
+                    copyBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>';
+                    lucide.createIcons();
+                    setTimeout(function() {
+                        copyBtn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
+                        lucide.createIcons();
+                    }, 1500);
+                });
+            });
+        }
+
+        initTheme();
+        renderSidebar('sidebarGroups');
+        renderSidebar('mobileSidebarGroups');
+    </script>
+</body>
+</html>

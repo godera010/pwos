@@ -10,9 +10,9 @@ class TestDecisionLogic:
         predictor.model.predict.return_value = [0]
         predictor.model.predict_proba.return_value = [[0.9, 0.1]]
         
-        # Scenario: 10% moisture (Critical < 15%), Standard temp
+        # Scenario: 5% moisture (Critically low in all seasons), Standard temp
         data = {
-            'soil_moisture': 10,
+            'soil_moisture': 5,
             'temperature': 25,
             'humidity': 50,
             'forecast_minutes': 0
@@ -51,7 +51,7 @@ class TestDecisionLogic:
         # Mock datetime to be 13:00 (midday)
         with patch('models.ml_predictor.datetime') as mock_date:
             mock_date.now.return_value.hour = 13
-            mock_date.now.return_value.month = 1 # Summer
+            mock_date.now.return_value.month = 10 # Spring/Dry (no seasonal shift)
             mock_date.now.return_value.weekday.return_value = 0
             
             # Scenario: High Temp, Low Humidity -> High VPD
@@ -88,7 +88,7 @@ class TestDecisionLogic:
         """Test proactive watering in morning before heatwave."""
         with patch('models.ml_predictor.datetime') as mock_date:
             mock_date.now.return_value.hour = 5 # 5 AM
-            mock_date.now.return_value.month = 1
+            mock_date.now.return_value.month = 10 # Spring/Dry (no seasonal shift)
             mock_date.now.return_value.weekday.return_value = 0 # Fix: Mock weekday to return int
             
             # Scenario: Moderate moisture (40%), but high predicted temp/vpd implied by 'is_extreme_vpd' logic 
@@ -104,7 +104,7 @@ class TestDecisionLogic:
             # But let's test the logic branch assuming input triggers it.
             
             data = {
-                'soil_moisture': 40, # < Proactive (50%)
+                'soil_moisture': 50, # < Proactive (55%), but > Low (45%)
                 'temperature': 30, # Unusually warm morning?
                 'humidity': 20     # Dry
             }

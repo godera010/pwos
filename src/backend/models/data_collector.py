@@ -1,3 +1,16 @@
+"""
+⚠️ LEGACY MODULE — DO NOT USE FOR NEW DEVELOPMENT
+This file uses SQLite and has been superseded by ai_service/data_extractor.py
+which uses PostgreSQL. Kept for reference only.
+"""
+
+import warnings
+warnings.warn(
+    "data_collector.py is deprecated. Use ai_service/data_extractor.py instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
 import sqlite3
 import logging
 import pandas as pd

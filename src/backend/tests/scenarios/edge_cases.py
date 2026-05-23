@@ -29,8 +29,56 @@ class TestEdgeCases:
         assert res['recommended_action'] in ["STOP", "MONITOR"] # Definitley not WATER_NOW
 
     def test_sensor_drift_handling(self, predictor):
-        """Scenario: verify behavior with consistent but weird values."""
-        pass
+        """Scenario: verify behavior with flatline standard deviation and low average moisture."""
+        import pandas as pd
+        
+        # 1. Flatline check (all readings are identical e.g., 45.0)
+        history_flatline = pd.DataFrame({
+            'soil_moisture': [45.0, 45.0, 45.0],
+            'timestamp': ['2026-05-22T20:00:00Z', '2026-05-22T20:01:00Z', '2026-05-22T20:02:00Z']
+        })
+        current_data_flatline = {
+            'soil_moisture': 45.0,
+            'temperature': 25.0
+        }
+        res_flatline = predictor.predict_next_watering(current_data_flatline, history_df=history_flatline)
+        # Flatline on 45% moisture with >= 4 readings (3 in history + 1 current) should trigger SENSOR_ERROR
+        assert res_flatline['recommended_action'] == "STOP"
+        assert res_flatline['system_status'] == "SENSOR_ERROR"
+        assert "sensor" in res_flatline['reason'].lower()
+
+        # 2. Low average check (readings are low but slightly variable e.g., 0.9, 0.8, 0.7 -> average < 1.0%)
+        history_low = pd.DataFrame({
+            'soil_moisture': [0.9, 0.8],
+            'timestamp': ['2026-05-22T20:00:00Z', '2026-05-22T20:01:00Z']
+        })
+        current_data_low = {
+            'soil_moisture': 0.7,
+            'temperature': 25.0
+        }
+        res_low = predictor.predict_next_watering(current_data_low, history_df=history_low)
+        # Average below 1.0% with >= 3 readings (2 in history + 1 current) should trigger SENSOR_ERROR
+        assert res_low['recommended_action'] == "STOP"
+        assert res_low['system_status'] == "SENSOR_ERROR"
+        assert "sensor" in res_low['reason'].lower()
+
+        # 3. Normal signal check (readings are slightly varying e.g., 45.2, 45.1, 45.3)
+        # Mock model prediction since sensor is valid and model will be queried
+        predictor.model = MagicMock()
+        predictor.model.predict = MagicMock(return_value=[0])
+        predictor.model.predict_proba = MagicMock(return_value=[[0.8, 0.2]])
+        
+        history_normal = pd.DataFrame({
+            'soil_moisture': [45.2, 45.1, 45.3],
+            'timestamp': ['2026-05-22T20:00:00Z', '2026-05-22T20:01:00Z', '2026-05-22T20:02:00Z']
+        })
+        current_data_normal = {
+            'soil_moisture': 45.2,
+            'temperature': 25.0
+        }
+        res_normal = predictor.predict_next_watering(current_data_normal, history_df=history_normal)
+        # Normal variation should not trigger SENSOR_ERROR
+        assert res_normal['system_status'] != "SENSOR_ERROR"
 
     def test_negative_readings(self, predictor):
         """Scenario: Sensor returns negative value (Hardware failure)."""
@@ -45,8 +93,10 @@ class TestEdgeCases:
         """Scenario: Dead sensor (all 0s)."""
         data = {'soil_moisture': 0, 'temperature': 0, 'humidity': 0}
         res = predictor.predict_next_watering(data)
-        # 0 moisture -> usually critical clean water
-        assert res['recommended_action'] == "NOW"
+        # 0 moisture -> suspected disconnected/broken sensor -> STOP
+        assert res['recommended_action'] == "STOP"
+        assert res['system_status'] == "SENSOR_ERROR"
+        assert "sensor" in res['reason'].lower()
 
     def test_max_values_scenario(self, predictor):
         """Scenario: Sensors pegged at max."""
