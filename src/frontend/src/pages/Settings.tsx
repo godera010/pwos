@@ -35,13 +35,13 @@ export const Settings: React.FC = () => {
             if (data) {
                 setSettings(prev => ({
                     ...prev,
-                    moistureMin: data.moisture_threshold || prev.moistureMin,
-                    moistureMax: data.moisture_max || prev.moistureMax,
-                    tempMin: data.temp_min || prev.tempMin,
-                    tempMax: data.temp_max || prev.tempMax,
-                    maxDuration: data.max_duration || prev.maxDuration,
-                    latitude: data.latitude || prev.latitude,
-                    longitude: data.longitude || prev.longitude,
+                    moistureMin: data.moisture_threshold ?? prev.moistureMin,
+                    moistureMax: data.moisture_max ?? prev.moistureMax,
+                    tempMin: data.temp_min ?? prev.tempMin,
+                    tempMax: data.temp_max ?? prev.tempMax,
+                    maxDuration: data.max_duration ?? prev.maxDuration,
+                    latitude: data.latitude ?? prev.latitude,
+                    longitude: data.longitude ?? prev.longitude,
                 }));
             }
         }).catch(console.error);

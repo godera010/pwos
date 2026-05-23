@@ -3,481 +3,223 @@
 
 ---
 
-## ROOT DIRECTORY STRUCTURE
+## Root Directory
 
 ```
-pwos-project/
+pwos/
 │
 ├── docs/                           # All documentation
-│   ├── master_prompt.md           # AI agent master instructions
-│   ├── instructions.md            # Build instructions for agents
-│   ├── tasks.md                   # Task checklist for agents
-│   ├── guidelines.md              # Development guidelines
-│   ├── tests.md                   # Testing procedures
-│   ├── files_structure.md         # This file
-│   ├── tech_stack_summary.md      # Technology overview
-│   ├── technical_analysis.md      # Complete build requirements
-│   ├── simulation_guide.md        # Simulation setup
-│   ├── ml_model_guide.md          # ML development guide
-│   └── hardware_shopping_list.md  # Hardware components
+│   ├── README.md                   # Documentation index
+│   ├── PROJECT_OVERVIEW.md         # Research context & architecture diagrams
+│   ├── PROJECT_ROADMAP.md          # Phase tracking & progress
+│   ├── QUICKSTART.md               # Setup & run in 5 minutes
+│   ├── codebase_analysis.md        # Technical architecture summary
+│   ├── guides/                     # How-to guides
+│   ├── reference/                  # Specifications & standards
+│   ├── reports/                    # Academic deliverables
+│   ├── hardware/                   # Hardware integration docs
+│   └── deployment/                 # Cloud deployment planning
 │
-├── src/                           # Source code
-│   ├── simulation/                # Simulation components
-│   │   ├── esp32_simulator.py    # Virtual hardware
-│   │   ├── weather_simulator.py  # Weather API mock
-│   │   └── README.md
-│   │
-│   ├── backend/                   # Backend API
-│   │   ├── app.py                # Main API server
-│   │   ├── database.py           # Database operations
-│   │   ├── mqtt_subscriber.py    # MQTT listener
-│   │   ├── models/               # ML models
-│   │   │   ├── ml_model_v1.py   # Rule-based model
-│   │   │   ├── ml_predictor.py  # ML wrapper
-│   │   │   ├── train_model.py   # Training script
-│   │   │   └── data_collector.py
-│   │   ├── utils/                # Utilities
-│   │   │   ├── logger.py
-│   │   │   └── config.py
-│   │   └── requirements.txt      # Python dependencies
-│   │
-│   ├── frontend/                  # Web interface
-│   │   ├── dashboard.html        # Main dashboard
-│   │   ├── assets/
-│   │   │   ├── css/
-│   │   │   │   └── styles.css
-│   │   │   └── js/
-│   │   │       └── main.js
-│   │   └── README.md
-│   │
-│   └── firmware/                  # ESP32 code (future)
-│       ├── main.ino              # Arduino sketch
-│       ├── config.h              # Configuration
-│       ├── sensors.h             # Sensor functions
-│       └── README.md
+├── src/                            # Source code
+│   ├── backend/                    # Flask API + ML + MQTT
+│   ├── frontend/                   # React Dashboard
+│   ├── firmware/                   # ESP32 firmware (C++/Arduino)
+│   ├── hardware/                   # Hardware bridge scripts
+│   ├── simulation/                 # ESP32 + Weather simulators
+│   └── config.py                   # Centralized configuration
 │
-├── data/                          # Data storage
-│   ├── sensor_data.db            # SQLite database
-│   ├── training_data.csv         # ML training data
-│   ├── trained_model.pkl         # Saved model
-│   ├── model_metadata.json       # Model info
-│   └── logs/                     # Log files
-│       ├── system.log
-│       ├── errors.log
-│       └── mqtt.log
+├── firmware/                       # Standalone firmware copies + tests
+│   ├── pwos_esp32/                 # Production firmware
+│   ├── pwos_wokwi/                 # Wokwi simulator version
+│   └── tests/                     # Hardware component tests
 │
-├── tests/                         # Test files
-│   ├── test_simulator.py         # Simulator tests
-│   ├── test_api.py               # API tests
-│   ├── test_ml_model.py          # ML model tests
-│   ├── test_database.py          # Database tests
-│   └── integration/              # Integration tests
-│       ├── test_full_pipeline.py
-│       └── test_mqtt_flow.py
+├── data/                           # Data storage
+│   ├── database/                   # DB schemas & migrations
+│   ├── raw/                        # Raw sensor data exports
+│   └── processed/                  # Processed data & simulation logs
 │
-├── scripts/                       # Utility scripts
-│   ├── setup.sh                  # Initial setup
-│   ├── start_all.sh              # Start all services
-│   ├── stop_all.sh               # Stop all services
-│   ├── export_data.py            # Data export
-│   └── backup_database.py        # Backup utility
+├── logs/                           # Runtime logs
+│   ├── app/                        # Backend API logs
+│   ├── sim/                        # Simulator logs
+│   ├── hardware/                   # Serial bridge logs
+│   └── test/                       # Test execution logs
 │
-├── config/                        # Configuration files
-│   ├── mqtt_config.json          # MQTT settings
-│   ├── api_config.json           # API settings
-│   ├── .env.example              # Environment template
-│   └── .env                      # Environment variables (gitignored)
+├── scripts/                        # Utility & maintenance scripts
+│   ├── setup/                      # Environment setup
+│   ├── simulation/                 # Simulation launchers
+│   ├── data/                       # Data processing scripts
+│   ├── testing/                    # Test utilities
+│   ├── maintenance/                # DB backup, cleanup
+│   ├── monitors/                   # Live monitoring scripts
+│   └── experiments/                # A/B test & experiment scripts
 │
-├── deployments/                   # Deployment configs
-│   ├── docker/
-│   │   ├── Dockerfile
-│   │   └── docker-compose.yml
-│   ├── railway/
-│   │   └── railway.json
-│   └── render/
-│       └── render.yaml
+├── tools/                          # Development tools
+├── overview/                       # Project overview materials
 │
-├── .github/                       # GitHub configs
-│   ├── workflows/
-│   │   ├── tests.yml             # CI/CD tests
-│   │   └── deploy.yml            # Auto deploy
-│   └── ISSUE_TEMPLATE/
-│       └── bug_report.md
-│
-├── .gitignore                     # Git ignore rules
-├── README.md                      # Project overview
-├── LICENSE                        # License file
-├── CHANGELOG.md                   # Version history
-└── CONTRIBUTING.md                # Contribution guide
+├── .env                            # Environment variables (gitignored)
+├── .env.example                    # Environment template
+├── .gitignore                      # Git ignore rules
+├── README.md                       # Project overview
+├── requirements.txt                # Python dependencies
+├── start_pwos.bat                  # One-click production launcher
+├── start_simulation.bat            # One-click simulation launcher
+└── fix_mosquitto.bat               # Mosquitto troubleshooting
 ```
 
 ---
 
-## DIRECTORY EXPLANATIONS
+## Source Code (`src/`)
 
-### `/docs` - Documentation
-**Purpose:** All project documentation and guides  
-**Who uses it:** Developers, AI agents, users  
-**Key files:**
-- `master_prompt.md` - AI agent instructions
-- `instructions.md` - Step-by-step build guide
-- `tasks.md` - Task checklist
-- Technical guides and references
+### Backend (`src/backend/`)
 
-### `/src` - Source Code
-**Purpose:** All application code  
-**Structure:**
-- `simulation/` - Virtual hardware for testing
-- `backend/` - API and ML logic
-- `frontend/` - User interface
-- `firmware/` - ESP32 code (when hardware arrives)
+| File | Purpose |
+|------|---------|
+| `app.py` | Flask API server + integrated MQTT subscriber |
+| `database.py` | PostgreSQL persistence (psycopg2) |
+| `automation_controller.py` | Autopilot — polls ML predictions, issues pump commands |
+| `weather_api.py` | OpenWeatherMap integration with simulation fallback |
+| `scheduler.py` | Periodic task scheduling |
+| `log_config.py` | Centralized logging configuration |
 
-### `/data` - Data Storage
-**Purpose:** Databases, logs, trained models  
-**Note:** Add to `.gitignore` (don't commit large files)
+| Directory | Purpose |
+|-----------|---------|
+| `models/` | ML model files (predictor, trainer, data collector) |
+| `models/artifacts/` | Saved model files (`rf_model.pkl`) |
+| `ai_service/` | ML retraining pipeline |
+| `utils/` | Shared utilities |
+| `tests/` | Backend test suite (unit, integration, scenarios, performance) |
 
-### `/tests` - Test Suite
-**Purpose:** Automated testing  
-**Types:**
-- Unit tests (individual functions)
-- Integration tests (component interaction)
-- End-to-end tests (full system)
+### Frontend (`src/frontend/`)
 
-### `/scripts` - Automation Scripts
-**Purpose:** Setup, deployment, maintenance  
-**Examples:**
-- `start_all.sh` - Launch entire system
-- `export_data.py` - Export for analysis
+| File | Purpose |
+|------|---------|
+| `index.html` | App entry point |
+| `vite.config.ts` | Vite bundler configuration |
+| `package.json` | Node.js dependencies |
 
-### `/config` - Configuration
-**Purpose:** Settings files  
-**Note:** `.env` contains secrets (gitignored)
+| Directory | Purpose |
+|-----------|---------|
+| `src/pages/` | Page components (Dashboard, Analytics, SystemHealth, Control) |
+| `src/components/` | Reusable UI components |
+| `src/components/ui/` | Radix UI primitives |
+| `src/services/` | API client (`api.ts`) |
+| `src/hooks/` | Custom React hooks (e.g., `useMqtt`) |
+| `src/types/` | TypeScript type definitions |
+| `src/assets/` | Static assets (images, icons) |
+| `e2e/` | Playwright end-to-end tests |
 
-### `/deployments` - Deployment Configs
-**Purpose:** Cloud deployment configurations  
-**Platforms:** Docker, Railway, Render
+### Firmware (`src/firmware/`)
 
----
+| File | Purpose |
+|------|---------|
+| `pwos_esp32/pwos_esp32.ino` | Production ESP32 firmware (C++/Arduino) |
+| `pwos_esp32/config.h` | WiFi, MQTT, and pin configuration |
+| `pwos_wokwi/` | Wokwi online simulator version |
+| `tests/` | Hardware component test sketches |
 
-## FILE NAMING CONVENTIONS
+### Simulation (`src/simulation/`)
 
-### Python Files
-- `lowercase_with_underscores.py`
-- Classes: `PascalCase`
-- Functions: `snake_case`
-- Constants: `UPPER_CASE`
+| File | Purpose |
+|------|---------|
+| `esp32_simulator.py` | Virtual ESP32 — sensor physics + MQTT |
+| `weather_simulator.py` | Dynamic weather pattern generator |
+| `data_generator.py` | Bulk historical data generation |
+| `generate_history.py` | Extended sensor history creation |
 
-### Documentation
-- `lowercase_with_underscores.md`
-- Clear, descriptive names
-- README in each major directory
+### Hardware Bridge (`src/hardware/`)
 
-### Configuration
-- `snake_case.json`
-- `.env` for secrets
-- `config.py` for Python configs
-
----
-
-## CRITICAL FILES
-
-### Must Have:
-1. `README.md` - Project overview
-2. `requirements.txt` - Python dependencies
-3. `.gitignore` - What not to commit
-4. `docs/master_prompt.md` - AI agent guide
-5. `docs/instructions.md` - Build steps
-
-### Should Have:
-6. `CHANGELOG.md` - Track changes
-7. `LICENSE` - Legal terms
-8. `CONTRIBUTING.md` - How to contribute
-9. `tests/` - Test suite
-10. `scripts/setup.sh` - Easy setup
+| File | Purpose |
+|------|---------|
+| `serial_bridge.py` | USB serial → MQTT bridge for ESP32 |
+| `hardware_manager.py` | Hardware detection and management |
 
 ---
 
-## FILE DEPENDENCIES MAP
+## Data Flow
 
 ```
-master_prompt.md
-    │
-    ├──> tech_stack_summary.md (understand architecture)
-    ├──> technical_analysis.md (know what to build)
-    ├──> simulation_guide.md (setup environment)
-    ├──> ml_model_guide.md (implement ML)
-    ├──> hardware_shopping_list.md (future reference)
-    ├──> instructions.md (step-by-step)
-    ├──> tasks.md (what to do)
-    ├──> guidelines.md (how to do it)
-    └──> tests.md (verify it works)
-
-instructions.md
-    │
-    ├──> tasks.md (break into steps)
-    ├──> guidelines.md (follow standards)
-    └──> tests.md (validate each step)
-
-tasks.md
-    │
-    ├──> tests.md (confirm completion)
-    └──> guidelines.md (maintain quality)
-```
-
----
-
-## DATA FLOW
-
-```
-Simulation:
-esp32_simulator.py → MQTT Broker → mqtt_subscriber.py → database.py → sensor_data.db
+Sensor Input (Hardware or Simulation):
+  ESP32 / Simulator  →  MQTT Broker  →  app.py (on_message)  →  PostgreSQL
 
 API Request:
-dashboard.html → app.py → ml_predictor.py → Response
+  React Dashboard  →  Flask API (app.py)  →  PostgreSQL / ML Predictor  →  JSON Response
 
-Training:
-sensor_data.db → data_collector.py → training_data.csv → train_model.py → trained_model.pkl
+ML Training:
+  PostgreSQL  →  data_collector.py  →  training_data.csv  →  train_model.py  →  rf_model.pkl
 ```
 
 ---
 
-## GITIGNORE RULES
+## Technology Stack
 
-```gitignore
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-*.egg-info/
-
-# Data
-data/*.db
-data/*.csv
-data/logs/
-*.pkl
-
-# Environment
-.env
-.env.local
-
-# IDE
-.vscode/
-.idea/
-*.swp
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-logs/
-```
+| Layer | Technology | Location |
+|-------|------------|----------|
+| **Frontend** | React 19, Vite, TypeScript, Vanilla CSS, Recharts | `src/frontend/` |
+| **Backend** | Python 3.13, Flask, psycopg2 | `src/backend/` |
+| **Database** | PostgreSQL 15+ | configured in `src/config.py` |
+| **ML** | Scikit-Learn, Random Forest (17 features) | `src/backend/models/` |
+| **Messaging** | MQTT (Mosquitto) | system service, port 1883 |
+| **Firmware** | C++ / Arduino Framework | `src/firmware/pwos_esp32/` |
+| **Simulation** | Python (paho-mqtt, numpy) | `src/simulation/` |
 
 ---
 
-## VERSION CONTROL STRATEGY
+## Configuration
 
-### Branch Structure:
-```
-main
-├── develop
-│   ├── feature/simulation
-│   ├── feature/backend-api
-│   ├── feature/ml-model
-│   └── feature/frontend
-└── release/v1.0
-```
-
-### Commit Message Format:
-```
-type(scope): subject
-
-Examples:
-feat(simulation): add moisture decay simulation
-fix(api): correct MQTT reconnection logic
-docs(readme): update installation instructions
-test(ml): add model accuracy tests
-```
+### Environment Variables (`src/config.py`)
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `DB_HOST` | `localhost` | PostgreSQL host |
+| `DB_PORT` | `5432` | PostgreSQL port |
+| `DB_NAME` | `pwos` | Database name |
+| `DB_USER` | `postgres` | Database user |
+| `DB_PASSWORD` | (empty) | Database password |
+| `MQTT_BROKER` | `localhost` | MQTT broker host |
+| `MQTT_PORT` | `1883` | MQTT broker port |
+| `OPENWEATHER_API_KEY` | (none) | OpenWeatherMap API key |
 
 ---
 
-## SIZE ESTIMATES
+## File Naming Conventions
 
-| Directory | Approx Size | Notes |
-|-----------|-------------|-------|
-| `/docs` | 5-10 MB | Text files |
-| `/src` | 1-2 MB | Code only |
-| `/data` | 10-500 MB | Grows over time |
-| `/tests` | 500 KB | Test code |
-| `/scripts` | 100 KB | Shell/Python scripts |
-| **Total (initial)** | **<20 MB** | Without collected data |
-| **Total (after 1 month)** | **100-500 MB** | With sensor data |
-
----
-
-## BACKUP STRATEGY
-
-### What to Back Up:
-1. **Code** → Git repository (GitHub)
-2. **Database** → Daily exports to CSV
-3. **Trained models** → Version with metadata
-4. **Logs** → Weekly archives
-5. **Config** → Git (without secrets)
-
-### What NOT to Back Up:
-- Temporary files (`__pycache__`)
-- Virtual environments (`venv/`)
-- Large raw data (keep summaries)
-- Generated files
+| Type | Convention | Example |
+|------|-----------|---------|
+| Python modules | `snake_case.py` | `weather_api.py` |
+| React components | `PascalCase.tsx` | `SystemHealth.tsx` |
+| CSS files | `snake_case.css` or `index.css` | `index.css` |
+| Documentation | `UPPER_CASE.md` or `snake_case.md` | `QUICKSTART.md`, `backend_guide.md` |
+| Arduino firmware | `sketch_name.ino` | `pwos_esp32.ino` |
+| Config files | `snake_case` | `config.h`, `config.py` |
 
 ---
 
-## ACCESS PERMISSIONS
-
-### Public (GitHub):
-- All code
-- Documentation
-- Tests
-- Example configs
-
-### Private:
-- `.env` (API keys, passwords)
-- Production database
-- User data
-- Deployment secrets
-
----
-
-## SCALABILITY PLAN
-
-### Current (Development):
-```
-Single machine
-All services local
-SQLite database
-Static HTML frontend
-```
-
-### Future (Production):
-```
-Backend: Railway/Render
-Database: PostgreSQL (cloud)
-Frontend: Netlify/Vercel
-MQTT: HiveMQ Cloud
-Monitoring: Sentry/LogRocket
-```
-
----
-
-## FILE LIFECYCLE
-
-### Development:
-1. Create in `/src`
-2. Test in `/tests`
-3. Document in `/docs`
-4. Commit to Git
-5. Deploy
-
-### Data:
-1. Collect in runtime
-2. Store in `/data`
-3. Export to CSV (weekly)
-4. Archive old data (monthly)
-5. Delete raw logs (after 3 months)
-
-### Models:
-1. Train from data
-2. Evaluate performance
-3. Save to `/data`
-4. Version with metadata
-5. Deploy to API
-
----
-
-## QUICK NAVIGATION
-
-```bash
-# Start development
-cd pwos-project/
-
-# View documentation
-cd docs/
-cat master_prompt.md
-
-# Edit code
-cd src/backend/
-code app.py
-
-# Run tests
-cd tests/
-pytest
-
-# Start system
-cd scripts/
-./start_all.sh
-
-# Check logs
-cd data/logs/
-tail -f system.log
-```
-
----
-
-## DEPENDENCY TREE
+## Dependency Tree
 
 ```
-Project Root
-│
-├── Python 3.9+
-│   ├── paho-mqtt (MQTT)
-│   ├── flask (API)
-│   ├── scikit-learn (ML)
-│   └── pandas (Data)
-│
-├── Mosquitto (MQTT Broker)
-│
-├── SQLite (Database)
-│
-└── Node.js (Optional)
-    └── npm packages (if needed)
+Python 3.13+
+├── flask (API)
+├── paho-mqtt (MQTT client)
+├── psycopg2 (PostgreSQL)
+├── scikit-learn / sklearnex (ML)
+├── numpy (Math)
+└── python-dotenv (Environment)
+
+Node.js 18+
+├── react 19 (UI framework)
+├── vite (Bundler)
+├── typescript (Type safety)
+├── recharts (Charts)
+├── framer-motion (Animations)
+├── lucide-react (Icons)
+└── @radix-ui (Primitives)
+
+System Services
+├── PostgreSQL 15+ (Database)
+└── Mosquitto (MQTT Broker)
+
+Hardware
+└── Arduino IDE / ESP32 Board Support
+    ├── PubSubClient (MQTT)
+    ├── DHT sensor library (Adafruit)
+    └── ArduinoJson (JSON)
 ```
-
----
-
-## MAINTENANCE SCHEDULE
-
-### Daily:
-- Check system logs
-- Monitor data collection
-- Review errors
-
-### Weekly:
-- Export data to CSV
-- Review model performance
-- Update documentation
-
-### Monthly:
-- Retrain ML model
-- Archive old logs
-- Update dependencies
-
-### Quarterly:
-- Major feature updates
-- Performance optimization
-- Security audit
-
----
-
-This structure provides:
-✅ Clear organization  
-✅ Easy navigation  
-✅ Scalable architecture  
-✅ Version control ready  
-✅ Deployment ready  
-✅ AI agent friendly  
-✅ Team collaboration ready

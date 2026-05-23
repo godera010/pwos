@@ -10,9 +10,9 @@
  *
  * Hardware:
  *   - ESP32-WROOM-32 DevKit V1
- *   - DHT22 (Temp + Humidity)       → GPIO 25
- *   - Capacitive Soil Moisture      → GPIO 34 (ADC)
- *   - 5V Relay Module (Pump)        → GPIO 26
+ *   - DHT11 (Temp + Humidity)       → GPIO 14
+ *   - Resistive Soil Moisture       → GPIO 34 (ADC)
+ *   - 5V Relay Module (Pump)        → GPIO 27
  *   - Status LED                    → GPIO 2 (onboard)
  *
  * Libraries (install via Arduino Library Manager):
@@ -44,14 +44,26 @@
 #define TOPIC_CONTROL_PUMP  "pwos/control/pump"
 #define TOPIC_DEVICE_STATUS "pwos/device/status"
 #define TOPIC_WEATHER       "pwos/weather/current"
+#define TOPIC_HARDWARE      "pwos/system/hardware"
 
 // ============================================================================
 // Hardware Objects
 // ============================================================================
-DHT dht(DHT_PIN, DHT22);
+DHT dht(DHT_PIN, DHT11);
 
 WiFiClient   wifiClient;
 PubSubClient mqttClient(wifiClient);
+
+// ============================================================================
+// Sensor Data Struct (forward declaration for Arduino compiler)
+// ============================================================================
+struct SensorData {
+    float soilMoisture;
+    float temperature;
+    float humidity;
+    bool  pumpActive;
+    bool  valid;
+};
 
 // ============================================================================
 // State Variables
@@ -115,7 +127,7 @@ void setup() {
 
     // Initialize DHT sensor
     dht.begin();
-    Serial.println("[INIT] DHT22 initialized");
+    Serial.println("[INIT] DHT11 initialized");
 
     #if WIFI_ENABLED
         // Initialize WiFi
@@ -134,8 +146,13 @@ void setup() {
         Serial.println("[INIT]   {\"action\":\"ON\",\"duration\":30}");
     #endif
 
-    // Enable watchdog timer (30 second timeout)
-    esp_task_wdt_init(30, true);
+    // Enable watchdog timer (30 second timeout) — ESP32 Core 3.x API
+    esp_task_wdt_config_t wdt_config = {
+        .timeout_ms = 30000,
+        .idle_core_mask = (1 << 0),
+        .trigger_panic = true
+    };
+    esp_task_wdt_init(&wdt_config);
     esp_task_wdt_add(NULL);
 
     Serial.println();
@@ -180,8 +197,11 @@ void loop() {
     #endif
 
     // --- Pump Timer (non-blocking) ---
+    // IMPORTANT: Use fresh millis(), NOT cached 'now', because pumpStartMs
+    // is set inside mqttClient.loop() callback. Using stale 'now' causes
+    // unsigned underflow (now < pumpStartMs → wraps to huge number → instant stop).
     if (pumpActive) {
-        if (now - pumpStartMs >= pumpDurationMs) {
+        if (millis() - pumpStartMs >= pumpDurationMs) {
             stopPump();
         }
     }
@@ -301,23 +321,33 @@ void connectMQTT() {
 
     Serial.printf("[MQTT] Connecting to %s:%d...\n", MQTT_BROKER, MQTT_PORT);
 
+    // Set Last Will and Testament (LWT) — broker publishes OFFLINE if ESP32
+    // disconnects unexpectedly (power loss, WiFi drop, crash).
+    // willRetain=true ensures new subscribers see the last status.
     bool connected;
     if (strlen(MQTT_USER) > 0) {
-        connected = mqttClient.connect(DEVICE_ID, MQTT_USER, MQTT_PASS);
+        connected = mqttClient.connect(DEVICE_ID, MQTT_USER, MQTT_PASS,
+                                       TOPIC_HARDWARE, 1, true, "OFFLINE");
     } else {
-        connected = mqttClient.connect(DEVICE_ID);
+        connected = mqttClient.connect(DEVICE_ID,
+                                       NULL, NULL,
+                                       TOPIC_HARDWARE, 1, true, "OFFLINE");
     }
 
     if (connected) {
         Serial.println("[MQTT] Connected!");
 
+        // Publish ONLINE status (retained so backend knows immediately)
+        mqttClient.publish(TOPIC_HARDWARE, "ONLINE", true);
+        Serial.printf("[MQTT] Published ONLINE to %s\n", TOPIC_HARDWARE);
+
         // Subscribe to pump control
-        mqttClient.subscribe(TOPIC_CONTROL_PUMP);
-        Serial.printf("[MQTT] Subscribed to: %s\n", TOPIC_CONTROL_PUMP);
+        bool sub1 = mqttClient.subscribe(TOPIC_CONTROL_PUMP);
+        Serial.printf("[MQTT] Subscribe to %s: %s\n", TOPIC_CONTROL_PUMP, sub1 ? "OK" : "FAILED");
 
         // Subscribe to weather updates
-        mqttClient.subscribe(TOPIC_WEATHER);
-        Serial.printf("[MQTT] Subscribed to: %s\n", TOPIC_WEATHER);
+        bool sub2 = mqttClient.subscribe(TOPIC_WEATHER);
+        Serial.printf("[MQTT] Subscribe to %s: %s\n", TOPIC_WEATHER, sub2 ? "OK" : "FAILED");
 
         mqttReconnectDelay = 1000;
     } else {
@@ -398,42 +428,29 @@ void stopPump() {
 // SENSOR READING
 // ============================================================================
 float readSoilMoisture() {
-    // Take multiple readings and average for stability
+    // Take 10 readings and average for stability
     long total = 0;
-    int validReadings = 0;
 
-    for (int i = 0; i < 5; i++) {
-        int raw = analogRead(SOIL_PIN);
-        if (raw > 0 && raw < 4095) {
-            total += raw;
-            validReadings++;
-        }
+    for (int i = 0; i < 10; i++) {
+        total += analogRead(SOIL_PIN);
         delay(10);
     }
 
-    if (validReadings == 0) {
-        soilErrors++;
-        Serial.println("[WARN] Soil sensor read failed!");
-        return -1.0; // Error
-    }
+    int avgRaw = total / 10;
 
-    int avgRaw = total / validReadings;
-
-    // Map ADC to percentage (SOIL_DRY=0%, SOIL_WET=100%)
-    float moisture = (float)(SOIL_DRY - avgRaw) / (float)(SOIL_DRY - SOIL_WET) * 100.0;
-    moisture = constrain(moisture, 0.0, 100.0);
+    // Map ADC to percentage using custom Galvanic Inversion safe math
+    if (avgRaw > SOIL_WET) return 100.0;
+    if (avgRaw <= SOIL_DRY) return 0.0;
+    
+    float moisture = map(avgRaw, SOIL_DRY, SOIL_WET, 0, 100);
+    if (moisture > 100.0) return 100.0;
+    if (moisture < 0.0) return 0.0;
 
     soilErrors = 0; // Reset error counter
     return moisture;
 }
 
-struct SensorData {
-    float soilMoisture;
-    float temperature;
-    float humidity;
-    bool  pumpActive;
-    bool  valid;
-};
+// SensorData struct declared at top of file for Arduino compiler
 
 SensorData readAllSensors() {
     SensorData data;
@@ -441,13 +458,13 @@ SensorData readAllSensors() {
     // Read soil moisture
     data.soilMoisture = readSoilMoisture();
 
-    // Read DHT22 (temperature + humidity)
+    // Read DHT11 (temperature + humidity)
     float temp = dht.readTemperature();
     float hum  = dht.readHumidity();
 
     if (isnan(temp) || isnan(hum)) {
         dhtErrors++;
-        Serial.println("[WARN] DHT22 read failed!");
+        Serial.println("[WARN] DHT11 read failed!");
 
         if (dhtErrors > 3) {
             // Too many consecutive failures

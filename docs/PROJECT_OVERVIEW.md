@@ -29,7 +29,7 @@ graph TB
         API["⚙️ Flask API<br/><i>app.py</i><br/>Port: 5000"]
         AUTO["🤖 Automation Controller<br/><i>automation_controller.py</i>"]
         ML["🧠 ML Predictor<br/><i>rf_model.pkl</i><br/>17 features"]
-        DB["🗄️ SQLite<br/><i>pwos_simulation.db</i>"]
+        DB["🗄️ PostgreSQL<br/>Port: 5432"]
         FE["🖥️ React Dashboard<br/><i>Vite dev server</i><br/>Port: 5173"]
     end
 
@@ -58,7 +58,7 @@ graph TB
 ```mermaid
 graph TB
     subgraph "Edge (Field)"
-        ESP["🔌 ESP32 Hardware<br/><i>MicroPython Firmware</i><br/>DHT22 + Soil Sensor"]
+        ESP["🔌 ESP32 Hardware<br/><i>C++ / Arduino Firmware</i><br/>DHT11 + Soil Sensor"]
         PUMP["💧 Water Pump<br/><i>5V Relay</i>"]
     end
 
@@ -102,7 +102,7 @@ graph TB
 graph LR
     subgraph "1. Data Collection"
         SIM2["ESP32 Simulator"]
-        DB2["SQLite DB<br/><i>sensor_readings</i><br/><i>watering_events</i>"]
+        DB2["🗄️ PostgreSQL<br/><i>sensor_readings</i><br/><i>watering_events</i>"]
     end
 
     subgraph "2. Data Preparation"

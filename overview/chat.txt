@@ -1,0 +1,24 @@
+Analyzing P-WOS Codebase Structure
+but now  esp32 is online but that they system says offline 
+
+logs
+ check recent logs 
+The fix is in. Here's a summary of what was wrong and what was fixed:
+
+Root Cause
+The on_message MQTT handler in app.py was calling json.loads() on line 93 before routing by topic. The topics pwos/system/hardware and pwos/system/mode send plain text payloads (ONLINE, AUTO) — not JSON. So json.loads("ONLINE") threw a JSONDecodeError, the entire handler aborted at the except block, and the code for pwos/system/hardware (line 155) was never reached. The system_state['hardware_status'] was stuck at the default 'OFFLINE' forever.
+
+Fix Applied
+Restructured on_message to:
+
+Handle plain-text topics first (pwos/system/mode, pwos/system/hardware) — decode the raw payload, strip quotes, and return immediately
+Then attempt json.loads() only for JSON-formatted topics (pwos/sensor/data, pwos/weather/current)
+This was the bug since the MQTT integration was added — it explains why System Health always showed ESP32 as offline and why the predict endpoint always returned HARDWARE_OFFLINE / STOP.
+
+You'll need to restart the backend for this fix to take effect. After restart, you should see [MQTT] Hardware status: ONLINE in the logs.
+
+1
+app.py
+1
+pwos_esp32.ino
+proceed

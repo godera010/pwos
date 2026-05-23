@@ -4,7 +4,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Analytics } from './pages/Analytics';
 import { MLInsights } from './pages/MLInsights';
 import { Control } from './pages/Control';
-import { Settings } from './pages/Settings';
+
 import { SystemHealth } from './pages/SystemHealth';
 import { Toaster } from 'sonner';
 
@@ -24,7 +24,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/analytics" element={<Analytics />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/settings" element={<Control />} />
           <Route path="/ml-insights" element={<MLInsights />} />
           <Route path="/control" element={<Control />} />
           <Route path="/system" element={<SystemHealth />} />

@@ -30,6 +30,15 @@ GET /api/health
 GET /api/system/state
 POST /api/system/state  (body: {"mode": "AUTO" | "MANUAL"})
 ```
+```json
+{
+    "mode": "AUTO",
+    "hardware_status": "ONLINE",
+    "pump_active": false
+}
+```
+
+> **Note:** `hardware_status` is updated via MQTT LWT. When the ESP32 disconnects unexpectedly, the broker publishes `OFFLINE` to `pwos/system/hardware`.
 
 ---
 
@@ -45,7 +54,16 @@ GET /api/sensor-data/latest
     "temperature": 23.1,
     "humidity": 60.2,
     "timestamp": "2026-02-08T10:00:00",
-    "forecast_minutes": 0
+    "forecast_minutes": 0,
+    "forecast_temp": 16.2,
+    "forecast_humidity": 63.0,
+    "weather_condition": "Clear",
+    "precipitation_chance": 0,
+    "wind_speed": 8.5,
+    "rain_intensity": 0.0,
+    "cloud_cover": 0,
+    "weather_source": "openweathermap",
+    "weather_updated_at": "2026-02-08T10:00:00"
 }
 ```
 
@@ -116,8 +134,10 @@ GET /api/predict-next-watering
 }
 ```
 
-**Actions:** `WATER_NOW`, `STALL`, `WAIT`  
-**Statuses:** `CRITICAL`, `LOW`, `OPTIMAL`, `PUMPING`
+**Actions:** `WATER_NOW`, `STALL`, `WAIT`, `HARDWARE_OFFLINE`  
+**Statuses:** `CRITICAL`, `LOW`, `OPTIMAL`, `PUMPING`, `STOP`
+
+> When `hardware_status` is `OFFLINE`, the endpoint returns `{"recommended_action": "HARDWARE_OFFLINE", "system_status": "STOP"}` as a safety interlock.
 
 ---
 
@@ -199,5 +219,9 @@ GET /api/weather/forecast
 
 | Topic | Direction | Payload |
 |-------|-----------|---------|
-| `pwos/sensor/data` | Pub (ESP32) | `{"soil_moisture": 60.0, ...}` |
-| `pwos/control/pump` | Sub (ESP32) | `{"action": "ON", "duration": 30}` |
+| `pwos/sensor/data` | ESP32 → Broker | `{"soil_moisture": 60.0, "temperature": 25.0, "humidity": 55.0, ...}` |
+| `pwos/control/pump` | Broker → ESP32 | `{"action": "ON", "duration": 30}` |
+| `pwos/system/hardware` | ESP32 → Broker | `ONLINE` (retained on connect) / `OFFLINE` (LWT on disconnect) |
+| `pwos/system/mode` | Bidirectional | `AUTO` / `MANUAL` (retained) |
+| `pwos/weather/current` | Backend → Broker | Weather JSON (real or simulated) |
+| `pwos/device/status` | ESP32 → Broker | Heartbeat JSON (uptime, heap, RSSI, pump state) |

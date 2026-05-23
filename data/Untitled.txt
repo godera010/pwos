@@ -1,0 +1,813 @@
+
+============================================
+  P-WOS Test 03: Water Level Sensor
+============================================
+
+[INFO] Sensor on GPIO 34 (ADC)
+[INFO] ADC Resolution: 12-bit (0-4095)
+[INFO] ADC Range: 0-3.3V
+[INFO] Samples per reading: 10
+[INFO] Reading every 2 seconds
+
+[TIP] Try these during the test:
+  1. Leave sensor DRY for a few readings
+  2. Touch the sensor pads with a WET finger
+  3. Dip the sensor tip in water
+  4. Watch the values change!
+
+--------------------------------------------
+
+[READ #1]
+  Raw ADC (avg):  366     ✅
+  Raw range:      0 – 1296 (this sample)
+  Voltage:        0.295 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 366 – 366
+
+[READ #2]
+  Raw ADC (avg):  206     ✅
+  Raw range:      0 – 431 (this sample)
+  Voltage:        0.166 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 206 – 366
+
+[READ #3]
+  Raw ADC (avg):  12     ✅
+  Raw range:      0 – 34 (this sample)
+  Voltage:        0.010 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 12 – 366
+
+[READ #4]
+  Raw ADC (avg):  67     ✅
+  Raw range:      0 – 138 (this sample)
+  Voltage:        0.054 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 12 – 366
+
+[READ #5]
+  Raw ADC (avg):  318     ✅
+  Raw range:      0 – 651 (this sample)
+  Voltage:        0.256 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 12 – 366
+
+[READ #6]
+  Raw ADC (avg):  377     ✅
+  Raw range:      0 – 759 (this sample)
+  Voltage:        0.304 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 12 – 377
+
+[READ #7]
+  Raw ADC (avg):  287     ✅
+  Raw range:      0 – 576 (this sample)
+  Voltage:        0.231 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 12 – 377
+
+[READ #8]
+  Raw ADC (avg):  196     ✅
+  Raw range:      0 – 399 (this sample)
+  Voltage:        0.158 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 12 – 377
+
+[READ #9]
+  Raw ADC (avg):  115     ✅
+  Raw range:      0 – 235 (this sample)
+  Voltage:        0.093 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 12 – 377
+
+[READ #10]
+  Raw ADC (avg):  41     ✅
+  Raw range:      0 – 89 (this sample)
+  Voltage:        0.033 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 12 – 377
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SUMMARY after 10 readings:
+  Overall average: 198
+  Min seen: 12 / Max seen: 377
+  Range delta: 365
+  ✅ Sensor responding — values are changing.
+     Try wetting the sensor to verify full range.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[READ #11]
+  Raw ADC (avg):  8     ✅
+  Raw range:      0 – 18 (this sample)
+  Voltage:        0.006 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 8 – 377
+
+[READ #12]
+  Raw ADC (avg):  27     ✅
+  Raw range:      0 – 57 (this sample)
+  Voltage:        0.022 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 8 – 377
+
+[READ #13]
+  Raw ADC (avg):  55     ✅
+  Raw range:      0 – 112 (this sample)
+  Voltage:        0.044 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 8 – 377
+
+[READ #14]
+  Raw ADC (avg):  83     ✅
+  Raw range:      0 – 169 (this sample)
+  Voltage:        0.067 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 8 – 377
+
+[READ #15]
+  Raw ADC (avg):  105     ✅
+  Raw range:      0 – 214 (this sample)
+  Voltage:        0.085 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 377
+
+[READ #16]
+  Raw ADC (avg):  134     ✅
+  Raw range:      0 – 270 (this sample)
+  Voltage:        0.108 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 377
+
+[READ #17]
+  Raw ADC (avg):  155     ✅
+  Raw range:      0 – 314 (this sample)
+  Voltage:        0.125 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 377
+
+[READ #18]
+  Raw ADC (avg):  178     ✅
+  Raw range:      0 – 361 (this sample)
+  Voltage:        0.143 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 377
+
+[READ #19]
+  Raw ADC (avg):  192     ✅
+  Raw range:      0 – 389 (this sample)
+  Voltage:        0.155 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 377
+
+[READ #20]
+  Raw ADC (avg):  230     ✅
+  Raw range:      0 – 464 (this sample)
+  Voltage:        0.185 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 377
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SUMMARY after 20 readings:
+  Overall average: 158
+  Min seen: 8 / Max seen: 377
+  Range delta: 369
+  ✅ Sensor responding — values are changing.
+     Try wetting the sensor to verify full range.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[READ #21]
+  Raw ADC (avg):  266     ✅
+  Raw range:      0 – 535 (this sample)
+  Voltage:        0.214 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 377
+
+[READ #22]
+  Raw ADC (avg):  317     ✅
+  Raw range:      0 – 636 (this sample)
+  Voltage:        0.255 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 377
+
+[READ #23]
+  Raw ADC (avg):  249     ✅
+  Raw range:      0 – 503 (this sample)
+  Voltage:        0.201 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 377
+
+[READ #24]
+  Raw ADC (avg):  320     ✅
+  Raw range:      0 – 652 (this sample)
+  Voltage:        0.258 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 377
+
+[READ #25]
+  Raw ADC (avg):  330     ✅
+  Raw range:      0 – 665 (this sample)
+  Voltage:        0.266 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 377
+
+[READ #26]
+  Raw ADC (avg):  268     ✅
+  Raw range:      0 – 542 (this sample)
+  Voltage:        0.216 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 377
+
+[READ #27]
+  Raw ADC (avg):  90     ✅
+  Raw range:      0 – 183 (this sample)
+  Voltage:        0.073 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 8 – 377
+
+[READ #28]
+  Raw ADC (avg):  121     ✅
+  Raw range:      0 – 247 (this sample)
+  Voltage:        0.098 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 377
+
+[READ #29]
+  Raw ADC (avg):  41     ✅
+  Raw range:      0 – 86 (this sample)
+  Voltage:        0.033 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 8 – 377
+
+[READ #30]
+  Raw ADC (avg):  218     ✅
+  Raw range:      0 – 448 (this sample)
+  Voltage:        0.176 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 377
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SUMMARY after 30 readings:
+  Overall average: 179
+  Min seen: 8 / Max seen: 377
+  Range delta: 369
+  ✅ Sensor responding — values are changing.
+     Try wetting the sensor to verify full range.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[READ #31]
+  Raw ADC (avg):  414     ✅
+  Raw range:      0 – 832 (this sample)
+  Voltage:        0.334 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 414
+
+[READ #32]
+  Raw ADC (avg):  461     ✅
+  Raw range:      0 – 928 (this sample)
+  Voltage:        0.372 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #33]
+  Raw ADC (avg):  171     ✅
+  Raw range:      0 – 347 (this sample)
+  Voltage:        0.138 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #34]
+  Raw ADC (avg):  78     ✅
+  Raw range:      0 – 160 (this sample)
+  Voltage:        0.063 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 8 – 461
+
+[READ #35]
+  Raw ADC (avg):  65     ✅
+  Raw range:      25 – 110 (this sample)
+  Voltage:        0.052 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 8 – 461
+
+[READ #36]
+  Raw ADC (avg):  165     ✅
+  Raw range:      0 – 334 (this sample)
+  Voltage:        0.133 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #37]
+  Raw ADC (avg):  252     ✅
+  Raw range:      0 – 511 (this sample)
+  Voltage:        0.203 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #38]
+  Raw ADC (avg):  315     ✅
+  Raw range:      0 – 644 (this sample)
+  Voltage:        0.254 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #39]
+  Raw ADC (avg):  310     ✅
+  Raw range:      0 – 624 (this sample)
+  Voltage:        0.250 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #40]
+  Raw ADC (avg):  310     ✅
+  Raw range:      0 – 622 (this sample)
+  Voltage:        0.250 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SUMMARY after 40 readings:
+  Overall average: 198
+  Min seen: 8 / Max seen: 461
+  Range delta: 453
+  ✅ Sensor responding — values are changing.
+     Try wetting the sensor to verify full range.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[READ #41]
+  Raw ADC (avg):  280     ✅
+  Raw range:      0 – 564 (this sample)
+  Voltage:        0.226 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #42]
+  Raw ADC (avg):  281     ✅
+  Raw range:      0 – 566 (this sample)
+  Voltage:        0.226 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #43]
+  Raw ADC (avg):  283     ✅
+  Raw range:      0 – 576 (this sample)
+  Voltage:        0.228 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #44]
+  Raw ADC (avg):  345     ✅
+  Raw range:      0 – 696 (this sample)
+  Voltage:        0.278 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #45]
+  Raw ADC (avg):  376     ✅
+  Raw range:      0 – 755 (this sample)
+  Voltage:        0.303 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #46]
+  Raw ADC (avg):  342     ✅
+  Raw range:      0 – 688 (this sample)
+  Voltage:        0.276 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #47]
+  Raw ADC (avg):  340     ✅
+  Raw range:      0 – 687 (this sample)
+  Voltage:        0.274 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #48]
+  Raw ADC (avg):  346     ✅
+  Raw range:      0 – 699 (this sample)
+  Voltage:        0.279 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #49]
+  Raw ADC (avg):  354     ✅
+  Raw range:      0 – 717 (this sample)
+  Voltage:        0.285 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #50]
+  Raw ADC (avg):  327     ✅
+  Raw range:      0 – 656 (this sample)
+  Voltage:        0.264 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SUMMARY after 50 readings:
+  Overall average: 224
+  Min seen: 8 / Max seen: 461
+  Range delta: 453
+  ✅ Sensor responding — values are changing.
+     Try wetting the sensor to verify full range.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[READ #51]
+  Raw ADC (avg):  315     ✅
+  Raw range:      0 – 635 (this sample)
+  Voltage:        0.254 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #52]
+  Raw ADC (avg):  296     ✅
+  Raw range:      0 – 596 (this sample)
+  Voltage:        0.239 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #53]
+  Raw ADC (avg):  294     ✅
+  Raw range:      0 – 592 (this sample)
+  Voltage:        0.237 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #54]
+  Raw ADC (avg):  248     ✅
+  Raw range:      0 – 498 (this sample)
+  Voltage:        0.200 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #55]
+  Raw ADC (avg):  322     ✅
+  Raw range:      0 – 646 (this sample)
+  Voltage:        0.259 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #56]
+  Raw ADC (avg):  342     ✅
+  Raw range:      0 – 688 (this sample)
+  Voltage:        0.276 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #57]
+  Raw ADC (avg):  358     ✅
+  Raw range:      0 – 720 (this sample)
+  Voltage:        0.288 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #58]
+  Raw ADC (avg):  389     ✅
+  Raw range:      0 – 784 (this sample)
+  Voltage:        0.313 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #59]
+  Raw ADC (avg):  418     ✅
+  Raw range:      0 – 843 (this sample)
+  Voltage:        0.337 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+[READ #60]
+  Raw ADC (avg):  459     ✅
+  Raw range:      0 – 923 (this sample)
+  Voltage:        0.370 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 461
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SUMMARY after 60 readings:
+  Overall average: 244
+  Min seen: 8 / Max seen: 461
+  Range delta: 453
+  ✅ Sensor responding — values are changing.
+     Try wetting the sensor to verify full range.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[READ #61]
+  Raw ADC (avg):  517     ✅
+  Raw range:      0 – 1035 (this sample)
+  Voltage:        0.417 V
+  Level:          🌊 WET (water detected)
+  All-time range: 8 – 517
+
+[READ #62]
+  Raw ADC (avg):  499     ✅
+  Raw range:      0 – 1003 (this sample)
+  Voltage:        0.402 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 517
+
+[READ #63]
+  Raw ADC (avg):  428     ✅
+  Raw range:      0 – 865 (this sample)
+  Voltage:        0.345 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 517
+
+[READ #64]
+  Raw ADC (avg):  295     ✅
+  Raw range:      0 – 598 (this sample)
+  Voltage:        0.238 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 517
+
+[READ #65]
+  Raw ADC (avg):  174     ✅
+  Raw range:      0 – 353 (this sample)
+  Voltage:        0.140 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 517
+
+[READ #66]
+  Raw ADC (avg):  69     ✅
+  Raw range:      0 – 143 (this sample)
+  Voltage:        0.056 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 8 – 517
+
+[READ #67]
+  Raw ADC (avg):  255     ✅
+  Raw range:      0 – 528 (this sample)
+  Voltage:        0.205 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 517
+
+[READ #68]
+  Raw ADC (avg):  505     ✅
+  Raw range:      0 – 1017 (this sample)
+  Voltage:        0.407 V
+  Level:          🌊 WET (water detected)
+  All-time range: 8 – 517
+
+[READ #69]
+  Raw ADC (avg):  198     ✅
+  Raw range:      0 – 403 (this sample)
+  Voltage:        0.160 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 517
+
+[READ #70]
+  Raw ADC (avg):  145     ✅
+  Raw range:      0 – 309 (this sample)
+  Voltage:        0.117 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 517
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SUMMARY after 70 readings:
+  Overall average: 253
+  Min seen: 8 / Max seen: 517
+  Range delta: 509
+  ✅ SENSOR WORKING — saw both DRY and WET values!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[READ #71]
+  Raw ADC (avg):  521     ✅
+  Raw range:      0 – 1047 (this sample)
+  Voltage:        0.420 V
+  Level:          🌊 WET (water detected)
+  All-time range: 8 – 521
+
+[READ #72]
+  Raw ADC (avg):  145     ✅
+  Raw range:      0 – 303 (this sample)
+  Voltage:        0.117 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 521
+
+[READ #73]
+  Raw ADC (avg):  344     ✅
+  Raw range:      0 – 704 (this sample)
+  Voltage:        0.277 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 521
+
+[READ #74]
+  Raw ADC (avg):  406     ✅
+  Raw range:      0 – 834 (this sample)
+  Voltage:        0.327 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 521
+
+[READ #75]
+  Raw ADC (avg):  56     ✅
+  Raw range:      0 – 123 (this sample)
+  Voltage:        0.045 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 8 – 521
+
+[READ #76]
+  Raw ADC (avg):  418     ✅
+  Raw range:      0 – 846 (this sample)
+  Voltage:        0.337 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 521
+
+[READ #77]
+  Raw ADC (avg):  271     ✅
+  Raw range:      0 – 565 (this sample)
+  Voltage:        0.218 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 521
+
+[READ #78]
+  Raw ADC (avg):  71     ✅
+  Raw range:      44 – 113 (this sample)
+  Voltage:        0.057 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 8 – 521
+
+[READ #79]
+  Raw ADC (avg):  403     ✅
+  Raw range:      0 – 816 (this sample)
+  Voltage:        0.325 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 521
+
+[READ #80]
+  Raw ADC (avg):  213     ✅
+  Raw range:      0 – 447 (this sample)
+  Voltage:        0.172 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 521
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SUMMARY after 80 readings:
+  Overall average: 257
+  Min seen: 8 / Max seen: 521
+  Range delta: 513
+  ✅ SENSOR WORKING — saw both DRY and WET values!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[READ #81]
+  Raw ADC (avg):  76     ✅
+  Raw range:      25 – 142 (this sample)
+  Voltage:        0.061 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 8 – 521
+
+[READ #82]
+  Raw ADC (avg):  438     ✅
+  Raw range:      0 – 882 (this sample)
+  Voltage:        0.353 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 521
+
+[READ #83]
+  Raw ADC (avg):  282     ✅
+  Raw range:      0 – 586 (this sample)
+  Voltage:        0.227 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 521
+
+[READ #84]
+  Raw ADC (avg):  66     ✅
+  Raw range:      53 – 91 (this sample)
+  Voltage:        0.053 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 8 – 521
+
+[READ #85]
+  Raw ADC (avg):  416     ✅
+  Raw range:      0 – 839 (this sample)
+  Voltage:        0.335 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 521
+
+[READ #86]
+  Raw ADC (avg):  272     ✅
+  Raw range:      0 – 570 (this sample)
+  Voltage:        0.219 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 521
+
+[READ #87]
+  Raw ADC (avg):  18     ✅
+  Raw range:      0 – 36 (this sample)
+  Voltage:        0.015 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 8 – 521
+
+[READ #88]
+  Raw ADC (avg):  23     ✅
+  Raw range:      0 – 50 (this sample)
+  Voltage:        0.019 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 8 – 521
+
+[READ #89]
+  Raw ADC (avg):  174     ✅
+  Raw range:      0 – 369 (this sample)
+  Voltage:        0.140 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 8 – 521
+
+[READ #90]
+  Raw ADC (avg):  0     ⚠️  (always zero — check VCC)
+  Raw range:      0 – 0 (this sample)
+  Voltage:        0.000 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 0 – 521
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SUMMARY after 90 readings:
+  Overall average: 248
+  Min seen: 0 / Max seen: 521
+  Range delta: 521
+  ✅ SENSOR WORKING — saw both DRY and WET values!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[READ #91]
+  Raw ADC (avg):  34     ✅
+  Raw range:      0 – 75 (this sample)
+  Voltage:        0.027 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 0 – 521
+
+[READ #92]
+  Raw ADC (avg):  42     ✅
+  Raw range:      15 – 85 (this sample)
+  Voltage:        0.034 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 0 – 521
+
+[READ #93]
+  Raw ADC (avg):  465     ✅
+  Raw range:      0 – 939 (this sample)
+  Voltage:        0.375 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 0 – 521
+
+[READ #94]
+  Raw ADC (avg):  68     ✅
+  Raw range:      8 – 144 (this sample)
+  Voltage:        0.055 V
+  Level:          🏜️ DRY (no water)
+  All-time range: 0 – 521
+
+[READ #95]
+  Raw ADC (avg):  442     ✅
+  Raw range:      0 – 904 (this sample)
+  Voltage:        0.356 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 0 – 521
+
+[READ #96]
+  Raw ADC (avg):  191     ✅
+  Raw range:      0 – 409 (this sample)
+  Voltage:        0.154 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 0 – 521
+
+[READ #97]
+  Raw ADC (avg):  214     ✅
+  Raw range:      0 – 466 (this sample)
+  Voltage:        0.172 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 0 – 521
+
+[READ #98]
+  Raw ADC (avg):  334     ✅
+  Raw range:      0 – 677 (this sample)
+  Voltage:        0.269 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 0 – 521
+
+[READ #99]
+  Raw ADC (avg):  140     ✅
+  Raw range:      0 – 289 (this sample)
+  Voltage:        0.113 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 0 – 521
+
+[READ #100]
+  Raw ADC (avg):  369     ✅
+  Raw range:      0 – 751 (this sample)
+  Voltage:        0.297 V
+  Level:          💧 TRACE (barely damp)
+  All-time range: 0 – 521
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SUMMARY after 100 readings:
+  Overall average: 246
+  Min seen: 0 / Max seen: 521
+  Range delta: 521
+  ✅ SENSOR WORKING — saw both DRY and WET values!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+============================================
+  TEST COMPLETE
+============================================
+  Total readings: 100
+  Min ADC: 0 / Max ADC: 521
+  Overall avg: 246
+  ✅ PASS — Sensor responded to water!
+============================================

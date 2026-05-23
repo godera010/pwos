@@ -1,5 +1,17 @@
 # P-WOS: Predictive Watering Optimization System
 
+<!-- NAV_START -->
+<div align="center">
+  <a href="README.md">🏠 Home (Root)</a> |
+  <a href="src\README.md">💻 Source Code</a> |
+  <a href="docs\README.md">📚 Documentation</a> |
+  <a href="docs\hardware\README.md">⚙️ Hardware</a> |
+  <a href="data\README.md">💾 Data</a>
+</div>
+<hr>
+<!-- NAV_END -->
+
+
 **Smart Irrigation Digital Twin with Machine Learning Control**
 
 ---
@@ -182,3 +194,4 @@ This project is part of a thesis submission.
 ---
 
 **P-WOS v2.0 | February 2026**
+\n\n

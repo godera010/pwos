@@ -1,5 +1,17 @@
 # data/ - Data & Simulation Hub 🧠
 
+<!-- NAV_START -->
+<div align="center">
+  <a href="..\README.md">🏠 Home (Root)</a> |
+  <a href="..\src\README.md">💻 Source Code</a> |
+  <a href="..\docs\README.md">📚 Documentation</a> |
+  <a href="..\docs\hardware\README.md">⚙️ Hardware</a> |
+  <a href="README.md">💾 Data</a>
+</div>
+<hr>
+<!-- NAV_END -->
+
+
 Central storage for P-WOS simulation artifacts, training datasets, and raw inputs.
 
 ---
@@ -67,3 +79,4 @@ The **CSV** files in `processed/` contain extra calculated fields used for train
 *   **`vpd`**: Vapor Pressure Deficit (Plant stress level).
 *   **`moisture_change_rate`**: How fast the soil is drying (derivative).
 *   **`is_hot_hours`**: Boolean flag for peak sun (10:00 - 16:00).
+\n\n
