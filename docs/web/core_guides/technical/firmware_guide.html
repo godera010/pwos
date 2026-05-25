@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-WOS Master System Manual - P-WOS Documentation Portal</title>
+    <title>ESP32 Firmware Guide - P-WOS Documentation Portal</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,7 +39,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="./search_index.js"></script>
+    <script src="../../search_index.js"></script>
 
     <style>
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -104,7 +104,7 @@
                 <i data-lucide="printer" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Export PDF</span>
             </button>
-            <a href="./getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+            <a href="../../getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
                 <i data-lucide="home" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Home</span>
             </a>
@@ -144,7 +144,7 @@
                         <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
                             <span id="breadcrumbCategory">Documentation</span>
                             <i data-lucide="chevron-right" class="w-3 h-3"></i>
-                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">MASTER_SYSTEM_MANUAL.md</span>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">firmware_guide.md</span>
                         </div>
 
                         <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
@@ -162,309 +162,407 @@
                                 prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
                                 prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
                                 prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
-<h1>P-WOS Master System Manual</h1>
-<h2>The Definitive Technical Encyclopedia for the Predictive Water Optimization System</h2>
-<blockquote>
-<p><strong>System Version:</strong> v3.0<br />
-<strong>Status:</strong> Production Reference<br />
-<strong>Scope:</strong> Full-stack technical architecture, from soil sensors and atmospheric physics to machine learning inference and frontend analytics.</p>
-</blockquote>
+<h1>ESP32 Firmware Guide</h1>
+<p><strong>P-WOS Production Firmware — C++ / Arduino Framework</strong></p>
 <hr />
-<h2>Part 1: Data Engineering &amp; Datasets</h2>
-<p>The foundation of P-WOS is a high-density, multi-featured dataset that captures the complex relationship between soil moisture, atmospheric demand (VPD), and crop physiology.</p>
-<h3>1.1 The Primary Training Dataset (<code>training_data.csv</code>)</h3>
-<ul>
-<li><strong>Size:</strong> 10,889 samples (rows)</li>
-<li><strong>Features:</strong> 11 input features + 1 target label</li>
-<li><strong>Sampling Frequency:</strong> 5-second control cycles (simulated and real-world aggregated)</li>
-</ul>
-<h4>Dataset Schema</h4>
+<h2>Overview</h2>
+<p>The P-WOS ESP32 firmware (<code>src/firmware/pwos_esp32/pwos_esp32.ino</code>) reads sensors, publishes data to MQTT, listens for pump commands, and reports hardware status. It supports two operating modes:</p>
 <table>
 <thead>
 <tr>
-<th>Column</th>
-<th>Type</th>
+<th>Mode</th>
+<th>Config</th>
 <th>Description</th>
-<th>Role in System</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>soil_moisture</code></td>
-<td><code>float</code></td>
-<td>Volumetric soil moisture percentage (0–100%)</td>
-<td>Primary drought signal</td>
+<td><strong>WiFi Mode</strong></td>
+<td><code>WIFI_ENABLED true</code></td>
+<td>ESP32 connects directly to MQTT broker over WiFi</td>
 </tr>
 <tr>
-<td><code>temperature</code></td>
-<td><code>float</code></td>
-<td>Ambient air temperature (°C)</td>
-<td>Direct evaporation driver</td>
-</tr>
-<tr>
-<td><code>humidity</code></td>
-<td><code>float</code></td>
-<td>Relative humidity percentage (0–100%)</td>
-<td>VPD component</td>
-</tr>
-<tr>
-<td><code>forecast_minutes</code></td>
-<td><code>int</code></td>
-<td>Minutes until the next predicted rain event</td>
-<td>Suppress unnecessary watering</td>
-</tr>
-<tr>
-<td><code>hour</code></td>
-<td><code>int</code></td>
-<td>Current hour of the day (0–23)</td>
-<td>Encodes daily evapotranspiration cycle</td>
-</tr>
-<tr>
-<td><code>day_of_week</code></td>
-<td><code>int</code></td>
-<td>Day index (0=Monday, 6=Sunday)</td>
-<td>Captures weekly patterns</td>
-</tr>
-<tr>
-<td><code>is_daytime</code></td>
-<td><code>binary</code></td>
-<td>1 if 6:00 &lt; hour &lt; 18:00</td>
-<td>Broad solar radiation proxy</td>
-</tr>
-<tr>
-<td><code>is_hot_hours</code></td>
-<td><code>binary</code></td>
-<td>1 if 10:00 &lt; hour &lt; 16:00</td>
-<td>Peak VPD window / Stall window</td>
-</tr>
-<tr>
-<td><code>moisture_change_rate</code></td>
-<td><code>float</code></td>
-<td>Rate of moisture change per 5-second interval</td>
-<td>Detects rapid drainage/drying trends</td>
-</tr>
-<tr>
-<td><code>moisture_rolling_6</code></td>
-<td><code>float</code></td>
-<td>30-second rolling average of soil moisture</td>
-<td>Smooths sensor noise &amp; confirms trends</td>
-</tr>
-<tr>
-<td><code>temp_rolling_6</code></td>
-<td><code>float</code></td>
-<td>30-second rolling average of temperature</td>
-<td>Tracks sustained thermal stress</td>
-</tr>
-<tr>
-<td><strong><code>needs_watering_soon</code></strong></td>
-<td><code>binary</code></td>
-<td><strong>Target Label:</strong> 1 if irrigation is required</td>
-<td>The model's prediction goal</td>
+<td><strong>USB Mode</strong></td>
+<td><code>WIFI_ENABLED false</code></td>
+<td>ESP32 outputs JSON on serial; PC runs <code>serial_bridge.py</code> to forward to MQTT</td>
 </tr>
 </tbody>
 </table>
-<h3>1.2 Feature Generation (The Rolling Engine)</h3>
-<p>P-WOS does not rely solely on "static" snapshots. The <code>data_collector.py</code> and <code>ml_predictor.py</code> use a 6-sample sliding window to generate temporal features:</p>
-<pre><code class="language-python"># Feature Engineering Logic
-moisture_change_rate = (current_moisture - previous_moisture) / time_delta
-moisture_rolling_6 = sum(last_6_readings) / 6
-</code></pre>
 <hr />
-<h2>Part 2: The ML Training Pipeline</h2>
-<p>P-WOS utilizes a "Forest of Decision Trees" to map 11 atmospheric and soil features to a binary watering decision.</p>
-<h3>2.1 Model Architecture: Random Forest</h3>
-<ul>
-<li><strong>Estimators (Trees):</strong> 100</li>
-<li><strong>Max Depth:</strong> 10 (tuned to prevent overfitting to noise while capturing non-linear interactions)</li>
-<li><strong>Engine:</strong> <code>RandomForestClassifier</code> (Scikit-Learn)</li>
-</ul>
-<h3>2.2 Performance Metrics (v3.0 Benchmark)</h3>
-<p>The model is evaluated using the F1-Score to ensure performance is maintained even with imbalanced datasets (more "Wait" than "Water" events).</p>
+<h2>Hardware Pinout</h2>
 <table>
 <thead>
 <tr>
-<th>Metric</th>
-<th>Score</th>
-<th>Interpretation</th>
+<th>Component</th>
+<th>GPIO</th>
+<th>Type</th>
+<th>Notes</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Accuracy</strong></td>
-<td>83.43%</td>
-<td>Overall correct predictions</td>
+<td>DHT11 (Temp + Humidity)</td>
+<td><strong>14</strong></td>
+<td>Digital</td>
+<td>Requires 10kΩ pull-up resistor</td>
 </tr>
 <tr>
-<td><strong>Precision</strong></td>
-<td>96%</td>
-<td>When the model says "Water", it is almost always correct</td>
+<td>Soil Moisture Sensor</td>
+<td><strong>34</strong></td>
+<td>ADC (analog)</td>
+<td>Resistive sensor, ADC1 channel</td>
 </tr>
 <tr>
-<td><strong>Recall</strong></td>
-<td>72%</td>
-<td>The model captures 72% of all actual watering needs</td>
+<td>Relay Module (Pump)</td>
+<td><strong>27</strong></td>
+<td>Digital Output</td>
+<td>5V relay, active HIGH</td>
 </tr>
 <tr>
-<td><strong>F1-Score</strong></td>
-<td>82%</td>
-<td>Excellent balance for agricultural decision-making</td>
+<td>Onboard LED</td>
+<td><strong>2</strong></td>
+<td>Digital Output</td>
+<td>Status indicator</td>
 </tr>
 </tbody>
 </table>
-<h3>2.3 Training Workflow (<code>train_model.py</code>)</h3>
-<ol>
-<li><strong>Load Data:</strong> Imports <code>training_data.csv</code>.</li>
-<li><strong>Pre-processing:</strong> Feature scaling (StandardScaler) is applied to ensure temperature (°C) and moisture (%) are weighted fairly.</li>
-<li><strong>Train/Test Split:</strong> 80/20 random split.</li>
-<li><strong>Serialization:</strong> Model saved as <code>rf_model.pkl</code>, metadata as <code>model_metadata.json</code>.</li>
-</ol>
+<h3>Wiring Diagram</h3>
+<p>See <a href="../../hardware/architecture/hardware_architecture.html">hardware architecture</a> and circuit diagrams in <code>docs/hardware/assets/</code>.</p>
 <hr />
-<h2>Part 3: Environmental Physics (VPD &amp; Weather)</h2>
-<p>The "Brain" is supplemented by the "Physics Engine" which applies raw meteorological formulas to refine ML outputs.</p>
-<h3>3.1 VPD (Vapor Pressure Deficit) - The Tetens Formula</h3>
-<p>VPD represents the "thirst" of the air. P-WOS implements the <strong>Tetens approximation</strong> (<code>vpd_calculator.py</code>):</p>
-<pre><code class="language-python"># The Physics of Evaporation
-svp = 0.61078 * exp((17.27 * T) / (T + 237.3))  # Saturation Vapor Pressure
-avp = svp * (RH / 100.0)                        # Actual Vapor Pressure
-VPD = svp - avp                                 # The Deficit (kPa)
+<h2>Setup Instructions</h2>
+<h3>1. Install Dependencies (Arduino IDE)</h3>
+<p>Install these libraries via <strong>Arduino Library Manager</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Library</th>
+<th>Author</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>WiFi</code></td>
+<td>(built-in)</td>
+<td>ESP32 WiFi connectivity</td>
+</tr>
+<tr>
+<td><code>PubSubClient</code></td>
+<td>Nick O'Leary</td>
+<td>MQTT client</td>
+</tr>
+<tr>
+<td><code>DHT sensor library</code></td>
+<td>Adafruit</td>
+<td>DHT11/DHT22 temperature/humidity</td>
+</tr>
+<tr>
+<td><code>ArduinoJson</code></td>
+<td>Benoit Blanchon</td>
+<td>JSON serialization</td>
+</tr>
+</tbody>
+</table>
+<h3>2. Configure Credentials</h3>
+<pre><code class="language-bash"># Copy the example config
+cp src/firmware/pwos_esp32/config.h.example src/firmware/pwos_esp32/config.h
 </code></pre>
-<h3>3.2 The Moisture Decay Rate Engine</h3>
-<p>When sensors are idle, the system predicts moisture loss using the following derived formula (<code>ml_predictor.py</code>):</p>
-<pre><code class="language-python"># Moisture Decay Rate (% / hour)
-temp_factor = 1 + (temp - 25) * 0.08 if temp &gt; 25 else 0.7
-vpd_factor = 1 + (vpd * 0.4)
-time_factor = 1.5 if 10 &lt;= hour &lt;= 16 else 1.0 (Day) or 0.3 (Night)
+<p>Edit <code>config.h</code>:</p>
+<pre><code class="language-cpp">// WiFi
+#define WIFI_SSID     &quot;your_wifi_ssid&quot;
+#define WIFI_PASS     &quot;your_wifi_password&quot;
+#define WIFI_ENABLED  true
 
-DecayRate = base_decay * temp_factor * vpd_factor * time_factor
+// MQTT Broker
+#define MQTT_BROKER   &quot;192.168.137.1&quot;   // PC IP if using mobile hotspot
+#define MQTT_PORT     1883
+#define MQTT_USER     &quot;&quot;                 // Leave empty if no auth
+#define MQTT_PASS     &quot;&quot;
+
+// Device
+#define DEVICE_ID     &quot;ESP32_PWOS_001&quot;
+
+// Sensor Calibration
+#define SOIL_DRY      3440              // ADC value in dry air
+#define SOIL_WET      1480              // ADC value in water
 </code></pre>
-<hr />
-<h2>Part 4: The Autonomous Decision Engine</h2>
-<p>The "Automation Controller" (<code>automation_controller.py</code>) is the executive function that manages the 5-second control loop.</p>
-<h3>4.1 The 5-Second Cycle (Priority List)</h3>
-<p>Every 5 seconds, the controller evaluates these steps in strict priority order:</p>
+<h3>3. Upload to ESP32</h3>
 <ol>
-<li><strong>Safety Interlock (Saturation):</strong> If Moisture &gt; 85%, kill pump immediately (STOP).</li>
-<li><strong>Safety Interlock (Critical):</strong> If Moisture &lt; <code>crop_critical_moisture</code>, force pump ON (NOW) overriding all modes.</li>
-<li><strong>Rain Confidence:</strong> If rain is expected in &lt; 2 hours, STALL irrigation.</li>
-<li><strong>False Dry Detection:</strong> If Wind &gt; 20 km/h and Humidity &lt; 40%, flag "False Dry" and MONITOR instead of watering.</li>
-<li><strong>VPD Stall:</strong> If VPD &gt; 3.0 kPa (Extreme Dry), STALL irrigation until evening to prevent evaporative loss.</li>
-<li><strong>ML Inference:</strong> If all above pass, execute the ML Model's prediction (NOW/MONITOR).</li>
+<li>Select <strong>Board</strong>: ESP32 Dev Module</li>
+<li>Select <strong>Port</strong>: COM port for your ESP32</li>
+<li>Click <strong>Upload</strong></li>
 </ol>
-<h3>4.2 Rain Confidence Tiers</h3>
+<hr />
+<h2>Sensor Calibration</h2>
+<p>The soil moisture sensor requires calibration for your specific soil type:</p>
+<h3>Calibration Process</h3>
+<ol>
+<li><strong>Dry reading</strong> — Hold sensor in air, note the ADC value → <code>SOIL_DRY</code></li>
+<li><strong>Wet reading</strong> — Submerge sensor in water, note the ADC value → <code>SOIL_WET</code></li>
+<li>Update <code>config.h</code> with your values</li>
+</ol>
+<h3>ADC → Percentage Formula</h3>
+<pre><code class="language-cpp">float rawPercent = (float)(SOIL_DRY - adcValue) / (float)(SOIL_DRY - SOIL_WET) * 100.0;
+float soilMoisture = constrain(rawPercent, 0.0, 100.0);  // Clamp 0-100%
+</code></pre>
+<h3>Calibration Tests</h3>
+<p>Located in <code>firmware/tests/soil_calibration/</code> — see test folders for different soil samples.</p>
+<hr />
+<h2>MQTT Behavior</h2>
+<h3>Published Topics</h3>
 <table>
 <thead>
 <tr>
-<th>Time to Rain</th>
-<th>Moisture State</th>
+<th>Topic</th>
+<th>Payload</th>
+<th>Interval</th>
+<th>Retained</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pwos/sensor/data</code></td>
+<td>JSON: <code>{"device_id":"...", "soil_moisture":45.5, "temperature":25.3, "humidity":60.2, "pump_active":false}</code></td>
+<td>Every 5s</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>pwos/system/hardware</code></td>
+<td><code>ONLINE</code></td>
+<td>On connect</td>
+<td><strong>Yes</strong></td>
+</tr>
+<tr>
+<td><code>pwos/device/status</code></td>
+<td>JSON heartbeat: <code>{"device_id":"...", "uptime":12345, "heap":180000, "rssi":-45, "pump_active":false}</code></td>
+<td>Every 30s</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<h3>Subscribed Topics</h3>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Expected Payload</th>
 <th>Action</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>&lt; 2 hours</td>
-<td>Any</td>
-<td><strong>STALL</strong> (Rain imminent)</td>
+<td><code>pwos/control/pump</code></td>
+<td><code>{"action":"ON","duration":30}</code></td>
+<td>Activates relay for N seconds</td>
 </tr>
 <tr>
-<td>2–6 hours</td>
-<td>&gt; 25%</td>
-<td><strong>STALL</strong> (Wait for rain)</td>
-</tr>
-<tr>
-<td>6–12 hours</td>
-<td>&gt; 40%</td>
-<td><strong>MONITOR</strong> (Keep watching)</td>
+<td><code>pwos/weather/current</code></td>
+<td>Weather JSON from backend</td>
+<td>Stored for display (future use)</td>
 </tr>
 </tbody>
 </table>
+<h3>Last Will and Testament (LWT)</h3>
+<p>When connecting to MQTT, the firmware registers a <strong>Last Will and Testament</strong>:
+- <strong>Topic</strong>: <code>pwos/system/hardware</code>
+- <strong>Payload</strong>: <code>OFFLINE</code>
+- <strong>QoS</strong>: 1
+- <strong>Retain</strong>: true</p>
+<p>This means:
+- On successful connect → firmware publishes <code>ONLINE</code> (retained)
+- On unexpected disconnect (power loss, WiFi drop, crash) → <strong>broker auto-publishes <code>OFFLINE</code></strong>
+- The backend reads this topic to track hardware connectivity in the SystemHealth dashboard</p>
 <hr />
-<h2>Part 5: Agronomic Personalisation</h2>
-<p>P-WOS is "Crop-Aware". Every decision is scaled by the active crop profile and region.</p>
-<h3>5.1 The 5 Pre-defined Crops</h3>
+<h2>Operating Modes</h2>
+<h3>WiFi Mode (<code>WIFI_ENABLED true</code>)</h3>
+<ul>
+<li>Connects to WiFi with exponential backoff (1s → 30s max)</li>
+<li>Connects to MQTT broker with LWT</li>
+<li>Publishes sensor data directly</li>
+<li>Receives pump commands over MQTT</li>
+<li>Auto-reconnects on WiFi/MQTT disconnect</li>
+</ul>
+<h3>USB Mode (<code>WIFI_ENABLED false</code>)</h3>
+<ul>
+<li>No WiFi or MQTT initialization</li>
+<li>Outputs JSON sensor data on serial (115200 baud)</li>
+<li>Accepts JSON pump commands via serial input</li>
+<li>Requires <code>serial_bridge.py</code> on the PC to bridge to MQTT</li>
+</ul>
+<pre><code>ESP32 (USB) → Serial JSON → serial_bridge.py → MQTT Broker → Backend
+</code></pre>
+<hr />
+<h2>Pump Control</h2>
+<h3>Non-Blocking Timer</h3>
+<p>The pump uses a non-blocking timer pattern — it does not block the main loop:</p>
+<pre><code>1. Receive pump command (MQTT or serial)
+2. Set pumpActive = true, record start time + duration
+3. Main loop checks: if (millis() - pumpStartMs &gt;= pumpDurationMs) → turn off pump
+</code></pre>
+<h3>Safety Features</h3>
+<ul>
+<li><strong>Maximum duration</strong>: Hardware-enforced limit</li>
+<li><strong>Watchdog timer</strong>: 30-second ESP32 hardware watchdog — auto-reboots on freeze</li>
+<li><strong>Water detection</strong>: If soil moisture &gt; 85%, pump commands may be rejected by backend</li>
+</ul>
+<hr />
+<h2>Error Handling</h2>
 <table>
 <thead>
 <tr>
-<th>Crop</th>
-<th>Critical</th>
-<th>Low</th>
-<th>Proactive</th>
-<th>Target</th>
-<th>Multiplier</th>
+<th>Error</th>
+<th>Recovery</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Maize</strong></td>
-<td>30%</td>
-<td>45%</td>
-<td>55%</td>
-<td>60%</td>
-<td>1.0x</td>
+<td>DHT11 read failure</td>
+<td>Retries next cycle; <code>dhtErrors</code> counter increments</td>
 </tr>
 <tr>
-<td><strong>Potato</strong></td>
-<td>45%</td>
-<td>55%</td>
-<td>65%</td>
-<td>70%</td>
-<td>1.4x</td>
+<td>Soil ADC out of range</td>
+<td>Clamped to 0-100%; <code>soilErrors</code> counter increments</td>
 </tr>
 <tr>
-<td><strong>Tomato</strong></td>
-<td>35%</td>
-<td>48%</td>
-<td>58%</td>
-<td>62%</td>
-<td>1.2x</td>
+<td>WiFi disconnect</td>
+<td>Auto-reconnect with exponential backoff (max 30s)</td>
 </tr>
 <tr>
-<td><strong>Onion</strong></td>
-<td>40%</td>
-<td>52%</td>
-<td>60%</td>
-<td>65%</td>
-<td>0.8x</td>
+<td>MQTT disconnect</td>
+<td>Auto-reconnect with exponential backoff (max 30s); LWT fires</td>
 </tr>
 <tr>
-<td><strong>Sorghum</strong></td>
-<td>20%</td>
-<td>30%</td>
-<td>40%</td>
-<td>50%</td>
-<td>0.6x</td>
+<td>Serial parse error</td>
+<td>Invalid commands silently ignored</td>
+</tr>
+<tr>
+<td>Watchdog timeout</td>
+<td>ESP32 hardware reboot</td>
 </tr>
 </tbody>
 </table>
-<h3>5.2 Seasonal &amp; Regional Logic</h3>
-<ul>
-<li><strong>Regional Evap Multiplier:</strong> Scaled by agro-ecological zone (e.g., Matabeleland = 1.5x evaporation pressure).</li>
-<li><strong>Seasonal Threshold Shift:</strong> <ul>
-<li><strong>Summer (Nov–Mar):</strong> Thresholds shifted <strong>+5%</strong> (higher moisture required for heat).</li>
-<li><strong>Winter (May–Sep):</strong> Thresholds shifted <strong>-5%</strong> (lower moisture required for cooler periods).</li>
-</ul>
-</li>
-</ul>
 <hr />
-<h2>Part 6: Dataflows &amp; Frontend Analytics</h2>
-<h3>6.1 The MQTT Pipeline</h3>
-<pre><code>[ESP32] --(pwos/sensor/data)--&gt; [MQTT Broker] --(Subscription)--&gt; [Backend API] --(Insert)--&gt; [Postgres]
-</code></pre>
-<h3>6.2 Frontend Formulas</h3>
-<ul>
-<li><strong>Gap-Filling:</strong> The analytics dashboard uses a "Snap-to-Boundary" algorithm to floor timestamps to 5-minute intervals, inserting <code>null</code> for missing buckets to represent sensor outages honestly.</li>
-<li><strong>Water Savings Calculation:</strong><ul>
-<li><code>Saved (L) = TotalStandardUsage (Reactive) - TotalAIUsage (P-WOS)</code></li>
-<li><code>Efficiency (%) = (1 - TotalAI / TotalStandard) * 100</code></li>
-</ul>
-</li>
-</ul>
+<h2>LED Patterns</h2>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Solid ON</td>
+<td>WiFi + MQTT connected, system healthy</td>
+</tr>
+<tr>
+<td>Slow blink (1s)</td>
+<td>WiFi connected, MQTT disconnected</td>
+</tr>
+<tr>
+<td>Fast blink (250ms)</td>
+<td>WiFi disconnected, attempting reconnect</td>
+</tr>
+<tr>
+<td>OFF</td>
+<td>USB mode (no WiFi)</td>
+</tr>
+</tbody>
+</table>
 <hr />
-<p><em>P-WOS v3.0 | Comprehensive Technical Manual</em></p>
+<h2>Firmware Tests</h2>
+<p>Located in <code>firmware/tests/</code> and <code>src/firmware/tests/</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>first_blink/</code></td>
+<td>Basic GPIO — verify LED works</td>
+</tr>
+<tr>
+<td><code>dht11/</code></td>
+<td>DHT11 sensor read validation</td>
+</tr>
+<tr>
+<td><code>relay_control/</code></td>
+<td>Relay ON/OFF cycle test</td>
+</tr>
+<tr>
+<td><code>soil_calibration/</code></td>
+<td>Soil sensor ADC calibration (4 test runs)</td>
+</tr>
+<tr>
+<td><code>mqtt_pump_test/</code></td>
+<td>MQTT connection + pump command test</td>
+</tr>
+<tr>
+<td><code>mqtt_soil_test/</code></td>
+<td>MQTT connection + soil data publish test</td>
+</tr>
+<tr>
+<td><code>pin_34_diagnostic/</code></td>
+<td>ADC pin 34 diagnostic</td>
+</tr>
+<tr>
+<td><code>voltage/</code></td>
+<td>Power supply voltage test</td>
+</tr>
+<tr>
+<td><code>esp32test/</code></td>
+<td>Basic ESP32 connectivity</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Troubleshooting</h2>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DHT11 returns NaN</td>
+<td>Check wiring, ensure 10kΩ pull-up on data pin</td>
+</tr>
+<tr>
+<td>Soil reads 0% always</td>
+<td>Check ADC pin 34 wiring, run <code>pin_34_diagnostic</code> test</td>
+</tr>
+<tr>
+<td>WiFi won't connect</td>
+<td>Verify SSID/password in <code>config.h</code>, check 2.4GHz band</td>
+</tr>
+<tr>
+<td>MQTT connection fails</td>
+<td>Verify broker IP, check firewall, verify Mosquitto is running</td>
+</tr>
+<tr>
+<td>Pump doesn't activate</td>
+<td>Check relay wiring on GPIO 27, verify 5V power to relay</td>
+</tr>
+<tr>
+<td>System shows OFFLINE</td>
+<td>Firmware must publish <code>ONLINE</code> to <code>pwos/system/hardware</code> — verify LWT code</td>
+</tr>
+<tr>
+<td>Watchdog reboot</td>
+<td>Main loop is blocked — check for infinite loops, large delays</td>
+</tr>
+</tbody>
+</table>
                             </div>
                         </article>
 
                         <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
-                            <a href="./getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                            <a href="../../getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
                                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
                                 <span>Back to Index</span>
                             </a>
@@ -479,7 +577,7 @@ DecayRate = base_decay * temp_factor * vpd_factor * time_factor
                             <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
                         </div>
                         <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
-                            <a href="./getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                            <a href="../../getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
                                 <i data-lucide="home" class="w-3.5 h-3.5"></i>
                                 <span>Back to Home</span>
                             </a>
@@ -541,7 +639,7 @@ DecayRate = base_decay * temp_factor * vpd_factor * time_factor
                     '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
                         '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
                             group.pages.map(function(page) {
-                                return '<li><a href="./' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                                return '<li><a href="../../' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
                             }).join('') +
                         '</ul>' +
                     '</div>' +

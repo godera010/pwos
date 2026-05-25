@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-WOS Master System Manual - P-WOS Documentation Portal</title>
+    <title>P-WOS Troubleshooting Guide - P-WOS Documentation Portal</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,7 +39,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="./search_index.js"></script>
+    <script src="../../search_index.js"></script>
 
     <style>
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -104,7 +104,7 @@
                 <i data-lucide="printer" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Export PDF</span>
             </button>
-            <a href="./getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+            <a href="../../getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
                 <i data-lucide="home" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Home</span>
             </a>
@@ -144,7 +144,7 @@
                         <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
                             <span id="breadcrumbCategory">Documentation</span>
                             <i data-lucide="chevron-right" class="w-3 h-3"></i>
-                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">MASTER_SYSTEM_MANUAL.md</span>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">troubleshooting.md</span>
                         </div>
 
                         <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
@@ -162,309 +162,339 @@
                                 prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
                                 prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
                                 prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
-<h1>P-WOS Master System Manual</h1>
-<h2>The Definitive Technical Encyclopedia for the Predictive Water Optimization System</h2>
-<blockquote>
-<p><strong>System Version:</strong> v3.0<br />
-<strong>Status:</strong> Production Reference<br />
-<strong>Scope:</strong> Full-stack technical architecture, from soil sensors and atmospheric physics to machine learning inference and frontend analytics.</p>
-</blockquote>
+<h1>P-WOS Troubleshooting Guide</h1>
+<p><strong>Common Issues and Solutions</strong></p>
 <hr />
-<h2>Part 1: Data Engineering &amp; Datasets</h2>
-<p>The foundation of P-WOS is a high-density, multi-featured dataset that captures the complex relationship between soil moisture, atmospheric demand (VPD), and crop physiology.</p>
-<h3>1.1 The Primary Training Dataset (<code>training_data.csv</code>)</h3>
-<ul>
-<li><strong>Size:</strong> 10,889 samples (rows)</li>
-<li><strong>Features:</strong> 11 input features + 1 target label</li>
-<li><strong>Sampling Frequency:</strong> 5-second control cycles (simulated and real-world aggregated)</li>
-</ul>
-<h4>Dataset Schema</h4>
+<h2>Backend Issues</h2>
 <table>
 <thead>
 <tr>
-<th>Column</th>
-<th>Type</th>
-<th>Description</th>
-<th>Role in System</th>
+<th>Problem</th>
+<th>Cause</th>
+<th>Solution</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>soil_moisture</code></td>
-<td><code>float</code></td>
-<td>Volumetric soil moisture percentage (0–100%)</td>
-<td>Primary drought signal</td>
+<td>Backend won't start</td>
+<td>Port 5000 in use</td>
+<td><code>netstat -ano \| findstr :5000</code> — kill the process</td>
 </tr>
 <tr>
-<td><code>temperature</code></td>
-<td><code>float</code></td>
-<td>Ambient air temperature (°C)</td>
-<td>Direct evaporation driver</td>
+<td><code>psycopg2.OperationalError: connection refused</code></td>
+<td>PostgreSQL not running</td>
+<td>Start PostgreSQL: <code>net start postgresql-x64-15</code></td>
 </tr>
 <tr>
-<td><code>humidity</code></td>
-<td><code>float</code></td>
-<td>Relative humidity percentage (0–100%)</td>
-<td>VPD component</td>
+<td><code>FATAL: database "pwos" does not exist</code></td>
+<td>DB not created</td>
+<td><code>psql -U postgres -c "CREATE DATABASE pwos;"</code></td>
 </tr>
 <tr>
-<td><code>forecast_minutes</code></td>
-<td><code>int</code></td>
-<td>Minutes until the next predicted rain event</td>
-<td>Suppress unnecessary watering</td>
+<td><code>FATAL: password authentication failed</code></td>
+<td>Wrong credentials</td>
+<td>Check <code>DB_PASSWORD</code> in <code>src/config.py</code> or <code>.env</code></td>
 </tr>
 <tr>
-<td><code>hour</code></td>
-<td><code>int</code></td>
-<td>Current hour of the day (0–23)</td>
-<td>Encodes daily evapotranspiration cycle</td>
+<td><code>ModuleNotFoundError: No module named 'paho'</code></td>
+<td>Dependencies not installed</td>
+<td><code>pip install -r requirements.txt</code></td>
 </tr>
 <tr>
-<td><code>day_of_week</code></td>
-<td><code>int</code></td>
-<td>Day index (0=Monday, 6=Sunday)</td>
-<td>Captures weekly patterns</td>
+<td>MQTT subscription errors</td>
+<td>Mosquitto not running</td>
+<td>Start Mosquitto: <code>mosquitto</code> or <code>net start mosquitto</code></td>
 </tr>
 <tr>
-<td><code>is_daytime</code></td>
-<td><code>binary</code></td>
-<td>1 if 6:00 &lt; hour &lt; 18:00</td>
-<td>Broad solar radiation proxy</td>
-</tr>
-<tr>
-<td><code>is_hot_hours</code></td>
-<td><code>binary</code></td>
-<td>1 if 10:00 &lt; hour &lt; 16:00</td>
-<td>Peak VPD window / Stall window</td>
-</tr>
-<tr>
-<td><code>moisture_change_rate</code></td>
-<td><code>float</code></td>
-<td>Rate of moisture change per 5-second interval</td>
-<td>Detects rapid drainage/drying trends</td>
-</tr>
-<tr>
-<td><code>moisture_rolling_6</code></td>
-<td><code>float</code></td>
-<td>30-second rolling average of soil moisture</td>
-<td>Smooths sensor noise &amp; confirms trends</td>
-</tr>
-<tr>
-<td><code>temp_rolling_6</code></td>
-<td><code>float</code></td>
-<td>30-second rolling average of temperature</td>
-<td>Tracks sustained thermal stress</td>
-</tr>
-<tr>
-<td><strong><code>needs_watering_soon</code></strong></td>
-<td><code>binary</code></td>
-<td><strong>Target Label:</strong> 1 if irrigation is required</td>
-<td>The model's prediction goal</td>
+<td><code>json.loads()</code> crash on MQTT message</td>
+<td>Backend trying to parse plain-text topic</td>
+<td>Ensure <code>on_message</code> handles plain-text topics before JSON parsing</td>
 </tr>
 </tbody>
 </table>
-<h3>1.2 Feature Generation (The Rolling Engine)</h3>
-<p>P-WOS does not rely solely on "static" snapshots. The <code>data_collector.py</code> and <code>ml_predictor.py</code> use a 6-sample sliding window to generate temporal features:</p>
-<pre><code class="language-python"># Feature Engineering Logic
-moisture_change_rate = (current_moisture - previous_moisture) / time_delta
-moisture_rolling_6 = sum(last_6_readings) / 6
-</code></pre>
 <hr />
-<h2>Part 2: The ML Training Pipeline</h2>
-<p>P-WOS utilizes a "Forest of Decision Trees" to map 11 atmospheric and soil features to a binary watering decision.</p>
-<h3>2.1 Model Architecture: Random Forest</h3>
-<ul>
-<li><strong>Estimators (Trees):</strong> 100</li>
-<li><strong>Max Depth:</strong> 10 (tuned to prevent overfitting to noise while capturing non-linear interactions)</li>
-<li><strong>Engine:</strong> <code>RandomForestClassifier</code> (Scikit-Learn)</li>
-</ul>
-<h3>2.2 Performance Metrics (v3.0 Benchmark)</h3>
-<p>The model is evaluated using the F1-Score to ensure performance is maintained even with imbalanced datasets (more "Wait" than "Water" events).</p>
+<h2>Frontend Issues</h2>
 <table>
 <thead>
 <tr>
-<th>Metric</th>
-<th>Score</th>
-<th>Interpretation</th>
+<th>Problem</th>
+<th>Cause</th>
+<th>Solution</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Accuracy</strong></td>
-<td>83.43%</td>
-<td>Overall correct predictions</td>
+<td><code>npm run dev</code> fails</td>
+<td>Dependencies not installed</td>
+<td><code>cd src/frontend &amp;&amp; npm install</code></td>
 </tr>
 <tr>
-<td><strong>Precision</strong></td>
-<td>96%</td>
-<td>When the model says "Water", it is almost always correct</td>
+<td>Dashboard shows no data</td>
+<td>Backend not running</td>
+<td>Start backend: <code>python src/backend/app.py</code></td>
 </tr>
 <tr>
-<td><strong>Recall</strong></td>
-<td>72%</td>
-<td>The model captures 72% of all actual watering needs</td>
+<td>Analytics shows wrong averages</td>
+<td>Gap-filled entries in calculations</td>
+<td>Ensure frontend filters <code>_isGap: true</code> entries from KPIs</td>
 </tr>
 <tr>
-<td><strong>F1-Score</strong></td>
-<td>82%</td>
-<td>Excellent balance for agricultural decision-making</td>
+<td>Charts show spikes to zero</td>
+<td>Zero-fill instead of null-fill</td>
+<td>Update <code>fillMissingBuckets</code> to use <code>null</code> values</td>
+</tr>
+<tr>
+<td>API requests fail with CORS error</td>
+<td>CORS not configured for your origin</td>
+<td>Check <code>ALLOWED_ORIGINS</code> in backend config</td>
+</tr>
+<tr>
+<td>Blank page after build</td>
+<td>Vite base path wrong</td>
+<td>Check <code>vite.config.ts</code> base setting</td>
 </tr>
 </tbody>
 </table>
-<h3>2.3 Training Workflow (<code>train_model.py</code>)</h3>
-<ol>
-<li><strong>Load Data:</strong> Imports <code>training_data.csv</code>.</li>
-<li><strong>Pre-processing:</strong> Feature scaling (StandardScaler) is applied to ensure temperature (°C) and moisture (%) are weighted fairly.</li>
-<li><strong>Train/Test Split:</strong> 80/20 random split.</li>
-<li><strong>Serialization:</strong> Model saved as <code>rf_model.pkl</code>, metadata as <code>model_metadata.json</code>.</li>
-</ol>
 <hr />
-<h2>Part 3: Environmental Physics (VPD &amp; Weather)</h2>
-<p>The "Brain" is supplemented by the "Physics Engine" which applies raw meteorological formulas to refine ML outputs.</p>
-<h3>3.1 VPD (Vapor Pressure Deficit) - The Tetens Formula</h3>
-<p>VPD represents the "thirst" of the air. P-WOS implements the <strong>Tetens approximation</strong> (<code>vpd_calculator.py</code>):</p>
-<pre><code class="language-python"># The Physics of Evaporation
-svp = 0.61078 * exp((17.27 * T) / (T + 237.3))  # Saturation Vapor Pressure
-avp = svp * (RH / 100.0)                        # Actual Vapor Pressure
-VPD = svp - avp                                 # The Deficit (kPa)
-</code></pre>
-<h3>3.2 The Moisture Decay Rate Engine</h3>
-<p>When sensors are idle, the system predicts moisture loss using the following derived formula (<code>ml_predictor.py</code>):</p>
-<pre><code class="language-python"># Moisture Decay Rate (% / hour)
-temp_factor = 1 + (temp - 25) * 0.08 if temp &gt; 25 else 0.7
-vpd_factor = 1 + (vpd * 0.4)
-time_factor = 1.5 if 10 &lt;= hour &lt;= 16 else 1.0 (Day) or 0.3 (Night)
+<h2>MQTT Issues</h2>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Can't connect to broker</td>
+<td>Mosquitto not running</td>
+<td><code>mosquitto -v</code> (verbose mode to see errors)</td>
+</tr>
+<tr>
+<td>Retained message stuck</td>
+<td>Old retained message from previous session</td>
+<td>Clear: <code>mosquitto_pub -h localhost -t "pwos/system/hardware" -n -r</code></td>
+</tr>
+<tr>
+<td>ESP32 shows OFFLINE in dashboard</td>
+<td>LWT from previous disconnect still retained</td>
+<td>Re-connect ESP32, or manually publish: <code>mosquitto_pub -h localhost -t "pwos/system/hardware" -m "ONLINE" -r</code></td>
+</tr>
+<tr>
+<td>Duplicate MQTT client IDs</td>
+<td>Two clients with same ID</td>
+<td>Change <code>DEVICE_ID</code> in <code>config.h</code> or simulator</td>
+</tr>
+<tr>
+<td>Messages not arriving</td>
+<td>Wrong broker IP</td>
+<td>Verify <code>MQTT_BROKER</code> matches in all components</td>
+</tr>
+</tbody>
+</table>
+<h3>Monitor MQTT Traffic</h3>
+<pre><code class="language-bash"># See ALL messages on ALL topics
+mosquitto_sub -h localhost -t &quot;pwos/#&quot; -v
 
-DecayRate = base_decay * temp_factor * vpd_factor * time_factor
+# Watch only sensor data
+mosquitto_sub -h localhost -t &quot;pwos/sensor/data&quot;
 </code></pre>
 <hr />
-<h2>Part 4: The Autonomous Decision Engine</h2>
-<p>The "Automation Controller" (<code>automation_controller.py</code>) is the executive function that manages the 5-second control loop.</p>
-<h3>4.1 The 5-Second Cycle (Priority List)</h3>
-<p>Every 5 seconds, the controller evaluates these steps in strict priority order:</p>
-<ol>
-<li><strong>Safety Interlock (Saturation):</strong> If Moisture &gt; 85%, kill pump immediately (STOP).</li>
-<li><strong>Safety Interlock (Critical):</strong> If Moisture &lt; <code>crop_critical_moisture</code>, force pump ON (NOW) overriding all modes.</li>
-<li><strong>Rain Confidence:</strong> If rain is expected in &lt; 2 hours, STALL irrigation.</li>
-<li><strong>False Dry Detection:</strong> If Wind &gt; 20 km/h and Humidity &lt; 40%, flag "False Dry" and MONITOR instead of watering.</li>
-<li><strong>VPD Stall:</strong> If VPD &gt; 3.0 kPa (Extreme Dry), STALL irrigation until evening to prevent evaporative loss.</li>
-<li><strong>ML Inference:</strong> If all above pass, execute the ML Model's prediction (NOW/MONITOR).</li>
-</ol>
-<h3>4.2 Rain Confidence Tiers</h3>
+<h2>ESP32 Hardware Issues</h2>
 <table>
 <thead>
 <tr>
-<th>Time to Rain</th>
-<th>Moisture State</th>
-<th>Action</th>
+<th>Problem</th>
+<th>Cause</th>
+<th>Solution</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>&lt; 2 hours</td>
-<td>Any</td>
-<td><strong>STALL</strong> (Rain imminent)</td>
+<td>DHT11 returns NaN</td>
+<td>Bad wiring or missing pull-up</td>
+<td>Add 10kΩ pull-up on data pin (GPIO 14)</td>
 </tr>
 <tr>
-<td>2–6 hours</td>
-<td>&gt; 25%</td>
-<td><strong>STALL</strong> (Wait for rain)</td>
+<td>Soil reads 0% always</td>
+<td>ADC pin not connected</td>
+<td>Check wiring on GPIO 34, run <code>pin_34_diagnostic</code> test</td>
 </tr>
 <tr>
-<td>6–12 hours</td>
-<td>&gt; 40%</td>
-<td><strong>MONITOR</strong> (Keep watching)</td>
+<td>Soil reads 100% always</td>
+<td>Sensor submerged or shorted</td>
+<td>Re-calibrate <code>SOIL_DRY</code> and <code>SOIL_WET</code> in <code>config.h</code></td>
+</tr>
+<tr>
+<td>WiFi won't connect</td>
+<td>Wrong credentials or 5GHz band</td>
+<td>Verify SSID/password, ensure router broadcasts 2.4GHz</td>
+</tr>
+<tr>
+<td>MQTT connect fails</td>
+<td>Firewall blocking port 1883</td>
+<td>Add firewall exception for port 1883</td>
+</tr>
+<tr>
+<td>Pump doesn't activate</td>
+<td>Relay wiring or GPIO wrong</td>
+<td>Check GPIO 27 → relay IN, verify 5V power to relay</td>
+</tr>
+<tr>
+<td>ESP32 keeps rebooting</td>
+<td>Watchdog timeout (loop blocked)</td>
+<td>Check for infinite loops, remove <code>delay()</code> calls</td>
+</tr>
+<tr>
+<td><code>E (3650) task_wdt</code> warning</td>
+<td>Watchdog already initialized</td>
+<td>Non-critical — ESP32 Core 3.x quirk, can be ignored</td>
+</tr>
+<tr>
+<td>Upload fails in Arduino IDE</td>
+<td>Wrong board or port selected</td>
+<td>Select "ESP32 Dev Module" and correct COM port</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2>Part 5: Agronomic Personalisation</h2>
-<p>P-WOS is "Crop-Aware". Every decision is scaled by the active crop profile and region.</p>
-<h3>5.1 The 5 Pre-defined Crops</h3>
+<h2>Database Issues</h2>
 <table>
 <thead>
 <tr>
-<th>Crop</th>
-<th>Critical</th>
-<th>Low</th>
-<th>Proactive</th>
-<th>Target</th>
-<th>Multiplier</th>
+<th>Problem</th>
+<th>Cause</th>
+<th>Solution</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Maize</strong></td>
-<td>30%</td>
-<td>45%</td>
-<td>55%</td>
-<td>60%</td>
-<td>1.0x</td>
+<td>"Connection refused"</td>
+<td>PostgreSQL not running</td>
+<td><code>pg_isready -h localhost -p 5432</code> to check; start the service</td>
 </tr>
 <tr>
-<td><strong>Potato</strong></td>
-<td>45%</td>
-<td>55%</td>
-<td>65%</td>
-<td>70%</td>
-<td>1.4x</td>
+<td>"Relation does not exist"</td>
+<td>Tables not created</td>
+<td><code>python src/backend/database.py</code></td>
 </tr>
 <tr>
-<td><strong>Tomato</strong></td>
-<td>35%</td>
-<td>48%</td>
-<td>58%</td>
-<td>62%</td>
-<td>1.2x</td>
+<td>"Database is locked" (legacy)</td>
+<td>Old SQLite file still being used</td>
+<td>Delete <code>data/pwos_simulation.db</code> if present; system uses PostgreSQL now</td>
 </tr>
 <tr>
-<td><strong>Onion</strong></td>
-<td>40%</td>
-<td>52%</td>
-<td>60%</td>
-<td>65%</td>
-<td>0.8x</td>
+<td>Slow queries</td>
+<td>Missing indexes</td>
+<td>Run <code>CREATE INDEX idx_readings_timestamp ON sensor_readings(timestamp);</code></td>
 </tr>
 <tr>
-<td><strong>Sorghum</strong></td>
-<td>20%</td>
-<td>30%</td>
-<td>40%</td>
-<td>50%</td>
-<td>0.6x</td>
+<td>Connection pool exhausted</td>
+<td>Too many unclosed connections</td>
+<td>Restart backend; check for connection leaks</td>
 </tr>
 </tbody>
 </table>
-<h3>5.2 Seasonal &amp; Regional Logic</h3>
-<ul>
-<li><strong>Regional Evap Multiplier:</strong> Scaled by agro-ecological zone (e.g., Matabeleland = 1.5x evaporation pressure).</li>
-<li><strong>Seasonal Threshold Shift:</strong> <ul>
-<li><strong>Summer (Nov–Mar):</strong> Thresholds shifted <strong>+5%</strong> (higher moisture required for heat).</li>
-<li><strong>Winter (May–Sep):</strong> Thresholds shifted <strong>-5%</strong> (lower moisture required for cooler periods).</li>
-</ul>
-</li>
-</ul>
 <hr />
-<h2>Part 6: Dataflows &amp; Frontend Analytics</h2>
-<h3>6.1 The MQTT Pipeline</h3>
-<pre><code>[ESP32] --(pwos/sensor/data)--&gt; [MQTT Broker] --(Subscription)--&gt; [Backend API] --(Insert)--&gt; [Postgres]
+<h2>ML / Prediction Issues</h2>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Prediction returns <code>HARDWARE_OFFLINE</code></td>
+<td>ESP32 status is OFFLINE</td>
+<td>Connect hardware or clear retained OFFLINE message</td>
+</tr>
+<tr>
+<td>Model file not found</td>
+<td><code>rf_model.pkl</code> missing</td>
+<td>Run <code>python src/backend/models/train_model.py</code></td>
+</tr>
+<tr>
+<td>Low prediction accuracy</td>
+<td>Stale training data</td>
+<td>Retrain: <code>python src/backend/models/train_model.py</code></td>
+</tr>
+<tr>
+<td>Feature mismatch error</td>
+<td>Model expects 17 features</td>
+<td>Check <code>ml_predictor.py</code> feature list matches training data</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Simulation Issues</h2>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Simulator can't connect to MQTT</td>
+<td>Broker not running</td>
+<td>Start Mosquitto first</td>
+</tr>
+<tr>
+<td>Dashboard shows stale "OFFLINE"</td>
+<td>Retained LWT from previous simulator session</td>
+<td>Clear: <code>mosquitto_pub -h localhost -t "pwos/system/hardware" -n -r</code></td>
+</tr>
+<tr>
+<td>Weather data not updating</td>
+<td>No weather source configured</td>
+<td>Run weather simulator or set <code>OPENWEATHER_API_KEY</code></td>
+</tr>
+<tr>
+<td>Simulation step returns empty</td>
+<td>Simulation not initialized</td>
+<td>Call <code>/api/simulation/reset</code> first</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Quick Diagnostic Commands</h2>
+<h3>Check All Services</h3>
+<pre><code class="language-bash"># PostgreSQL
+pg_isready -h localhost -p 5432
+
+# Mosquitto
+mosquitto_sub -h localhost -t &quot;$SYS/broker/version&quot; -C 1
+
+# Backend
+curl http://localhost:5000/api/health
+
+# Frontend
+curl http://localhost:5173
 </code></pre>
-<h3>6.2 Frontend Formulas</h3>
-<ul>
-<li><strong>Gap-Filling:</strong> The analytics dashboard uses a "Snap-to-Boundary" algorithm to floor timestamps to 5-minute intervals, inserting <code>null</code> for missing buckets to represent sensor outages honestly.</li>
-<li><strong>Water Savings Calculation:</strong><ul>
-<li><code>Saved (L) = TotalStandardUsage (Reactive) - TotalAIUsage (P-WOS)</code></li>
-<li><code>Efficiency (%) = (1 - TotalAI / TotalStandard) * 100</code></li>
-</ul>
-</li>
-</ul>
-<hr />
-<p><em>P-WOS v3.0 | Comprehensive Technical Manual</em></p>
+<h3>View Logs</h3>
+<pre><code class="language-bash"># Backend log
+type logs\app\app.log
+
+# Simulator log
+type logs\sim\esp32_simulator.log
+
+# Hardware log
+type logs\hardware\serial_bridge.log
+
+# Most recent errors (PowerShell)
+Get-Content logs\app\app.log -Tail 50 | Select-String &quot;ERROR&quot;
+</code></pre>
                             </div>
                         </article>
 
                         <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
-                            <a href="./getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                            <a href="../../getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
                                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
                                 <span>Back to Index</span>
                             </a>
@@ -479,7 +509,7 @@ DecayRate = base_decay * temp_factor * vpd_factor * time_factor
                             <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
                         </div>
                         <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
-                            <a href="./getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                            <a href="../../getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
                                 <i data-lucide="home" class="w-3.5 h-3.5"></i>
                                 <span>Back to Home</span>
                             </a>
@@ -541,7 +571,7 @@ DecayRate = base_decay * temp_factor * vpd_factor * time_factor
                     '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
                         '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
                             group.pages.map(function(page) {
-                                return '<li><a href="./' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                                return '<li><a href="../../' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
                             }).join('') +
                         '</ul>' +
                     '</div>' +

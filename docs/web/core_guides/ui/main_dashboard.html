@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-WOS Master System Manual - P-WOS Documentation Portal</title>
+    <title>Main Dashboard Guide - P-WOS Documentation Portal</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,7 +39,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="./search_index.js"></script>
+    <script src="../../search_index.js"></script>
 
     <style>
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -104,7 +104,7 @@
                 <i data-lucide="printer" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Export PDF</span>
             </button>
-            <a href="./getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+            <a href="../../getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
                 <i data-lucide="home" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Home</span>
             </a>
@@ -144,7 +144,7 @@
                         <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
                             <span id="breadcrumbCategory">Documentation</span>
                             <i data-lucide="chevron-right" class="w-3 h-3"></i>
-                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">MASTER_SYSTEM_MANUAL.md</span>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">main_dashboard.md</span>
                         </div>
 
                         <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
@@ -162,309 +162,114 @@
                                 prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
                                 prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
                                 prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
-<h1>P-WOS Master System Manual</h1>
-<h2>The Definitive Technical Encyclopedia for the Predictive Water Optimization System</h2>
-<blockquote>
-<p><strong>System Version:</strong> v3.0<br />
-<strong>Status:</strong> Production Reference<br />
-<strong>Scope:</strong> Full-stack technical architecture, from soil sensors and atmospheric physics to machine learning inference and frontend analytics.</p>
-</blockquote>
+<h1>Main Dashboard Guide</h1>
+<p>The P-WOS Main Dashboard (<code>Dashboard.tsx</code>) provides a premium, high-fidelity monitoring and control console for the Predictive Watering Optimization System. It integrates real-time telemetry, crop-aware limits, and explainable machine learning insights in a responsive, glassmorphic interface.</p>
 <hr />
-<h2>Part 1: Data Engineering &amp; Datasets</h2>
-<p>The foundation of P-WOS is a high-density, multi-featured dataset that captures the complex relationship between soil moisture, atmospheric demand (VPD), and crop physiology.</p>
-<h3>1.1 The Primary Training Dataset (<code>training_data.csv</code>)</h3>
-<ul>
-<li><strong>Size:</strong> 10,889 samples (rows)</li>
-<li><strong>Features:</strong> 11 input features + 1 target label</li>
-<li><strong>Sampling Frequency:</strong> 5-second control cycles (simulated and real-world aggregated)</li>
-</ul>
-<h4>Dataset Schema</h4>
-<table>
-<thead>
-<tr>
-<th>Column</th>
-<th>Type</th>
-<th>Description</th>
-<th>Role in System</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>soil_moisture</code></td>
-<td><code>float</code></td>
-<td>Volumetric soil moisture percentage (0–100%)</td>
-<td>Primary drought signal</td>
-</tr>
-<tr>
-<td><code>temperature</code></td>
-<td><code>float</code></td>
-<td>Ambient air temperature (°C)</td>
-<td>Direct evaporation driver</td>
-</tr>
-<tr>
-<td><code>humidity</code></td>
-<td><code>float</code></td>
-<td>Relative humidity percentage (0–100%)</td>
-<td>VPD component</td>
-</tr>
-<tr>
-<td><code>forecast_minutes</code></td>
-<td><code>int</code></td>
-<td>Minutes until the next predicted rain event</td>
-<td>Suppress unnecessary watering</td>
-</tr>
-<tr>
-<td><code>hour</code></td>
-<td><code>int</code></td>
-<td>Current hour of the day (0–23)</td>
-<td>Encodes daily evapotranspiration cycle</td>
-</tr>
-<tr>
-<td><code>day_of_week</code></td>
-<td><code>int</code></td>
-<td>Day index (0=Monday, 6=Sunday)</td>
-<td>Captures weekly patterns</td>
-</tr>
-<tr>
-<td><code>is_daytime</code></td>
-<td><code>binary</code></td>
-<td>1 if 6:00 &lt; hour &lt; 18:00</td>
-<td>Broad solar radiation proxy</td>
-</tr>
-<tr>
-<td><code>is_hot_hours</code></td>
-<td><code>binary</code></td>
-<td>1 if 10:00 &lt; hour &lt; 16:00</td>
-<td>Peak VPD window / Stall window</td>
-</tr>
-<tr>
-<td><code>moisture_change_rate</code></td>
-<td><code>float</code></td>
-<td>Rate of moisture change per 5-second interval</td>
-<td>Detects rapid drainage/drying trends</td>
-</tr>
-<tr>
-<td><code>moisture_rolling_6</code></td>
-<td><code>float</code></td>
-<td>30-second rolling average of soil moisture</td>
-<td>Smooths sensor noise &amp; confirms trends</td>
-</tr>
-<tr>
-<td><code>temp_rolling_6</code></td>
-<td><code>float</code></td>
-<td>30-second rolling average of temperature</td>
-<td>Tracks sustained thermal stress</td>
-</tr>
-<tr>
-<td><strong><code>needs_watering_soon</code></strong></td>
-<td><code>binary</code></td>
-<td><strong>Target Label:</strong> 1 if irrigation is required</td>
-<td>The model's prediction goal</td>
-</tr>
-</tbody>
-</table>
-<h3>1.2 Feature Generation (The Rolling Engine)</h3>
-<p>P-WOS does not rely solely on "static" snapshots. The <code>data_collector.py</code> and <code>ml_predictor.py</code> use a 6-sample sliding window to generate temporal features:</p>
-<pre><code class="language-python"># Feature Engineering Logic
-moisture_change_rate = (current_moisture - previous_moisture) / time_delta
-moisture_rolling_6 = sum(last_6_readings) / 6
+<h2>🎨 Design System &amp; Visual Highlights</h2>
+<p>The dashboard adheres to a modern, dark-mode-first aesthetic (with full light-mode compatibility) using HSL color mapping, smooth transition overlays, glassmorphic backdrops, and active-pulse micro-animations.</p>
+<pre><code>┌────────────────────────────────────────────────────────────────────────┐
+│                              P-WOS CONSOLE                             │
+├────────────────────────────────────────────────────────────────────────┤
+│  [🌿 Maize (60%)]                       [● Diagnostics Live] [MONITOR] │
+├───────────────────┬───────────────────┬────────────────────────────────┤
+│  SOIL MOISTURE    │  AMBIENT          │  SYSTEM HEALTH                 │
+│      (54%)        │  Temp: 24.8°C     │  ● Message Broker  [CONNECTED] │
+│                   │  Humid: 60.1%     │  ● Database / API  [CONNECTED] │
+│  Optimal Range    │  VPD: 1.18 kPa    │  ● Sensor Hub      [   ONLINE] │
+│  (35% - 85%)      │  [Optimal Badge]  │  ● ML Engine       [   ACTIVE] │
+├───────────────────┴───────────────────┴────────────────────────────────┤
+│  🧠 AI PREDICTION ENGINE                                               │
+│  ✓ System Optimal (Confidence: 94%)                                    │
+│  &quot;Moisture stable and optimal based on live evapotranspiration.&quot;      │
+│  [▼] ML Diagnostics &amp; Feature Insights                                 │
+├────────────────────────────────────────────────────────────────────────┤
+│  p-wos://system-events [LIVE FEED]                                     │
+│  ● [INF] 09:22:15 Moisture stable. Decay: 0.15%/h.         Just now    │
+│  ● [ACT] 09:15:00 Pump deactivated after 30s cycle.        7m ago      │
+└────────────────────────────────────────────────────────────────────────┘
 </code></pre>
 <hr />
-<h2>Part 2: The ML Training Pipeline</h2>
-<p>P-WOS utilizes a "Forest of Decision Trees" to map 11 atmospheric and soil features to a binary watering decision.</p>
-<h3>2.1 Model Architecture: Random Forest</h3>
+<h2>🧩 Core Dashboard Components</h2>
+<h3>1. Soil Moisture Card (Saturation Overhaul)</h3>
 <ul>
-<li><strong>Estimators (Trees):</strong> 100</li>
-<li><strong>Max Depth:</strong> 10 (tuned to prevent overfitting to noise while capturing non-linear interactions)</li>
-<li><strong>Engine:</strong> <code>RandomForestClassifier</code> (Scikit-Learn)</li>
+<li><strong>Visual Gauge:</strong> Renders a high-accuracy circular moisture gauge reflecting live soil humidity.</li>
+<li><strong>Crop-Aware Boundaries:</strong> Graphically highlights the <strong>85% Saturation Limit</strong> and the crop-specific critical low thresholds dynamically.</li>
+<li><strong>Dynamic Range Warnings:</strong> Generates localized status blocks below the gauge based on active readings:</li>
+<li><strong>Critically Dry (&lt; 15%):</strong> <code>"Soil critically dry. Failsafe auto-irrigation engaged."</code> (Rose / Red pulsing alert)</li>
+<li><strong>Low Moisture (15% - 35%):</strong> <code>"Moisture low. Autopilot scheduled to trigger soon."</code> (Orange alert)</li>
+<li><strong>Optimal Moisture (35% - 85%):</strong> <code>"Moisture optimal for root uptake and growth."</code> (Emerald Green)</li>
+<li><strong>Saturated (≥ 85%):</strong> <code>"Soil saturated. Pump locked out to prevent root rot."</code> (Cyan / Teal)</li>
 </ul>
-<h3>2.2 Performance Metrics (v3.0 Benchmark)</h3>
-<p>The model is evaluated using the F1-Score to ensure performance is maintained even with imbalanced datasets (more "Wait" than "Water" events).</p>
-<table>
-<thead>
-<tr>
-<th>Metric</th>
-<th>Score</th>
-<th>Interpretation</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Accuracy</strong></td>
-<td>83.43%</td>
-<td>Overall correct predictions</td>
-</tr>
-<tr>
-<td><strong>Precision</strong></td>
-<td>96%</td>
-<td>When the model says "Water", it is almost always correct</td>
-</tr>
-<tr>
-<td><strong>Recall</strong></td>
-<td>72%</td>
-<td>The model captures 72% of all actual watering needs</td>
-</tr>
-<tr>
-<td><strong>F1-Score</strong></td>
-<td>82%</td>
-<td>Excellent balance for agricultural decision-making</td>
-</tr>
-</tbody>
-</table>
-<h3>2.3 Training Workflow (<code>train_model.py</code>)</h3>
-<ol>
-<li><strong>Load Data:</strong> Imports <code>training_data.csv</code>.</li>
-<li><strong>Pre-processing:</strong> Feature scaling (StandardScaler) is applied to ensure temperature (°C) and moisture (%) are weighted fairly.</li>
-<li><strong>Train/Test Split:</strong> 80/20 random split.</li>
-<li><strong>Serialization:</strong> Model saved as <code>rf_model.pkl</code>, metadata as <code>model_metadata.json</code>.</li>
-</ol>
-<hr />
-<h2>Part 3: Environmental Physics (VPD &amp; Weather)</h2>
-<p>The "Brain" is supplemented by the "Physics Engine" which applies raw meteorological formulas to refine ML outputs.</p>
-<h3>3.1 VPD (Vapor Pressure Deficit) - The Tetens Formula</h3>
-<p>VPD represents the "thirst" of the air. P-WOS implements the <strong>Tetens approximation</strong> (<code>vpd_calculator.py</code>):</p>
-<pre><code class="language-python"># The Physics of Evaporation
-svp = 0.61078 * exp((17.27 * T) / (T + 237.3))  # Saturation Vapor Pressure
-avp = svp * (RH / 100.0)                        # Actual Vapor Pressure
-VPD = svp - avp                                 # The Deficit (kPa)
-</code></pre>
-<h3>3.2 The Moisture Decay Rate Engine</h3>
-<p>When sensors are idle, the system predicts moisture loss using the following derived formula (<code>ml_predictor.py</code>):</p>
-<pre><code class="language-python"># Moisture Decay Rate (% / hour)
-temp_factor = 1 + (temp - 25) * 0.08 if temp &gt; 25 else 0.7
-vpd_factor = 1 + (vpd * 0.4)
-time_factor = 1.5 if 10 &lt;= hour &lt;= 16 else 1.0 (Day) or 0.3 (Night)
-
-DecayRate = base_decay * temp_factor * vpd_factor * time_factor
-</code></pre>
-<hr />
-<h2>Part 4: The Autonomous Decision Engine</h2>
-<p>The "Automation Controller" (<code>automation_controller.py</code>) is the executive function that manages the 5-second control loop.</p>
-<h3>4.1 The 5-Second Cycle (Priority List)</h3>
-<p>Every 5 seconds, the controller evaluates these steps in strict priority order:</p>
-<ol>
-<li><strong>Safety Interlock (Saturation):</strong> If Moisture &gt; 85%, kill pump immediately (STOP).</li>
-<li><strong>Safety Interlock (Critical):</strong> If Moisture &lt; <code>crop_critical_moisture</code>, force pump ON (NOW) overriding all modes.</li>
-<li><strong>Rain Confidence:</strong> If rain is expected in &lt; 2 hours, STALL irrigation.</li>
-<li><strong>False Dry Detection:</strong> If Wind &gt; 20 km/h and Humidity &lt; 40%, flag "False Dry" and MONITOR instead of watering.</li>
-<li><strong>VPD Stall:</strong> If VPD &gt; 3.0 kPa (Extreme Dry), STALL irrigation until evening to prevent evaporative loss.</li>
-<li><strong>ML Inference:</strong> If all above pass, execute the ML Model's prediction (NOW/MONITOR).</li>
-</ol>
-<h3>4.2 Rain Confidence Tiers</h3>
-<table>
-<thead>
-<tr>
-<th>Time to Rain</th>
-<th>Moisture State</th>
-<th>Action</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>&lt; 2 hours</td>
-<td>Any</td>
-<td><strong>STALL</strong> (Rain imminent)</td>
-</tr>
-<tr>
-<td>2–6 hours</td>
-<td>&gt; 25%</td>
-<td><strong>STALL</strong> (Wait for rain)</td>
-</tr>
-<tr>
-<td>6–12 hours</td>
-<td>&gt; 40%</td>
-<td><strong>MONITOR</strong> (Keep watching)</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2>Part 5: Agronomic Personalisation</h2>
-<p>P-WOS is "Crop-Aware". Every decision is scaled by the active crop profile and region.</p>
-<h3>5.1 The 5 Pre-defined Crops</h3>
-<table>
-<thead>
-<tr>
-<th>Crop</th>
-<th>Critical</th>
-<th>Low</th>
-<th>Proactive</th>
-<th>Target</th>
-<th>Multiplier</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Maize</strong></td>
-<td>30%</td>
-<td>45%</td>
-<td>55%</td>
-<td>60%</td>
-<td>1.0x</td>
-</tr>
-<tr>
-<td><strong>Potato</strong></td>
-<td>45%</td>
-<td>55%</td>
-<td>65%</td>
-<td>70%</td>
-<td>1.4x</td>
-</tr>
-<tr>
-<td><strong>Tomato</strong></td>
-<td>35%</td>
-<td>48%</td>
-<td>58%</td>
-<td>62%</td>
-<td>1.2x</td>
-</tr>
-<tr>
-<td><strong>Onion</strong></td>
-<td>40%</td>
-<td>52%</td>
-<td>60%</td>
-<td>65%</td>
-<td>0.8x</td>
-</tr>
-<tr>
-<td><strong>Sorghum</strong></td>
-<td>20%</td>
-<td>30%</td>
-<td>40%</td>
-<td>50%</td>
-<td>0.6x</td>
-</tr>
-</tbody>
-</table>
-<h3>5.2 Seasonal &amp; Regional Logic</h3>
+<h3>2. Ambient Conditions &amp; Vapor Pressure Deficit (VPD)</h3>
+<p>Vapor Pressure Deficit (VPD) measures the drying power of the air, representing the physical transpiration pressure exerted on the crop.
+* <strong>Dynamic Calculation:</strong> VPD is computed using the high-accuracy Tetens formula fallback:
+  $$e_s = 0.61078 \times e^{\left(\frac{17.27 \times T}{T + 237.3}\right)}$$
+  $$e_a = e_s \times \left(\frac{RH}{100}\right)$$
+  $$\text{VPD} = \max(0, e_s - e_a)$$
+* <strong>Transpiration Stress Badges:</strong> The UI classifies crop transpiration stress into color-coded indicator badges:
+  * <strong><code>&lt; 0.4 kPa</code>:</strong> <code>Saturated (Fungal Risk)</code> (sky blue badge)
+  * <strong><code>0.4 - 0.8 kPa</code>:</strong> <code>Low Transpiration</code> (blue badge)
+  * <strong><code>0.8 - 1.2 kPa</code>:</strong> <code>Optimal Transpiration</code> (glowing emerald badge)
+  * <strong><code>1.2 - 2.0 kPa</code>:</strong> <code>Moderate Evap Stress</code> (amber badge)
+  * <strong><code>&gt; 2.0 kPa</code>:</strong> <code>Extreme Vapor Stress</code> (rose pulsing badge)</p>
+<h3>3. System Health Console</h3>
+<p>Transforms status listings into a server-health console grids:
+* Pulsing glow animations (<code>animate-pulse-glow</code>) indicate operational states.
+* Monitors five key subsystems concurrently: <strong>Message Broker (MQTT)</strong>, <strong>Database / API</strong>, <strong>ESP32 Sensor Hub</strong>, <strong>ML Prediction Engine</strong>, and the <strong>Physical Pump Relay</strong>.</p>
+<h3>4. AI Prediction Card &amp; Explainable AI (XAI) Drawer</h3>
+<p>The AI prediction card dynamically shifts its layout styling, border glows, and colors depending on the active ML action recommendations:
+* <strong>NOW (Hydration Dispatch):</strong> Indigo-to-violet gradient borders.
+* <strong>STALL (Resource Guard Delay):</strong> Amber-to-orange borders.
+* <strong>STOP (Safety Cutoff Override):</strong> Pulsing rose-to-pink borders.
+* <strong>MONITOR (Continuous Watch):</strong> Emerald-to-teal borders.</p>
+<h4>Collapsible Diagnostics Drawer</h4>
+<p>An interactive <strong>"ML Diagnostics &amp; Feature Insights"</strong> button opens a detailed features grid exposing the exact telemetry parameters evaluated by the Random Forest model:
+* <strong>Moisture Change Rate (%/hr):</strong> Shows soil moisture rate trends with corresponding upward (green) or downward (indigo) indicator arrows.
+* <strong>Midday Peak Guard:</strong> Flags whether midday heatwave rules (<code>is_hot_hours === 1</code>) are actively stalling or preheating irrigation.
+* <strong>Vapor Pressure Deficit (VPD):</strong> Displays the exact kPa value used as model input.
+* <strong>High Wind Delay Guard:</strong> Flags if high wind speeds (<code>wind_speed &gt; 20 km/h</code>) have triggered evaporation guards.
+* <strong>6h Rolling Averages:</strong> Mean moisture and temperature values calculated over the preceding 6 hours.</p>
+<h3>5. Snappy Event Log Terminal</h3>
 <ul>
-<li><strong>Regional Evap Multiplier:</strong> Scaled by agro-ecological zone (e.g., Matabeleland = 1.5x evaporation pressure).</li>
-<li><strong>Seasonal Threshold Shift:</strong> <ul>
-<li><strong>Summer (Nov–Mar):</strong> Thresholds shifted <strong>+5%</strong> (higher moisture required for heat).</li>
-<li><strong>Winter (May–Sep):</strong> Thresholds shifted <strong>-5%</strong> (lower moisture required for cooler periods).</li>
-</ul>
-</li>
+<li><strong>Decoupled Polling:</strong> Event logs are fetched from the API on a snappy <strong>3-second interval</strong>, decoupled from the heavy forecast/predict endpoints to ensure instant user visibility when events occur.</li>
+<li><strong>Client-Side Deduplication:</strong> A contiguous reduction filter suppresses redundant log lines before displaying them.</li>
+<li><strong>Monospaced Hacker Theme:</strong> Encapsulated in a monospaced terminal environment with colored window controls:</li>
+<li><code>[INF]</code> (Info - Sky Blue): General monitoring details.</li>
+<li><code>[ACT]</code> (Action - Violet Glow): Autopilot activations, mode swaps, and pump events.</li>
+<li><code>[ERR]</code> (Error - Rose Pulsing): Broker timeouts, offline signals, and hardware disconnects.</li>
+<li><strong>Relative Timestamps:</strong> Uses relative string conversions (<code>Just now</code>, <code>5m ago</code>, <code>2d ago</code>) for rapid reading.</li>
 </ul>
 <hr />
-<h2>Part 6: Dataflows &amp; Frontend Analytics</h2>
-<h3>6.1 The MQTT Pipeline</h3>
-<pre><code>[ESP32] --(pwos/sensor/data)--&gt; [MQTT Broker] --(Subscription)--&gt; [Backend API] --(Insert)--&gt; [Postgres]
+<h2>🛠️ State Mappings &amp; API Contract</h2>
+<p>The frontend bindings rely on the updated <code>PredictionData</code> structure from <code>api.ts</code>:</p>
+<pre><code class="language-typescript">export interface PredictionData {
+    recommended_action: 'NOW' | 'STALL' | 'STOP' | 'MONITOR';
+    ml_analysis: {
+        confidence: number;
+        probability_class_1: number;
+        system_status: string;
+        reason: string;
+        features_used?: {
+            soil_moisture?: number;
+            temperature?: number;
+            humidity?: number;
+            moisture_change_rate?: number;
+            is_hot_hours?: number;
+            vpd?: number;
+            is_high_wind?: number;
+            moisture_rolling_6?: number;
+            temp_rolling_6?: number;
+        };
+    };
+    recommended_duration: number;
+    system_status: string;
+}
 </code></pre>
-<h3>6.2 Frontend Formulas</h3>
-<ul>
-<li><strong>Gap-Filling:</strong> The analytics dashboard uses a "Snap-to-Boundary" algorithm to floor timestamps to 5-minute intervals, inserting <code>null</code> for missing buckets to represent sensor outages honestly.</li>
-<li><strong>Water Savings Calculation:</strong><ul>
-<li><code>Saved (L) = TotalStandardUsage (Reactive) - TotalAIUsage (P-WOS)</code></li>
-<li><code>Efficiency (%) = (1 - TotalAI / TotalStandard) * 100</code></li>
-</ul>
-</li>
-</ul>
-<hr />
-<p><em>P-WOS v3.0 | Comprehensive Technical Manual</em></p>
                             </div>
                         </article>
 
                         <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
-                            <a href="./getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                            <a href="../../getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
                                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
                                 <span>Back to Index</span>
                             </a>
@@ -479,7 +284,7 @@ DecayRate = base_decay * temp_factor * vpd_factor * time_factor
                             <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
                         </div>
                         <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
-                            <a href="./getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                            <a href="../../getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
                                 <i data-lucide="home" class="w-3.5 h-3.5"></i>
                                 <span>Back to Home</span>
                             </a>
@@ -541,7 +346,7 @@ DecayRate = base_decay * temp_factor * vpd_factor * time_factor
                     '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
                         '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
                             group.pages.map(function(page) {
-                                return '<li><a href="./' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                                return '<li><a href="../../' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
                             }).join('') +
                         '</ul>' +
                     '</div>' +

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-WOS Master System Manual - P-WOS Documentation Portal</title>
+    <title>P-WOS Cloud-Based ML API Implementation - P-WOS Documentation Portal</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,7 +39,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="./search_index.js"></script>
+    <script src="../../search_index.js"></script>
 
     <style>
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -104,7 +104,7 @@
                 <i data-lucide="printer" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Export PDF</span>
             </button>
-            <a href="./getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+            <a href="../../getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
                 <i data-lucide="home" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Home</span>
             </a>
@@ -144,7 +144,7 @@
                         <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
                             <span id="breadcrumbCategory">Documentation</span>
                             <i data-lucide="chevron-right" class="w-3 h-3"></i>
-                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">MASTER_SYSTEM_MANUAL.md</span>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">cloud_ml_deployment.md</span>
                         </div>
 
                         <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
@@ -162,309 +162,634 @@
                                 prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
                                 prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
                                 prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
-<h1>P-WOS Master System Manual</h1>
-<h2>The Definitive Technical Encyclopedia for the Predictive Water Optimization System</h2>
-<blockquote>
-<p><strong>System Version:</strong> v3.0<br />
-<strong>Status:</strong> Production Reference<br />
-<strong>Scope:</strong> Full-stack technical architecture, from soil sensors and atmospheric physics to machine learning inference and frontend analytics.</p>
-</blockquote>
+<h1>P-WOS Cloud-Based ML API Implementation</h1>
+<h2>Matching Your Presentation Architecture</h2>
+<p><strong>Architecture:</strong> ESP32/Simulator → MQTT → <strong>Cloud ML API</strong> → Database → Dashboard</p>
 <hr />
-<h2>Part 1: Data Engineering &amp; Datasets</h2>
-<p>The foundation of P-WOS is a high-density, multi-featured dataset that captures the complex relationship between soil moisture, atmospheric demand (VPD), and crop physiology.</p>
-<h3>1.1 The Primary Training Dataset (<code>training_data.csv</code>)</h3>
-<ul>
-<li><strong>Size:</strong> 10,889 samples (rows)</li>
-<li><strong>Features:</strong> 11 input features + 1 target label</li>
-<li><strong>Sampling Frequency:</strong> 5-second control cycles (simulated and real-world aggregated)</li>
-</ul>
-<h4>Dataset Schema</h4>
-<table>
-<thead>
-<tr>
-<th>Column</th>
-<th>Type</th>
-<th>Description</th>
-<th>Role in System</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>soil_moisture</code></td>
-<td><code>float</code></td>
-<td>Volumetric soil moisture percentage (0–100%)</td>
-<td>Primary drought signal</td>
-</tr>
-<tr>
-<td><code>temperature</code></td>
-<td><code>float</code></td>
-<td>Ambient air temperature (°C)</td>
-<td>Direct evaporation driver</td>
-</tr>
-<tr>
-<td><code>humidity</code></td>
-<td><code>float</code></td>
-<td>Relative humidity percentage (0–100%)</td>
-<td>VPD component</td>
-</tr>
-<tr>
-<td><code>forecast_minutes</code></td>
-<td><code>int</code></td>
-<td>Minutes until the next predicted rain event</td>
-<td>Suppress unnecessary watering</td>
-</tr>
-<tr>
-<td><code>hour</code></td>
-<td><code>int</code></td>
-<td>Current hour of the day (0–23)</td>
-<td>Encodes daily evapotranspiration cycle</td>
-</tr>
-<tr>
-<td><code>day_of_week</code></td>
-<td><code>int</code></td>
-<td>Day index (0=Monday, 6=Sunday)</td>
-<td>Captures weekly patterns</td>
-</tr>
-<tr>
-<td><code>is_daytime</code></td>
-<td><code>binary</code></td>
-<td>1 if 6:00 &lt; hour &lt; 18:00</td>
-<td>Broad solar radiation proxy</td>
-</tr>
-<tr>
-<td><code>is_hot_hours</code></td>
-<td><code>binary</code></td>
-<td>1 if 10:00 &lt; hour &lt; 16:00</td>
-<td>Peak VPD window / Stall window</td>
-</tr>
-<tr>
-<td><code>moisture_change_rate</code></td>
-<td><code>float</code></td>
-<td>Rate of moisture change per 5-second interval</td>
-<td>Detects rapid drainage/drying trends</td>
-</tr>
-<tr>
-<td><code>moisture_rolling_6</code></td>
-<td><code>float</code></td>
-<td>30-second rolling average of soil moisture</td>
-<td>Smooths sensor noise &amp; confirms trends</td>
-</tr>
-<tr>
-<td><code>temp_rolling_6</code></td>
-<td><code>float</code></td>
-<td>30-second rolling average of temperature</td>
-<td>Tracks sustained thermal stress</td>
-</tr>
-<tr>
-<td><strong><code>needs_watering_soon</code></strong></td>
-<td><code>binary</code></td>
-<td><strong>Target Label:</strong> 1 if irrigation is required</td>
-<td>The model's prediction goal</td>
-</tr>
-</tbody>
-</table>
-<h3>1.2 Feature Generation (The Rolling Engine)</h3>
-<p>P-WOS does not rely solely on "static" snapshots. The <code>data_collector.py</code> and <code>ml_predictor.py</code> use a 6-sample sliding window to generate temporal features:</p>
-<pre><code class="language-python"># Feature Engineering Logic
-moisture_change_rate = (current_moisture - previous_moisture) / time_delta
-moisture_rolling_6 = sum(last_6_readings) / 6
-</code></pre>
-<hr />
-<h2>Part 2: The ML Training Pipeline</h2>
-<p>P-WOS utilizes a "Forest of Decision Trees" to map 11 atmospheric and soil features to a binary watering decision.</p>
-<h3>2.1 Model Architecture: Random Forest</h3>
-<ul>
-<li><strong>Estimators (Trees):</strong> 100</li>
-<li><strong>Max Depth:</strong> 10 (tuned to prevent overfitting to noise while capturing non-linear interactions)</li>
-<li><strong>Engine:</strong> <code>RandomForestClassifier</code> (Scikit-Learn)</li>
-</ul>
-<h3>2.2 Performance Metrics (v3.0 Benchmark)</h3>
-<p>The model is evaluated using the F1-Score to ensure performance is maintained even with imbalanced datasets (more "Wait" than "Water" events).</p>
-<table>
-<thead>
-<tr>
-<th>Metric</th>
-<th>Score</th>
-<th>Interpretation</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Accuracy</strong></td>
-<td>83.43%</td>
-<td>Overall correct predictions</td>
-</tr>
-<tr>
-<td><strong>Precision</strong></td>
-<td>96%</td>
-<td>When the model says "Water", it is almost always correct</td>
-</tr>
-<tr>
-<td><strong>Recall</strong></td>
-<td>72%</td>
-<td>The model captures 72% of all actual watering needs</td>
-</tr>
-<tr>
-<td><strong>F1-Score</strong></td>
-<td>82%</td>
-<td>Excellent balance for agricultural decision-making</td>
-</tr>
-</tbody>
-</table>
-<h3>2.3 Training Workflow (<code>train_model.py</code>)</h3>
-<ol>
-<li><strong>Load Data:</strong> Imports <code>training_data.csv</code>.</li>
-<li><strong>Pre-processing:</strong> Feature scaling (StandardScaler) is applied to ensure temperature (°C) and moisture (%) are weighted fairly.</li>
-<li><strong>Train/Test Split:</strong> 80/20 random split.</li>
-<li><strong>Serialization:</strong> Model saved as <code>rf_model.pkl</code>, metadata as <code>model_metadata.json</code>.</li>
-</ol>
-<hr />
-<h2>Part 3: Environmental Physics (VPD &amp; Weather)</h2>
-<p>The "Brain" is supplemented by the "Physics Engine" which applies raw meteorological formulas to refine ML outputs.</p>
-<h3>3.1 VPD (Vapor Pressure Deficit) - The Tetens Formula</h3>
-<p>VPD represents the "thirst" of the air. P-WOS implements the <strong>Tetens approximation</strong> (<code>vpd_calculator.py</code>):</p>
-<pre><code class="language-python"># The Physics of Evaporation
-svp = 0.61078 * exp((17.27 * T) / (T + 237.3))  # Saturation Vapor Pressure
-avp = svp * (RH / 100.0)                        # Actual Vapor Pressure
-VPD = svp - avp                                 # The Deficit (kPa)
-</code></pre>
-<h3>3.2 The Moisture Decay Rate Engine</h3>
-<p>When sensors are idle, the system predicts moisture loss using the following derived formula (<code>ml_predictor.py</code>):</p>
-<pre><code class="language-python"># Moisture Decay Rate (% / hour)
-temp_factor = 1 + (temp - 25) * 0.08 if temp &gt; 25 else 0.7
-vpd_factor = 1 + (vpd * 0.4)
-time_factor = 1.5 if 10 &lt;= hour &lt;= 16 else 1.0 (Day) or 0.3 (Night)
+<h2>🏗️ CORRECT ARCHITECTURE (From Your PPT)</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    P-WOS ARCHITECTURE                        │
+└─────────────────────────────────────────────────────────────┘
 
-DecayRate = base_decay * temp_factor * vpd_factor * time_factor
+┌──────────────────┐
+│   ESP32 / SIM    │  Sensors (Moisture, Temp, Humidity)
+│   (Edge Device)  │  MQTT Publisher
+└────────┬─────────┘
+         │
+         │ MQTT Protocol
+         ▼
+┌──────────────────┐
+│  MQTT Broker     │  Message Router
+│  (Mosquitto)     │  Local or Cloud
+└────────┬─────────┘
+         │
+         │
+         ▼
+┌──────────────────────────────────────────────────────┐
+│           CLOUD-BASED ML API                         │
+│  ┌────────────────────────────────────────────┐     │
+│  │  Flask/FastAPI Application                  │     │
+│  │  ├── MQTT Subscriber (receives data)        │     │
+│  │  ├── Database (PostgreSQL/SQLite)           │     │
+│  │  ├── ML Model (Random Forest)               │     │
+│  │  └── REST Endpoints                         │     │
+│  └────────────────────────────────────────────┘     │
+│                                                       │
+│  Hosted on: Railway / Render / AWS / Google Cloud   │
+└───────────────────────┬───────────────────────────────┘
+                        │
+                        │ HTTP/REST
+                        ▼
+                ┌─────────────────┐
+                │  Web Dashboard  │  User Interface
+                │  (HTML/JS)      │  Charts &amp; Controls
+                └─────────────────┘
 </code></pre>
 <hr />
-<h2>Part 4: The Autonomous Decision Engine</h2>
-<p>The "Automation Controller" (<code>automation_controller.py</code>) is the executive function that manages the 5-second control loop.</p>
-<h3>4.1 The 5-Second Cycle (Priority List)</h3>
-<p>Every 5 seconds, the controller evaluates these steps in strict priority order:</p>
+<h2>☁️ CLOUD DEPLOYMENT OPTIONS</h2>
+<h3>Option 1: Railway (Recommended - Easiest)</h3>
+<p><strong>Pros:</strong>
+- Free tier available
+- Automatic deployments from GitHub
+- Built-in PostgreSQL
+- Easy environment variables</p>
+<p><strong>Cons:</strong>
+- Free tier has usage limits</p>
+<h3>Option 2: Render</h3>
+<p><strong>Pros:</strong>
+- Generous free tier
+- Automatic SSL
+- PostgreSQL included</p>
+<p><strong>Cons:</strong>
+- Cold starts on free tier</p>
+<h3>Option 3: Google Cloud Run</h3>
+<p><strong>Pros:</strong>
+- Scales to zero (only pay when used)
+- Professional grade</p>
+<p><strong>Cons:</strong>
+- More complex setup
+- Requires Google Cloud account</p>
+<h3>Option 4: AWS Lambda + API Gateway</h3>
+<p><strong>Pros:</strong>
+- Serverless architecture
+- Very scalable</p>
+<p><strong>Cons:</strong>
+- Most complex setup
+- Cold start latency</p>
+<hr />
+<h2>🚀 IMPLEMENTATION PLAN</h2>
+<h3>PHASE 1: Prepare Code for Cloud Deployment</h3>
+<h4>Step 1.1: Restructure Project for Cloud</h4>
+<pre><code>pwos-cloud-api/
+├── app.py                    # Main Flask application
+├── requirements.txt          # Python dependencies
+├── Procfile                  # Railway/Render startup command
+├── runtime.txt              # Python version specification
+├── railway.json             # Railway configuration (optional)
+├── .env.example            # Environment variables template
+├── models/
+│   ├── data_collector.py
+│   ├── train_model.py
+│   ├── ml_predictor.py
+│   └── trained_model.pkl   # Upload after training
+├── database.py
+└── mqtt_subscriber.py
+</code></pre>
+<h4>Step 1.2: Create <code>requirements.txt</code></h4>
+<pre><code class="language-txt"># Web Framework
+flask==3.0.0
+flask-cors==4.0.0
+gunicorn==21.2.0
+
+# MQTT
+paho-mqtt==1.6.1
+
+# Database
+psycopg2-binary==2.9.9  # PostgreSQL (for cloud)
+# OR
+# sqlite3 is built-in for local testing
+
+# ML &amp; Data
+scikit-learn==1.3.2
+pandas==2.1.4
+numpy==1.24.4
+joblib==1.3.2
+
+# Utilities
+python-dotenv==1.0.0
+requests==2.31.0
+</code></pre>
+<h4>Step 1.3: Create <code>Procfile</code> (for Railway/Render)</h4>
+<pre><code class="language-procfile">web: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2
+</code></pre>
+<h4>Step 1.4: Create <code>runtime.txt</code></h4>
+<pre><code class="language-txt">python-3.9.18
+</code></pre>
+<hr />
+<h3>PHASE 2: Modify Code for Cloud</h3>
+<h4>Update <code>app.py</code> for Cloud Environment</h4>
+<pre><code class="language-python">import os
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+import sqlite3
+import json
+import paho.mqtt.client as mqtt
+from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+app = Flask(__name__)
+CORS(app)
+
+# Configuration - Use environment variables for cloud
+PORT = int(os.getenv('PORT', 5000))
+DB_PATH = os.getenv('DATABASE_URL', 'pwos_simulation.db')  # Cloud DB or local
+MQTT_BROKER = os.getenv('MQTT_BROKER', 'localhost')
+MQTT_PORT = int(os.getenv('MQTT_PORT', 1883))
+MQTT_USERNAME = os.getenv('MQTT_USERNAME', None)
+MQTT_PASSWORD = os.getenv('MQTT_PASSWORD', None)
+
+# Load ML Model
+try:
+    from models.ml_predictor import MLPredictor
+    ml_predictor = MLPredictor('models/trained_model.pkl', 'models/model_metadata.json')
+    print(&quot;✅ ML Model loaded successfully&quot;)
+    USE_ML_MODEL = True
+except Exception as e:
+    print(f&quot;⚠️  ML Model not available: {e}&quot;)
+    USE_ML_MODEL = False
+
+# MQTT Setup for Cloud
+mqtt_client = mqtt.Client(&quot;PWOS_Cloud_API&quot;)
+
+if MQTT_USERNAME and MQTT_PASSWORD:
+    mqtt_client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
+
+def on_connect(client, userdata, flags, rc):
+    print(f&quot;📡 Connected to MQTT broker (code {rc})&quot;)
+    client.subscribe(&quot;pwos/sensor/data&quot;)
+
+def on_message(client, userdata, msg):
+    &quot;&quot;&quot;Store incoming sensor data in database.&quot;&quot;&quot;
+    try:
+        data = json.loads(msg.payload.decode())
+
+        # Store in database
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(&quot;&quot;&quot;
+            INSERT INTO sensor_readings 
+            (timestamp, soil_moisture, temperature, humidity, device_id)
+            VALUES (?, ?, ?, ?, ?)
+        &quot;&quot;&quot;, (
+            data['timestamp'],
+            data['soil_moisture'],
+            data['temperature'],
+            data['humidity'],
+            data.get('device_id', 'UNKNOWN')
+        ))
+        conn.commit()
+        conn.close()
+
+        print(f&quot;💾 Stored: {data['soil_moisture']}% moisture&quot;)
+
+    except Exception as e:
+        print(f&quot;❌ Error storing data: {e}&quot;)
+
+mqtt_client.on_connect = on_connect
+mqtt_client.on_message = on_message
+
+# Connect to MQTT broker (runs in background)
+try:
+    mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
+    mqtt_client.loop_start()
+    print(f&quot;✅ MQTT client started: {MQTT_BROKER}:{MQTT_PORT}&quot;)
+except Exception as e:
+    print(f&quot;⚠️  MQTT connection failed: {e}&quot;)
+
+# ============= API ENDPOINTS =============
+
+@app.route('/')
+def home():
+    &quot;&quot;&quot;API home page.&quot;&quot;&quot;
+    return jsonify({
+        &quot;name&quot;: &quot;P-WOS Cloud ML API&quot;,
+        &quot;version&quot;: &quot;1.0&quot;,
+        &quot;status&quot;: &quot;online&quot;,
+        &quot;endpoints&quot;: {
+            &quot;/api/health&quot;: &quot;System health check&quot;,
+            &quot;/api/sensor-data/latest&quot;: &quot;Latest sensor reading&quot;,
+            &quot;/api/sensor-data/history&quot;: &quot;Historical data&quot;,
+            &quot;/api/predict-next-watering&quot;: &quot;ML prediction&quot;,
+            &quot;/api/control/pump&quot;: &quot;Pump control (POST)&quot;,
+            &quot;/api/statistics&quot;: &quot;System statistics&quot;
+        }
+    })
+
+@app.route('/api/health')
+def health():
+    &quot;&quot;&quot;Health check endpoint.&quot;&quot;&quot;
+    try:
+        # Check database
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(&quot;SELECT COUNT(*) FROM sensor_readings&quot;)
+        count = cursor.fetchone()[0]
+        conn.close()
+
+        return jsonify({
+            &quot;status&quot;: &quot;healthy&quot;,
+            &quot;timestamp&quot;: datetime.now().isoformat(),
+            &quot;database&quot;: {
+                &quot;connected&quot;: True,
+                &quot;total_readings&quot;: count
+            },
+            &quot;ml_model&quot;: {
+                &quot;loaded&quot;: USE_ML_MODEL
+            },
+            &quot;mqtt&quot;: {
+                &quot;connected&quot;: mqtt_client.is_connected()
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            &quot;status&quot;: &quot;unhealthy&quot;,
+            &quot;error&quot;: str(e)
+        }), 500
+
+@app.route('/api/sensor-data/latest')
+def get_latest():
+    &quot;&quot;&quot;Get most recent sensor reading.&quot;&quot;&quot;
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(&quot;&quot;&quot;
+            SELECT timestamp, soil_moisture, temperature, humidity, device_id
+            FROM sensor_readings
+            ORDER BY timestamp DESC
+            LIMIT 1
+        &quot;&quot;&quot;)
+        row = cursor.fetchone()
+        conn.close()
+
+        if not row:
+            return jsonify({&quot;error&quot;: &quot;No data available&quot;}), 404
+
+        return jsonify({
+            &quot;timestamp&quot;: row[0],
+            &quot;soil_moisture&quot;: row[1],
+            &quot;temperature&quot;: row[2],
+            &quot;humidity&quot;: row[3],
+            &quot;device_id&quot;: row[4]
+        })
+    except Exception as e:
+        return jsonify({&quot;error&quot;: str(e)}), 500
+
+@app.route('/api/sensor-data/history')
+def get_history():
+    &quot;&quot;&quot;Get historical sensor data.&quot;&quot;&quot;
+    limit = request.args.get('limit', 100, type=int)
+    limit = min(limit, 1000)  # Cap at 1000 for performance
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(&quot;&quot;&quot;
+            SELECT timestamp, soil_moisture, temperature, humidity
+            FROM sensor_readings
+            ORDER BY timestamp DESC
+            LIMIT ?
+        &quot;&quot;&quot;, (limit,))
+        rows = cursor.fetchall()
+        conn.close()
+
+        data = [{
+            &quot;timestamp&quot;: row[0],
+            &quot;soil_moisture&quot;: row[1],
+            &quot;temperature&quot;: row[2],
+            &quot;humidity&quot;: row[3]
+        } for row in rows]
+
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({&quot;error&quot;: str(e)}), 500
+
+@app.route('/api/predict-next-watering')
+def predict_watering():
+    &quot;&quot;&quot;ML-based watering prediction.&quot;&quot;&quot;
+    try:
+        # Get latest reading
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute(&quot;&quot;&quot;
+            SELECT timestamp, soil_moisture, temperature, humidity
+            FROM sensor_readings
+            ORDER BY timestamp DESC
+            LIMIT 1
+        &quot;&quot;&quot;)
+        latest = cursor.fetchone()
+
+        if not latest:
+            conn.close()
+            return jsonify({&quot;error&quot;: &quot;No sensor data&quot;}), 404
+
+        sensor_data = {
+            &quot;timestamp&quot;: latest[0],
+            &quot;soil_moisture&quot;: latest[1],
+            &quot;temperature&quot;: latest[2],
+            &quot;humidity&quot;: latest[3]
+        }
+
+        if USE_ML_MODEL:
+            # Get historical moisture for rolling average
+            cursor.execute(&quot;&quot;&quot;
+                SELECT soil_moisture FROM sensor_readings 
+                ORDER BY timestamp DESC LIMIT 10
+            &quot;&quot;&quot;)
+            hist_moisture = [row[0] for row in cursor.fetchall()]
+            conn.close()
+
+            # ML Prediction
+            prediction = ml_predictor.predict(sensor_data, hist_moisture)
+
+            return jsonify({
+                &quot;needs_water&quot;: prediction['needs_watering_soon'],
+                &quot;confidence&quot;: prediction['confidence'],
+                &quot;current_moisture&quot;: sensor_data['soil_moisture'],
+                &quot;recommendation&quot;: &quot;Water soon&quot; if prediction['needs_watering_soon'] else &quot;No action needed&quot;,
+                &quot;reasoning&quot;: prediction['reasoning'],
+                &quot;model_type&quot;: &quot;ML (Random Forest - Cloud)&quot;,
+                &quot;probabilities&quot;: prediction['probabilities']
+            })
+        else:
+            # Rule-based fallback
+            conn.close()
+            moisture = sensor_data['soil_moisture']
+            needs_water = moisture &lt; 40
+
+            return jsonify({
+                &quot;needs_water&quot;: needs_water,
+                &quot;confidence&quot;: 0.7,
+                &quot;current_moisture&quot;: moisture,
+                &quot;recommendation&quot;: &quot;Water now&quot; if needs_water else &quot;No action needed&quot;,
+                &quot;reasoning&quot;: f&quot;Rule-based: Moisture is {moisture:.1f}%&quot;,
+                &quot;model_type&quot;: &quot;Rule-based (ML model not loaded)&quot;
+            })
+
+    except Exception as e:
+        return jsonify({&quot;error&quot;: str(e)}), 500
+
+@app.route('/api/control/pump', methods=['POST'])
+def control_pump():
+    &quot;&quot;&quot;Send pump control command via MQTT.&quot;&quot;&quot;
+    try:
+        data = request.json
+        action = data.get('action', 'OFF')
+        duration = data.get('duration', 30)
+
+        command = {
+            &quot;action&quot;: action,
+            &quot;duration&quot;: duration
+        }
+
+        # Publish to MQTT
+        result = mqtt_client.publish(&quot;pwos/control/pump&quot;, json.dumps(command))
+
+        return jsonify({
+            &quot;status&quot;: &quot;success&quot;,
+            &quot;message&quot;: f&quot;Pump {action}&quot;,
+            &quot;duration&quot;: duration,
+            &quot;mqtt_result&quot;: result.rc
+        })
+    except Exception as e:
+        return jsonify({
+            &quot;status&quot;: &quot;error&quot;,
+            &quot;error&quot;: str(e)
+        }), 500
+
+@app.route('/api/statistics')
+def get_statistics():
+    &quot;&quot;&quot;Get system statistics.&quot;&quot;&quot;
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute(&quot;SELECT COUNT(*) FROM sensor_readings&quot;)
+        total_readings = cursor.fetchone()[0]
+
+        cursor.execute(&quot;SELECT AVG(soil_moisture) FROM sensor_readings&quot;)
+        avg_moisture = cursor.fetchone()[0]
+
+        cursor.execute(&quot;SELECT COUNT(*) FROM watering_events&quot;)
+        total_waterings = cursor.fetchone()[0]
+
+        conn.close()
+
+        return jsonify({
+            &quot;total_readings&quot;: total_readings,
+            &quot;total_waterings&quot;: total_waterings,
+            &quot;avg_moisture&quot;: round(avg_moisture, 2) if avg_moisture else 0
+        })
+    except Exception as e:
+        return jsonify({&quot;error&quot;: str(e)}), 500
+
+# ============= RUN APP =============
+
+if __name__ == '__main__':
+    # Create database tables if not exists
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(&quot;&quot;&quot;
+            CREATE TABLE IF NOT EXISTS sensor_readings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT,
+                soil_moisture REAL,
+                temperature REAL,
+                humidity REAL,
+                device_id TEXT
+            )
+        &quot;&quot;&quot;)
+        cursor.execute(&quot;&quot;&quot;
+            CREATE TABLE IF NOT EXISTS watering_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT,
+                duration INTEGER,
+                trigger_type TEXT,
+                moisture_before REAL
+            )
+        &quot;&quot;&quot;)
+        conn.commit()
+        conn.close()
+        print(&quot;✅ Database tables ready&quot;)
+    except Exception as e:
+        print(f&quot;⚠️  Database initialization: {e}&quot;)
+
+    # Start Flask app
+    print(f&quot;🚀 Starting P-WOS Cloud API on port {PORT}&quot;)
+    app.run(host='0.0.0.0', port=PORT, debug=False)
+</code></pre>
+<hr />
+<h3>PHASE 3: Deploy to Railway (Step-by-Step)</h3>
+<h4>Step 1: Prepare Your Code</h4>
+<pre><code class="language-bash"># In your project root
+cd pwos-project
+
+# Create cloud API directory
+mkdir pwos-cloud-api
+cd pwos-cloud-api
+
+# Copy necessary files
+cp ../src/backend/app.py .
+cp -r ../src/backend/models .
+cp ../data/pwos_simulation.db .  # Initial database
+
+# Create requirements.txt, Procfile, runtime.txt (as shown above)
+</code></pre>
+<h4>Step 2: Create <code>.env.example</code></h4>
+<pre><code class="language-bash"># .env.example (template for environment variables)
+PORT=5000
+MQTT_BROKER=broker.hivemq.com
+MQTT_PORT=1883
+MQTT_USERNAME=your_username
+MQTT_PASSWORD=your_password
+DATABASE_URL=pwos_simulation.db
+</code></pre>
+<h4>Step 3: Initialize Git</h4>
+<pre><code class="language-bash">git init
+git add .
+git commit -m &quot;Initial commit: P-WOS Cloud API&quot;
+</code></pre>
+<h4>Step 4: Deploy to Railway</h4>
 <ol>
-<li><strong>Safety Interlock (Saturation):</strong> If Moisture &gt; 85%, kill pump immediately (STOP).</li>
-<li><strong>Safety Interlock (Critical):</strong> If Moisture &lt; <code>crop_critical_moisture</code>, force pump ON (NOW) overriding all modes.</li>
-<li><strong>Rain Confidence:</strong> If rain is expected in &lt; 2 hours, STALL irrigation.</li>
-<li><strong>False Dry Detection:</strong> If Wind &gt; 20 km/h and Humidity &lt; 40%, flag "False Dry" and MONITOR instead of watering.</li>
-<li><strong>VPD Stall:</strong> If VPD &gt; 3.0 kPa (Extreme Dry), STALL irrigation until evening to prevent evaporative loss.</li>
-<li><strong>ML Inference:</strong> If all above pass, execute the ML Model's prediction (NOW/MONITOR).</li>
+<li><strong>Go to:</strong> https://railway.app/</li>
+<li><strong>Sign up</strong> with GitHub</li>
+<li><strong>Click:</strong> "New Project"</li>
+<li><strong>Select:</strong> "Deploy from GitHub repo"</li>
+<li><strong>Choose:</strong> Your pwos-cloud-api repository</li>
+<li><strong>Railway will:</strong></li>
+<li>Auto-detect Python</li>
+<li>Install dependencies</li>
+<li>Run Procfile command</li>
+<li>Assign a public URL</li>
 </ol>
-<h3>4.2 Rain Confidence Tiers</h3>
-<table>
-<thead>
-<tr>
-<th>Time to Rain</th>
-<th>Moisture State</th>
-<th>Action</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>&lt; 2 hours</td>
-<td>Any</td>
-<td><strong>STALL</strong> (Rain imminent)</td>
-</tr>
-<tr>
-<td>2–6 hours</td>
-<td>&gt; 25%</td>
-<td><strong>STALL</strong> (Wait for rain)</td>
-</tr>
-<tr>
-<td>6–12 hours</td>
-<td>&gt; 40%</td>
-<td><strong>MONITOR</strong> (Keep watching)</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2>Part 5: Agronomic Personalisation</h2>
-<p>P-WOS is "Crop-Aware". Every decision is scaled by the active crop profile and region.</p>
-<h3>5.1 The 5 Pre-defined Crops</h3>
-<table>
-<thead>
-<tr>
-<th>Crop</th>
-<th>Critical</th>
-<th>Low</th>
-<th>Proactive</th>
-<th>Target</th>
-<th>Multiplier</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Maize</strong></td>
-<td>30%</td>
-<td>45%</td>
-<td>55%</td>
-<td>60%</td>
-<td>1.0x</td>
-</tr>
-<tr>
-<td><strong>Potato</strong></td>
-<td>45%</td>
-<td>55%</td>
-<td>65%</td>
-<td>70%</td>
-<td>1.4x</td>
-</tr>
-<tr>
-<td><strong>Tomato</strong></td>
-<td>35%</td>
-<td>48%</td>
-<td>58%</td>
-<td>62%</td>
-<td>1.2x</td>
-</tr>
-<tr>
-<td><strong>Onion</strong></td>
-<td>40%</td>
-<td>52%</td>
-<td>60%</td>
-<td>65%</td>
-<td>0.8x</td>
-</tr>
-<tr>
-<td><strong>Sorghum</strong></td>
-<td>20%</td>
-<td>30%</td>
-<td>40%</td>
-<td>50%</td>
-<td>0.6x</td>
-</tr>
-</tbody>
-</table>
-<h3>5.2 Seasonal &amp; Regional Logic</h3>
-<ul>
-<li><strong>Regional Evap Multiplier:</strong> Scaled by agro-ecological zone (e.g., Matabeleland = 1.5x evaporation pressure).</li>
-<li><strong>Seasonal Threshold Shift:</strong> <ul>
-<li><strong>Summer (Nov–Mar):</strong> Thresholds shifted <strong>+5%</strong> (higher moisture required for heat).</li>
-<li><strong>Winter (May–Sep):</strong> Thresholds shifted <strong>-5%</strong> (lower moisture required for cooler periods).</li>
-</ul>
-</li>
-</ul>
-<hr />
-<h2>Part 6: Dataflows &amp; Frontend Analytics</h2>
-<h3>6.1 The MQTT Pipeline</h3>
-<pre><code>[ESP32] --(pwos/sensor/data)--&gt; [MQTT Broker] --(Subscription)--&gt; [Backend API] --(Insert)--&gt; [Postgres]
+<h4>Step 5: Configure Environment Variables</h4>
+<p>In Railway dashboard:
+1. Click "Variables"
+2. Add:
+   <code>MQTT_BROKER=broker.hivemq.com  (or your MQTT server)
+   MQTT_PORT=1883</code></p>
+<h4>Step 6: Get Your Cloud API URL</h4>
+<p>Railway will give you a URL like:</p>
+<pre><code>https://pwos-production.up.railway.app
 </code></pre>
-<h3>6.2 Frontend Formulas</h3>
+<hr />
+<h3>PHASE 4: Update Your Simulator to Use Cloud API</h3>
+<p>Your simulator stays the same (publishes to MQTT), but now you can use <strong>Cloud MQTT</strong> broker.</p>
+<h4>Option 1: Use HiveMQ Cloud (Free)</h4>
+<ol>
+<li>Go to: https://www.hivemq.com/mqtt-cloud-broker/</li>
+<li>Create free cluster</li>
+<li>Get connection details</li>
+<li>Update simulator:</li>
+</ol>
+<pre><code class="language-python"># In esp32_simulator.py
+MQTT_BROKER = &quot;abc123.s1.eu.hivemq.cloud&quot;  # Your cluster
+MQTT_PORT = 8883
+MQTT_USERNAME = &quot;your_username&quot;
+MQTT_PASSWORD = &quot;your_password&quot;
+
+# Add TLS for cloud MQTT
+client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
+client.tls_set()
+</code></pre>
+<h4>Option 2: Keep Local MQTT, Expose with Tunneling</h4>
+<p>Use <strong>ngrok</strong> to expose local Mosquitto:</p>
+<pre><code class="language-bash">ngrok tcp 1883
+</code></pre>
+<p>Then use the ngrok URL in your cloud API environment variables.</p>
+<hr />
+<h3>PHASE 5: Update Dashboard to Use Cloud API</h3>
+<p><strong>File:</strong> <code>dashboard.html</code></p>
+<pre><code class="language-javascript">// Change API URL to cloud
+const API_URL = 'https://pwos-production.up.railway.app/api';
+
+// All fetch calls now go to cloud
+async function fetchStatus() {
+    const response = await fetch(`${API_URL}/sensor-data/latest`);
+    const data = await response.json();
+    // ... rest stays the same
+}
+</code></pre>
+<hr />
+<h2>🎯 FINAL ARCHITECTURE</h2>
+<pre><code>Local Machine:
+  └── ESP32 Simulator (Python)
+         ↓ MQTT (WiFi simulation)
+
+Cloud MQTT Broker (HiveMQ):
+  └── broker.hivemq.com
+         ↓
+
+Cloud ML API (Railway):
+  ├── Flask App
+  ├── ML Model (Random Forest)
+  ├── Database (SQLite or PostgreSQL)
+  └── REST Endpoints
+         ↓ HTTP
+
+Web Dashboard (Anywhere):
+  └── HTML/JS (Hosted on Netlify or local)
+</code></pre>
+<hr />
+<h2>✅ DEPLOYMENT CHECKLIST</h2>
 <ul>
-<li><strong>Gap-Filling:</strong> The analytics dashboard uses a "Snap-to-Boundary" algorithm to floor timestamps to 5-minute intervals, inserting <code>null</code> for missing buckets to represent sensor outages honestly.</li>
-<li><strong>Water Savings Calculation:</strong><ul>
-<li><code>Saved (L) = TotalStandardUsage (Reactive) - TotalAIUsage (P-WOS)</code></li>
-<li><code>Efficiency (%) = (1 - TotalAI / TotalStandard) * 100</code></li>
-</ul>
-</li>
+<li>[ ] Train ML model locally</li>
+<li>[ ] Create <code>pwos-cloud-api</code> directory</li>
+<li>[ ] Add all required files (app.py, requirements.txt, Procfile, etc.)</li>
+<li>[ ] Copy trained model to <code>models/trained_model.pkl</code></li>
+<li>[ ] Initialize Git repository</li>
+<li>[ ] Push to GitHub</li>
+<li>[ ] Create Railway account</li>
+<li>[ ] Deploy from GitHub</li>
+<li>[ ] Configure environment variables</li>
+<li>[ ] Test cloud API endpoints</li>
+<li>[ ] Update simulator to use cloud MQTT</li>
+<li>[ ] Update dashboard to use cloud API URL</li>
+<li>[ ] Test end-to-end flow</li>
 </ul>
 <hr />
-<p><em>P-WOS v3.0 | Comprehensive Technical Manual</em></p>
+<h2>🚀 QUICK START COMMANDS</h2>
+<pre><code class="language-bash"># 1. Train model locally first
+cd src/backend/models
+python data_collector.py
+python train_model.py
+
+# 2. Prepare for cloud
+mkdir pwos-cloud-api
+cd pwos-cloud-api
+# ... copy files ...
+
+# 3. Test locally
+python app.py
+# Visit: http://localhost:5000
+
+# 4. Deploy to Railway
+git init
+git add .
+git commit -m &quot;Deploy P-WOS Cloud API&quot;
+# ... push to GitHub and deploy via Railway dashboard
+</code></pre>
+<hr />
+<p><strong>This matches your presentation architecture: Cloud-based ML API! 🚀☁️</strong></p>
                             </div>
                         </article>
 
                         <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
-                            <a href="./getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                            <a href="../../getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
                                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
                                 <span>Back to Index</span>
                             </a>
@@ -479,7 +804,7 @@ DecayRate = base_decay * temp_factor * vpd_factor * time_factor
                             <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
                         </div>
                         <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
-                            <a href="./getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                            <a href="../../getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
                                 <i data-lucide="home" class="w-3.5 h-3.5"></i>
                                 <span>Back to Home</span>
                             </a>
@@ -541,7 +866,7 @@ DecayRate = base_decay * temp_factor * vpd_factor * time_factor
                     '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
                         '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
                             group.pages.map(function(page) {
-                                return '<li><a href="./' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                                return '<li><a href="../../' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
                             }).join('') +
                         '</ul>' +
                     '</div>' +

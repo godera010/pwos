@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-WOS Master System Manual - P-WOS Documentation Portal</title>
+    <title>P-WOS Database Guide - P-WOS Documentation Portal</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,7 +39,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="./search_index.js"></script>
+    <script src="../../search_index.js"></script>
 
     <style>
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -104,7 +104,7 @@
                 <i data-lucide="printer" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Export PDF</span>
             </button>
-            <a href="./getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+            <a href="../../getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
                 <i data-lucide="home" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Home</span>
             </a>
@@ -144,7 +144,7 @@
                         <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
                             <span id="breadcrumbCategory">Documentation</span>
                             <i data-lucide="chevron-right" class="w-3 h-3"></i>
-                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">MASTER_SYSTEM_MANUAL.md</span>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">database_guide.md</span>
                         </div>
 
                         <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
@@ -162,309 +162,597 @@
                                 prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
                                 prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
                                 prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
-<h1>P-WOS Master System Manual</h1>
-<h2>The Definitive Technical Encyclopedia for the Predictive Water Optimization System</h2>
-<blockquote>
-<p><strong>System Version:</strong> v3.0<br />
-<strong>Status:</strong> Production Reference<br />
-<strong>Scope:</strong> Full-stack technical architecture, from soil sensors and atmospheric physics to machine learning inference and frontend analytics.</p>
-</blockquote>
+<h1>P-WOS Database Guide</h1>
+<p><strong>Complete Database Setup for Contributors</strong></p>
 <hr />
-<h2>Part 1: Data Engineering &amp; Datasets</h2>
-<p>The foundation of P-WOS is a high-density, multi-featured dataset that captures the complex relationship between soil moisture, atmospheric demand (VPD), and crop physiology.</p>
-<h3>1.1 The Primary Training Dataset (<code>training_data.csv</code>)</h3>
-<ul>
-<li><strong>Size:</strong> 10,889 samples (rows)</li>
-<li><strong>Features:</strong> 11 input features + 1 target label</li>
-<li><strong>Sampling Frequency:</strong> 5-second control cycles (simulated and real-world aggregated)</li>
-</ul>
-<h4>Dataset Schema</h4>
+<h2>Quick Start</h2>
+<h3>Option 1: Fresh Database (Recommended)</h3>
+<pre><code class="language-bash"># 1. Ensure PostgreSQL is running
+# 2. Create the database
+psql -U postgres -c &quot;CREATE DATABASE pwos;&quot;
+
+# 3. Initialize tables (auto-creates schema)
+python src/backend/database.py
+</code></pre>
+<h3>Option 2: Restore from Backup</h3>
+<pre><code class="language-bash"># Restore a pg_dump backup
+psql -U postgres -d pwos &lt; data/backups/pwos_backup.sql
+</code></pre>
+<hr />
+<h2>Database Overview</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Engine</strong></td>
+<td>PostgreSQL 15+</td>
+</tr>
+<tr>
+<td><strong>Connection</strong></td>
+<td>Configured in <code>src/config.py</code></td>
+</tr>
+<tr>
+<td><strong>Default Host</strong></td>
+<td><code>localhost:5432</code></td>
+</tr>
+<tr>
+<td><strong>Default Name</strong></td>
+<td><code>pwos</code></td>
+</tr>
+<tr>
+<td><strong>Driver</strong></td>
+<td>psycopg2 (Python)</td>
+</tr>
+<tr>
+<td><strong>Connection Pool</strong></td>
+<td><code>ThreadedConnectionPool</code> (min=1, max=20)</td>
+</tr>
+<tr>
+<td><strong>Tables</strong></td>
+<td>5</td>
+</tr>
+</tbody>
+</table>
+<h3>Connection Configuration (<code>src/config.py</code>)</h3>
+<pre><code class="language-python">DB_HOST = os.getenv(&quot;DB_HOST&quot;, &quot;localhost&quot;)
+DB_PORT = os.getenv(&quot;DB_PORT&quot;, &quot;5432&quot;)
+DB_NAME = os.getenv(&quot;DB_NAME&quot;, &quot;pwos&quot;)
+DB_USER = os.getenv(&quot;DB_USER&quot;, &quot;postgres&quot;)
+DB_PASSWORD = os.getenv(&quot;DB_PASSWORD&quot;, &quot;&quot;)
+</code></pre>
+<hr />
+<h2>Schema Reference</h2>
+<h3>1. sensor_readings (Core Data)</h3>
+<p>Stores all sensor telemetry from ESP32 hardware or simulator.</p>
+<pre><code class="language-sql">CREATE TABLE sensor_readings (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP NOT NULL,
+    soil_moisture REAL,
+    temperature REAL,
+    humidity REAL,
+    device_id TEXT,
+    forecast_minutes INTEGER DEFAULT 0,
+    wind_speed REAL DEFAULT 0.0,
+    precipitation_chance INTEGER DEFAULT 0,
+    vpd REAL DEFAULT 0.0,
+    rain_intensity REAL DEFAULT 0.0,
+    cloud_cover REAL DEFAULT 0.0,
+    forecast_temp REAL DEFAULT 0.0,
+    forecast_humidity REAL DEFAULT 0.0,
+    weather_condition TEXT DEFAULT 'unknown',
+    weather_source TEXT DEFAULT 'none'
+);
+</code></pre>
 <table>
 <thead>
 <tr>
 <th>Column</th>
 <th>Type</th>
 <th>Description</th>
-<th>Role in System</th>
 </tr>
 </thead>
 <tbody>
 <tr>
+<td><code>id</code></td>
+<td>SERIAL</td>
+<td>Auto-increment primary key</td>
+</tr>
+<tr>
+<td><code>timestamp</code></td>
+<td>TIMESTAMP</td>
+<td>When reading was recorded</td>
+</tr>
+<tr>
 <td><code>soil_moisture</code></td>
-<td><code>float</code></td>
-<td>Volumetric soil moisture percentage (0–100%)</td>
-<td>Primary drought signal</td>
+<td>REAL</td>
+<td>Soil moisture 0–100%</td>
 </tr>
 <tr>
 <td><code>temperature</code></td>
-<td><code>float</code></td>
-<td>Ambient air temperature (°C)</td>
-<td>Direct evaporation driver</td>
+<td>REAL</td>
+<td>Temperature in Celsius</td>
 </tr>
 <tr>
 <td><code>humidity</code></td>
-<td><code>float</code></td>
-<td>Relative humidity percentage (0–100%)</td>
-<td>VPD component</td>
+<td>REAL</td>
+<td>Relative humidity 0–100%</td>
+</tr>
+<tr>
+<td><code>device_id</code></td>
+<td>TEXT</td>
+<td>Sensor device identifier</td>
 </tr>
 <tr>
 <td><code>forecast_minutes</code></td>
-<td><code>int</code></td>
-<td>Minutes until the next predicted rain event</td>
-<td>Suppress unnecessary watering</td>
+<td>INTEGER</td>
+<td>Minutes until predicted rain</td>
 </tr>
 <tr>
-<td><code>hour</code></td>
-<td><code>int</code></td>
-<td>Current hour of the day (0–23)</td>
-<td>Encodes daily evapotranspiration cycle</td>
+<td><code>wind_speed</code></td>
+<td>REAL</td>
+<td>Wind speed in km/h</td>
 </tr>
 <tr>
-<td><code>day_of_week</code></td>
-<td><code>int</code></td>
-<td>Day index (0=Monday, 6=Sunday)</td>
-<td>Captures weekly patterns</td>
+<td><code>precipitation_chance</code></td>
+<td>INTEGER</td>
+<td>Rain probability 0–100%</td>
 </tr>
 <tr>
-<td><code>is_daytime</code></td>
-<td><code>binary</code></td>
-<td>1 if 6:00 &lt; hour &lt; 18:00</td>
-<td>Broad solar radiation proxy</td>
+<td><code>vpd</code></td>
+<td>REAL</td>
+<td>Vapor Pressure Deficit (kPa)</td>
 </tr>
 <tr>
-<td><code>is_hot_hours</code></td>
-<td><code>binary</code></td>
-<td>1 if 10:00 &lt; hour &lt; 16:00</td>
-<td>Peak VPD window / Stall window</td>
+<td><code>rain_intensity</code></td>
+<td>REAL</td>
+<td>Current rain intensity</td>
 </tr>
 <tr>
-<td><code>moisture_change_rate</code></td>
-<td><code>float</code></td>
-<td>Rate of moisture change per 5-second interval</td>
-<td>Detects rapid drainage/drying trends</td>
+<td><code>cloud_cover</code></td>
+<td>REAL</td>
+<td>Cloud cover percentage</td>
 </tr>
 <tr>
-<td><code>moisture_rolling_6</code></td>
-<td><code>float</code></td>
-<td>30-second rolling average of soil moisture</td>
-<td>Smooths sensor noise &amp; confirms trends</td>
+<td><code>forecast_temp</code></td>
+<td>REAL</td>
+<td>Forecasted temperature</td>
 </tr>
 <tr>
-<td><code>temp_rolling_6</code></td>
-<td><code>float</code></td>
-<td>30-second rolling average of temperature</td>
-<td>Tracks sustained thermal stress</td>
+<td><code>forecast_humidity</code></td>
+<td>REAL</td>
+<td>Forecasted humidity</td>
 </tr>
 <tr>
-<td><strong><code>needs_watering_soon</code></strong></td>
-<td><code>binary</code></td>
-<td><strong>Target Label:</strong> 1 if irrigation is required</td>
-<td>The model's prediction goal</td>
+<td><code>weather_condition</code></td>
+<td>TEXT</td>
+<td>Weather condition string</td>
+</tr>
+<tr>
+<td><code>weather_source</code></td>
+<td>TEXT</td>
+<td>Data source (openweathermap/simulation/fallback)</td>
 </tr>
 </tbody>
 </table>
-<h3>1.2 Feature Generation (The Rolling Engine)</h3>
-<p>P-WOS does not rely solely on "static" snapshots. The <code>data_collector.py</code> and <code>ml_predictor.py</code> use a 6-sample sliding window to generate temporal features:</p>
-<pre><code class="language-python"># Feature Engineering Logic
-moisture_change_rate = (current_moisture - previous_moisture) / time_delta
-moisture_rolling_6 = sum(last_6_readings) / 6
-</code></pre>
 <hr />
-<h2>Part 2: The ML Training Pipeline</h2>
-<p>P-WOS utilizes a "Forest of Decision Trees" to map 11 atmospheric and soil features to a binary watering decision.</p>
-<h3>2.1 Model Architecture: Random Forest</h3>
-<ul>
-<li><strong>Estimators (Trees):</strong> 100</li>
-<li><strong>Max Depth:</strong> 10 (tuned to prevent overfitting to noise while capturing non-linear interactions)</li>
-<li><strong>Engine:</strong> <code>RandomForestClassifier</code> (Scikit-Learn)</li>
-</ul>
-<h3>2.2 Performance Metrics (v3.0 Benchmark)</h3>
-<p>The model is evaluated using the F1-Score to ensure performance is maintained even with imbalanced datasets (more "Wait" than "Water" events).</p>
+<h3>2. watering_events (Pump Activity)</h3>
+<p>Records every pump activation.</p>
+<pre><code class="language-sql">CREATE TABLE watering_events (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP NOT NULL,
+    duration_seconds INTEGER,
+    trigger_type TEXT,
+    moisture_before REAL,
+    moisture_after REAL
+);
+</code></pre>
 <table>
 <thead>
 <tr>
-<th>Metric</th>
-<th>Score</th>
-<th>Interpretation</th>
+<th>Column</th>
+<th>Type</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Accuracy</strong></td>
-<td>83.43%</td>
-<td>Overall correct predictions</td>
+<td><code>id</code></td>
+<td>SERIAL</td>
+<td>Auto-increment primary key</td>
 </tr>
 <tr>
-<td><strong>Precision</strong></td>
-<td>96%</td>
-<td>When the model says "Water", it is almost always correct</td>
+<td><code>timestamp</code></td>
+<td>TIMESTAMP</td>
+<td>When pump activated</td>
 </tr>
 <tr>
-<td><strong>Recall</strong></td>
-<td>72%</td>
-<td>The model captures 72% of all actual watering needs</td>
+<td><code>duration_seconds</code></td>
+<td>INTEGER</td>
+<td>Pump duration in seconds</td>
 </tr>
 <tr>
-<td><strong>F1-Score</strong></td>
-<td>82%</td>
-<td>Excellent balance for agricultural decision-making</td>
+<td><code>trigger_type</code></td>
+<td>TEXT</td>
+<td>'AUTO', 'MANUAL', or 'ML'</td>
+</tr>
+<tr>
+<td><code>moisture_before</code></td>
+<td>REAL</td>
+<td>Moisture before watering</td>
+</tr>
+<tr>
+<td><code>moisture_after</code></td>
+<td>REAL</td>
+<td>Moisture after watering</td>
 </tr>
 </tbody>
 </table>
-<h3>2.3 Training Workflow (<code>train_model.py</code>)</h3>
-<ol>
-<li><strong>Load Data:</strong> Imports <code>training_data.csv</code>.</li>
-<li><strong>Pre-processing:</strong> Feature scaling (StandardScaler) is applied to ensure temperature (°C) and moisture (%) are weighted fairly.</li>
-<li><strong>Train/Test Split:</strong> 80/20 random split.</li>
-<li><strong>Serialization:</strong> Model saved as <code>rf_model.pkl</code>, metadata as <code>model_metadata.json</code>.</li>
-</ol>
 <hr />
-<h2>Part 3: Environmental Physics (VPD &amp; Weather)</h2>
-<p>The "Brain" is supplemented by the "Physics Engine" which applies raw meteorological formulas to refine ML outputs.</p>
-<h3>3.1 VPD (Vapor Pressure Deficit) - The Tetens Formula</h3>
-<p>VPD represents the "thirst" of the air. P-WOS implements the <strong>Tetens approximation</strong> (<code>vpd_calculator.py</code>):</p>
-<pre><code class="language-python"># The Physics of Evaporation
-svp = 0.61078 * exp((17.27 * T) / (T + 237.3))  # Saturation Vapor Pressure
-avp = svp * (RH / 100.0)                        # Actual Vapor Pressure
-VPD = svp - avp                                 # The Deficit (kPa)
+<h3>3. system_logs (Activity Log)</h3>
+<p>System events and messages.</p>
+<pre><code class="language-sql">CREATE TABLE system_logs (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP NOT NULL,
+    level TEXT,
+    source TEXT,
+    message TEXT
+);
 </code></pre>
-<h3>3.2 The Moisture Decay Rate Engine</h3>
-<p>When sensors are idle, the system predicts moisture loss using the following derived formula (<code>ml_predictor.py</code>):</p>
-<pre><code class="language-python"># Moisture Decay Rate (% / hour)
-temp_factor = 1 + (temp - 25) * 0.08 if temp &gt; 25 else 0.7
-vpd_factor = 1 + (vpd * 0.4)
-time_factor = 1.5 if 10 &lt;= hour &lt;= 16 else 1.0 (Day) or 0.3 (Night)
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>level</code></td>
+<td>TEXT</td>
+<td><code>INFO</code>, <code>WARNING</code>, <code>ERROR</code></td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td>TEXT</td>
+<td>Component name (e.g. <code>SYSTEM</code>, <code>ML</code>, <code>MQTT</code>)</td>
+</tr>
+<tr>
+<td><code>message</code></td>
+<td>TEXT</td>
+<td>Log message content</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>4. ml_decisions (ML Audit Trail)</h3>
+<p>Logs every ML prediction for audit and retraining purposes.</p>
+<pre><code class="language-sql">CREATE TABLE ml_decisions (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP NOT NULL,
+    soil_moisture REAL,
+    temperature REAL,
+    humidity REAL,
+    vpd REAL,
+    forecast_minutes INTEGER DEFAULT 0,
+    precipitation_chance INTEGER DEFAULT 0,
+    wind_speed REAL DEFAULT 0.0,
+    rain_intensity REAL DEFAULT 0.0,
+    decay_rate REAL,
+    decision TEXT,
+    confidence REAL,
+    reason TEXT,
+    recommended_duration INTEGER DEFAULT 0,
+    features_json TEXT
+);
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>decision</code></td>
+<td>TEXT</td>
+<td><code>NOW</code>, <code>STALL</code>, <code>STOP</code>, <code>MONITOR</code></td>
+</tr>
+<tr>
+<td><code>confidence</code></td>
+<td>REAL</td>
+<td>Prediction confidence 0–100</td>
+</tr>
+<tr>
+<td><code>decay_rate</code></td>
+<td>REAL</td>
+<td>Predicted moisture loss rate (%/hr)</td>
+</tr>
+<tr>
+<td><code>reason</code></td>
+<td>TEXT</td>
+<td>Human-readable decision explanation</td>
+</tr>
+<tr>
+<td><code>features_json</code></td>
+<td>TEXT</td>
+<td>JSON of all input features used</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>5. model_versions (ML Model Registry)</h3>
+<p>Tracks trained model versions for rollback and comparison.</p>
+<pre><code class="language-sql">CREATE TABLE model_versions (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP NOT NULL,
+    version_tag TEXT,
+    accuracy REAL,
+    precision REAL,
+    recall REAL,
+    f1_score REAL,
+    training_samples INTEGER,
+    model_path TEXT,
+    is_active BOOLEAN
+);
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>version_tag</code></td>
+<td>TEXT</td>
+<td>e.g. <code>v20260319_092225</code></td>
+</tr>
+<tr>
+<td><code>accuracy</code></td>
+<td>REAL</td>
+<td>Model accuracy on test set</td>
+</tr>
+<tr>
+<td><code>precision</code> / <code>recall</code> / <code>f1_score</code></td>
+<td>REAL</td>
+<td>Classification metrics</td>
+</tr>
+<tr>
+<td><code>training_samples</code></td>
+<td>INTEGER</td>
+<td>Number of samples used</td>
+</tr>
+<tr>
+<td><code>is_active</code></td>
+<td>BOOLEAN</td>
+<td>Whether this is the active model</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Common Queries</h2>
+<h3>Get Latest Sensor Reading</h3>
+<pre><code class="language-sql">SELECT * FROM sensor_readings 
+ORDER BY timestamp DESC 
+LIMIT 1;
+</code></pre>
+<h3>Get Daily Water Usage</h3>
+<pre><code class="language-sql">SELECT 
+    DATE(timestamp) as date,
+    SUM(duration) as total_seconds,
+    COUNT(*) as pump_cycles
+FROM watering_events
+GROUP BY DATE(timestamp)
+ORDER BY date DESC;
+</code></pre>
+<h3>Get Average Moisture by Hour</h3>
+<pre><code class="language-sql">SELECT 
+    EXTRACT(HOUR FROM timestamp) as hour,
+    AVG(soil_moisture) as avg_moisture
+FROM sensor_readings
+GROUP BY hour
+ORDER BY hour;
+</code></pre>
+<h3>Get Aggregated Data (15-minute buckets)</h3>
+<p>This is the query used by the Analytics dashboard:</p>
+<pre><code class="language-sql">SELECT 
+    DATE_TRUNC('minute', timestamp) 
+        - (EXTRACT(MINUTE FROM timestamp)::int % 15) * INTERVAL '1 minute' as bucket,
+    AVG(soil_moisture) as avg_moisture,
+    AVG(temperature) as avg_temp,
+    AVG(humidity) as avg_humidity,
+    COUNT(*) as reading_count
+FROM sensor_readings
+WHERE timestamp &gt;= NOW() - INTERVAL '24 hours'
+GROUP BY bucket
+ORDER BY bucket;
+</code></pre>
+<h3>Get Readings for Training Data</h3>
+<pre><code class="language-sql">SELECT 
+    r.*,
+    EXTRACT(HOUR FROM r.timestamp) as hour,
+    EXTRACT(DOW FROM r.timestamp) as day_of_week
+FROM sensor_readings r
+ORDER BY r.timestamp DESC
+LIMIT 10000;
+</code></pre>
+<hr />
+<h2>Connection Pooling</h2>
+<p><code>database.py</code> uses a <strong><code>ThreadedConnectionPool</code></strong> (min=1, max=20 connections). Connections are borrowed from the pool, used, and automatically returned on <code>close()</code> via the <code>PoolConnectionWrapper</code> proxy:</p>
+<pre><code class="language-python"># How pooling works internally (simplified)
+conn = self._pool.getconn()      # borrow from pool
+try:
+    cursor = conn.cursor()
+    cursor.execute(...)           # your query
+    conn.commit()
+finally:
+    self._pool.putconn(conn)     # return to pool
+</code></pre>
+<p>The <code>PoolConnectionWrapper</code> is transparent — all existing query code continues to call <code>.cursor()</code>, <code>.commit()</code>, and <code>.close()</code> as normal.</p>
+<p><strong>Unit Test Safety</strong>: The wrapper detects mocked <code>psycopg2</code> connections in tests and bypasses the pool, ensuring 100% test compatibility.</p>
+<hr />
+<h2>Performance Indexes</h2>
+<p>The following descending timestamp indexes are created automatically on <code>init_database()</code>:</p>
+<pre><code class="language-sql">CREATE INDEX IF NOT EXISTS idx_sensor_readings_timestamp ON sensor_readings (timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_watering_events_timestamp ON watering_events (timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_ml_decisions_timestamp    ON ml_decisions    (timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_system_logs_timestamp     ON system_logs     (timestamp DESC);
+</code></pre>
+<p><strong>Impact</strong>: All <code>ORDER BY timestamp DESC LIMIT N</code> queries (used by every history endpoint) are now index-scans (O(log N)) instead of full-table scans (O(N)).</p>
+<hr />
+<h2>Python Usage</h2>
+<h3>Using database.py Module</h3>
+<pre><code class="language-python">from src.backend.database import PWOSDatabase
 
-DecayRate = base_decay * temp_factor * vpd_factor * time_factor
+db = PWOSDatabase()  # pool initialized automatically
+
+# Get latest reading (returns list of dicts)
+latest = db.get_recent_readings(limit=1)
+print(f&quot;Moisture: {latest[0]['soil_moisture']}%&quot;)
+
+# Get recent history
+history = db.get_recent_readings(limit=100)
+
+# Log watering event
+db.insert_watering_event(duration=30, trigger_type='AUTO', moisture_before=35.0)
+
+# Get aggregated analytics data
+sensors, events = db.get_aggregated_data(hours=24, interval_seconds=900)
+</code></pre>
+<h3>Direct psycopg2 Connection</h3>
+<pre><code class="language-python">import psycopg2
+from src.config import DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+
+conn = psycopg2.connect(
+    host=DB_HOST, port=DB_PORT,
+    database=DB_NAME, user=DB_USER,
+    password=DB_PASSWORD
+)
+cursor = conn.cursor()
+
+cursor.execute(&quot;SELECT * FROM sensor_readings ORDER BY id DESC LIMIT 10&quot;)
+rows = cursor.fetchall()
+for row in rows:
+    print(row)
+
+conn.close()
 </code></pre>
 <hr />
-<h2>Part 4: The Autonomous Decision Engine</h2>
-<p>The "Automation Controller" (<code>automation_controller.py</code>) is the executive function that manages the 5-second control loop.</p>
-<h3>4.1 The 5-Second Cycle (Priority List)</h3>
-<p>Every 5 seconds, the controller evaluates these steps in strict priority order:</p>
+<h2>Backup &amp; Restore</h2>
+<h3>Backup Database</h3>
+<pre><code class="language-bash"># Full backup
+pg_dump -U postgres pwos &gt; data/backups/pwos_$(date +%Y%m%d).sql
+
+# Windows
+pg_dump -U postgres pwos &gt; data\backups\pwos_backup.sql
+</code></pre>
+<h3>Restore Database</h3>
+<pre><code class="language-bash"># Drop and recreate
+psql -U postgres -c &quot;DROP DATABASE IF EXISTS pwos;&quot;
+psql -U postgres -c &quot;CREATE DATABASE pwos;&quot;
+psql -U postgres -d pwos &lt; data/backups/pwos_backup.sql
+</code></pre>
+<h3>Reset Database (Fresh Start)</h3>
+<pre><code class="language-bash"># Drop all tables and recreate schema
+psql -U postgres -d pwos -c &quot;DROP TABLE IF EXISTS sensor_readings, watering_events, system_logs, ml_decisions, model_versions CASCADE;&quot;
+python src/backend/database.py
+</code></pre>
+<hr />
+<h2>Troubleshooting</h2>
+<h3>"Connection refused"</h3>
+<pre><code class="language-bash"># Check PostgreSQL is running
+pg_isready -h localhost -p 5432
+
+# Start PostgreSQL (Windows)
+net start postgresql-x64-15
+
+# Start PostgreSQL (Linux)
+sudo systemctl start postgresql
+</code></pre>
+<h3>"Database does not exist"</h3>
+<pre><code class="language-bash">psql -U postgres -c &quot;CREATE DATABASE pwos;&quot;
+</code></pre>
+<h3>"Password authentication failed"</h3>
+<p>Check your <code>DB_PASSWORD</code> in <code>src/config.py</code> or set the environment variable:</p>
+<pre><code class="language-bash">set DB_PASSWORD=your_password
+</code></pre>
+<h3>"No such table"</h3>
+<pre><code class="language-bash"># Recreate schema
+python src/backend/database.py
+</code></pre>
+<hr />
+<h2>For Contributors</h2>
+<h3>Setting Up Your Development Database</h3>
 <ol>
-<li><strong>Safety Interlock (Saturation):</strong> If Moisture &gt; 85%, kill pump immediately (STOP).</li>
-<li><strong>Safety Interlock (Critical):</strong> If Moisture &lt; <code>crop_critical_moisture</code>, force pump ON (NOW) overriding all modes.</li>
-<li><strong>Rain Confidence:</strong> If rain is expected in &lt; 2 hours, STALL irrigation.</li>
-<li><strong>False Dry Detection:</strong> If Wind &gt; 20 km/h and Humidity &lt; 40%, flag "False Dry" and MONITOR instead of watering.</li>
-<li><strong>VPD Stall:</strong> If VPD &gt; 3.0 kPa (Extreme Dry), STALL irrigation until evening to prevent evaporative loss.</li>
-<li><strong>ML Inference:</strong> If all above pass, execute the ML Model's prediction (NOW/MONITOR).</li>
+<li><strong>Install PostgreSQL 15+</strong></li>
+<li>
+<p>Download from <a href="https://www.postgresql.org/download/">postgresql.org</a></p>
+</li>
+<li>
+<p><strong>Create the database:</strong>
+   <code>bash
+   psql -U postgres -c "CREATE DATABASE pwos;"</code></p>
+</li>
+<li>
+<p><strong>Initialize schema:</strong>
+   <code>bash
+   python src/backend/database.py</code></p>
+</li>
+<li>
+<p><strong>Seed with simulation data (optional):</strong>
+   <code>bash
+   python src/simulation/esp32_simulator.py
+   # Let it run for a few minutes, then stop with Ctrl+C</code></p>
+</li>
+<li>
+<p><strong>Verify setup:</strong>
+   <code>bash
+   psql -U postgres -d pwos -c "SELECT COUNT(*) FROM sensor_readings;"</code></p>
+</li>
 </ol>
-<h3>4.2 Rain Confidence Tiers</h3>
+<hr />
+<h2>Migration History</h2>
 <table>
 <thead>
 <tr>
-<th>Time to Rain</th>
-<th>Moisture State</th>
-<th>Action</th>
+<th>Date</th>
+<th>Migration</th>
+<th>Notes</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>&lt; 2 hours</td>
-<td>Any</td>
-<td><strong>STALL</strong> (Rain imminent)</td>
+<td>Feb 2026</td>
+<td>SQLite (initial)</td>
+<td>Prototype database, file-based</td>
 </tr>
 <tr>
-<td>2–6 hours</td>
-<td>&gt; 25%</td>
-<td><strong>STALL</strong> (Wait for rain)</td>
+<td>Apr 2026</td>
+<td><strong>PostgreSQL</strong></td>
+<td>Production migration — <code>DATE_TRUNC</code> aggregation, concurrent access, connection pooling</td>
 </tr>
 <tr>
-<td>6–12 hours</td>
-<td>&gt; 40%</td>
-<td><strong>MONITOR</strong> (Keep watching)</td>
+<td>May 2026</td>
+<td><strong>v3.0 Optimizations</strong></td>
+<td>Added <code>ThreadedConnectionPool</code> (1–20), <code>PoolConnectionWrapper</code>, descending timestamp indexes, <code>make_interval(hours =&gt; %s)</code> SQL parameter fix</td>
 </tr>
 </tbody>
 </table>
-<hr />
-<h2>Part 5: Agronomic Personalisation</h2>
-<p>P-WOS is "Crop-Aware". Every decision is scaled by the active crop profile and region.</p>
-<h3>5.1 The 5 Pre-defined Crops</h3>
-<table>
-<thead>
-<tr>
-<th>Crop</th>
-<th>Critical</th>
-<th>Low</th>
-<th>Proactive</th>
-<th>Target</th>
-<th>Multiplier</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Maize</strong></td>
-<td>30%</td>
-<td>45%</td>
-<td>55%</td>
-<td>60%</td>
-<td>1.0x</td>
-</tr>
-<tr>
-<td><strong>Potato</strong></td>
-<td>45%</td>
-<td>55%</td>
-<td>65%</td>
-<td>70%</td>
-<td>1.4x</td>
-</tr>
-<tr>
-<td><strong>Tomato</strong></td>
-<td>35%</td>
-<td>48%</td>
-<td>58%</td>
-<td>62%</td>
-<td>1.2x</td>
-</tr>
-<tr>
-<td><strong>Onion</strong></td>
-<td>40%</td>
-<td>52%</td>
-<td>60%</td>
-<td>65%</td>
-<td>0.8x</td>
-</tr>
-<tr>
-<td><strong>Sorghum</strong></td>
-<td>20%</td>
-<td>30%</td>
-<td>40%</td>
-<td>50%</td>
-<td>0.6x</td>
-</tr>
-</tbody>
-</table>
-<h3>5.2 Seasonal &amp; Regional Logic</h3>
-<ul>
-<li><strong>Regional Evap Multiplier:</strong> Scaled by agro-ecological zone (e.g., Matabeleland = 1.5x evaporation pressure).</li>
-<li><strong>Seasonal Threshold Shift:</strong> <ul>
-<li><strong>Summer (Nov–Mar):</strong> Thresholds shifted <strong>+5%</strong> (higher moisture required for heat).</li>
-<li><strong>Winter (May–Sep):</strong> Thresholds shifted <strong>-5%</strong> (lower moisture required for cooler periods).</li>
-</ul>
-</li>
-</ul>
-<hr />
-<h2>Part 6: Dataflows &amp; Frontend Analytics</h2>
-<h3>6.1 The MQTT Pipeline</h3>
-<pre><code>[ESP32] --(pwos/sensor/data)--&gt; [MQTT Broker] --(Subscription)--&gt; [Backend API] --(Insert)--&gt; [Postgres]
-</code></pre>
-<h3>6.2 Frontend Formulas</h3>
-<ul>
-<li><strong>Gap-Filling:</strong> The analytics dashboard uses a "Snap-to-Boundary" algorithm to floor timestamps to 5-minute intervals, inserting <code>null</code> for missing buckets to represent sensor outages honestly.</li>
-<li><strong>Water Savings Calculation:</strong><ul>
-<li><code>Saved (L) = TotalStandardUsage (Reactive) - TotalAIUsage (P-WOS)</code></li>
-<li><code>Efficiency (%) = (1 - TotalAI / TotalStandard) * 100</code></li>
-</ul>
-</li>
-</ul>
-<hr />
-<p><em>P-WOS v3.0 | Comprehensive Technical Manual</em></p>
                             </div>
                         </article>
 
                         <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
-                            <a href="./getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                            <a href="../../getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
                                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
                                 <span>Back to Index</span>
                             </a>
@@ -479,7 +767,7 @@ DecayRate = base_decay * temp_factor * vpd_factor * time_factor
                             <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
                         </div>
                         <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
-                            <a href="./getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                            <a href="../../getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
                                 <i data-lucide="home" class="w-3.5 h-3.5"></i>
                                 <span>Back to Home</span>
                             </a>
@@ -541,7 +829,7 @@ DecayRate = base_decay * temp_factor * vpd_factor * time_factor
                     '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
                         '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
                             group.pages.map(function(page) {
-                                return '<li><a href="./' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                                return '<li><a href="../../' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
                             }).join('') +
                         '</ul>' +
                     '</div>' +

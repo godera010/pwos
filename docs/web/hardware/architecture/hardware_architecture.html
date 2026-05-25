@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-WOS Master System Manual - P-WOS Documentation Portal</title>
+    <title>P-WOS Hardware & Cloud Architecture - P-WOS Documentation Portal</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,7 +39,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="./search_index.js"></script>
+    <script src="../../search_index.js"></script>
 
     <style>
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -104,7 +104,7 @@
                 <i data-lucide="printer" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Export PDF</span>
             </button>
-            <a href="./getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+            <a href="../../getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
                 <i data-lucide="home" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Home</span>
             </a>
@@ -144,7 +144,7 @@
                         <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
                             <span id="breadcrumbCategory">Documentation</span>
                             <i data-lucide="chevron-right" class="w-3 h-3"></i>
-                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">MASTER_SYSTEM_MANUAL.md</span>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">hardware_architecture.md</span>
                         </div>
 
                         <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
@@ -162,309 +162,223 @@
                                 prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
                                 prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
                                 prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
-<h1>P-WOS Master System Manual</h1>
-<h2>The Definitive Technical Encyclopedia for the Predictive Water Optimization System</h2>
-<blockquote>
-<p><strong>System Version:</strong> v3.0<br />
-<strong>Status:</strong> Production Reference<br />
-<strong>Scope:</strong> Full-stack technical architecture, from soil sensors and atmospheric physics to machine learning inference and frontend analytics.</p>
-</blockquote>
+<h1>P-WOS Hardware &amp; Cloud Architecture</h1>
+<h2>Overview</h2>
+<p>This document defines how the physical ESP32 hardware communicates with the backend, replacing the current local simulation.</p>
 <hr />
-<h2>Part 1: Data Engineering &amp; Datasets</h2>
-<p>The foundation of P-WOS is a high-density, multi-featured dataset that captures the complex relationship between soil moisture, atmospheric demand (VPD), and crop physiology.</p>
-<h3>1.1 The Primary Training Dataset (<code>training_data.csv</code>)</h3>
-<ul>
-<li><strong>Size:</strong> 10,889 samples (rows)</li>
-<li><strong>Features:</strong> 11 input features + 1 target label</li>
-<li><strong>Sampling Frequency:</strong> 5-second control cycles (simulated and real-world aggregated)</li>
-</ul>
-<h4>Dataset Schema</h4>
-<table>
-<thead>
-<tr>
-<th>Column</th>
-<th>Type</th>
-<th>Description</th>
-<th>Role in System</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>soil_moisture</code></td>
-<td><code>float</code></td>
-<td>Volumetric soil moisture percentage (0–100%)</td>
-<td>Primary drought signal</td>
-</tr>
-<tr>
-<td><code>temperature</code></td>
-<td><code>float</code></td>
-<td>Ambient air temperature (°C)</td>
-<td>Direct evaporation driver</td>
-</tr>
-<tr>
-<td><code>humidity</code></td>
-<td><code>float</code></td>
-<td>Relative humidity percentage (0–100%)</td>
-<td>VPD component</td>
-</tr>
-<tr>
-<td><code>forecast_minutes</code></td>
-<td><code>int</code></td>
-<td>Minutes until the next predicted rain event</td>
-<td>Suppress unnecessary watering</td>
-</tr>
-<tr>
-<td><code>hour</code></td>
-<td><code>int</code></td>
-<td>Current hour of the day (0–23)</td>
-<td>Encodes daily evapotranspiration cycle</td>
-</tr>
-<tr>
-<td><code>day_of_week</code></td>
-<td><code>int</code></td>
-<td>Day index (0=Monday, 6=Sunday)</td>
-<td>Captures weekly patterns</td>
-</tr>
-<tr>
-<td><code>is_daytime</code></td>
-<td><code>binary</code></td>
-<td>1 if 6:00 &lt; hour &lt; 18:00</td>
-<td>Broad solar radiation proxy</td>
-</tr>
-<tr>
-<td><code>is_hot_hours</code></td>
-<td><code>binary</code></td>
-<td>1 if 10:00 &lt; hour &lt; 16:00</td>
-<td>Peak VPD window / Stall window</td>
-</tr>
-<tr>
-<td><code>moisture_change_rate</code></td>
-<td><code>float</code></td>
-<td>Rate of moisture change per 5-second interval</td>
-<td>Detects rapid drainage/drying trends</td>
-</tr>
-<tr>
-<td><code>moisture_rolling_6</code></td>
-<td><code>float</code></td>
-<td>30-second rolling average of soil moisture</td>
-<td>Smooths sensor noise &amp; confirms trends</td>
-</tr>
-<tr>
-<td><code>temp_rolling_6</code></td>
-<td><code>float</code></td>
-<td>30-second rolling average of temperature</td>
-<td>Tracks sustained thermal stress</td>
-</tr>
-<tr>
-<td><strong><code>needs_watering_soon</code></strong></td>
-<td><code>binary</code></td>
-<td><strong>Target Label:</strong> 1 if irrigation is required</td>
-<td>The model's prediction goal</td>
-</tr>
-</tbody>
-</table>
-<h3>1.2 Feature Generation (The Rolling Engine)</h3>
-<p>P-WOS does not rely solely on "static" snapshots. The <code>data_collector.py</code> and <code>ml_predictor.py</code> use a 6-sample sliding window to generate temporal features:</p>
-<pre><code class="language-python"># Feature Engineering Logic
-moisture_change_rate = (current_moisture - previous_moisture) / time_delta
-moisture_rolling_6 = sum(last_6_readings) / 6
-</code></pre>
-<hr />
-<h2>Part 2: The ML Training Pipeline</h2>
-<p>P-WOS utilizes a "Forest of Decision Trees" to map 11 atmospheric and soil features to a binary watering decision.</p>
-<h3>2.1 Model Architecture: Random Forest</h3>
-<ul>
-<li><strong>Estimators (Trees):</strong> 100</li>
-<li><strong>Max Depth:</strong> 10 (tuned to prevent overfitting to noise while capturing non-linear interactions)</li>
-<li><strong>Engine:</strong> <code>RandomForestClassifier</code> (Scikit-Learn)</li>
-</ul>
-<h3>2.2 Performance Metrics (v3.0 Benchmark)</h3>
-<p>The model is evaluated using the F1-Score to ensure performance is maintained even with imbalanced datasets (more "Wait" than "Water" events).</p>
-<table>
-<thead>
-<tr>
-<th>Metric</th>
-<th>Score</th>
-<th>Interpretation</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Accuracy</strong></td>
-<td>83.43%</td>
-<td>Overall correct predictions</td>
-</tr>
-<tr>
-<td><strong>Precision</strong></td>
-<td>96%</td>
-<td>When the model says "Water", it is almost always correct</td>
-</tr>
-<tr>
-<td><strong>Recall</strong></td>
-<td>72%</td>
-<td>The model captures 72% of all actual watering needs</td>
-</tr>
-<tr>
-<td><strong>F1-Score</strong></td>
-<td>82%</td>
-<td>Excellent balance for agricultural decision-making</td>
-</tr>
-</tbody>
-</table>
-<h3>2.3 Training Workflow (<code>train_model.py</code>)</h3>
-<ol>
-<li><strong>Load Data:</strong> Imports <code>training_data.csv</code>.</li>
-<li><strong>Pre-processing:</strong> Feature scaling (StandardScaler) is applied to ensure temperature (°C) and moisture (%) are weighted fairly.</li>
-<li><strong>Train/Test Split:</strong> 80/20 random split.</li>
-<li><strong>Serialization:</strong> Model saved as <code>rf_model.pkl</code>, metadata as <code>model_metadata.json</code>.</li>
-</ol>
-<hr />
-<h2>Part 3: Environmental Physics (VPD &amp; Weather)</h2>
-<p>The "Brain" is supplemented by the "Physics Engine" which applies raw meteorological formulas to refine ML outputs.</p>
-<h3>3.1 VPD (Vapor Pressure Deficit) - The Tetens Formula</h3>
-<p>VPD represents the "thirst" of the air. P-WOS implements the <strong>Tetens approximation</strong> (<code>vpd_calculator.py</code>):</p>
-<pre><code class="language-python"># The Physics of Evaporation
-svp = 0.61078 * exp((17.27 * T) / (T + 237.3))  # Saturation Vapor Pressure
-avp = svp * (RH / 100.0)                        # Actual Vapor Pressure
-VPD = svp - avp                                 # The Deficit (kPa)
-</code></pre>
-<h3>3.2 The Moisture Decay Rate Engine</h3>
-<p>When sensors are idle, the system predicts moisture loss using the following derived formula (<code>ml_predictor.py</code>):</p>
-<pre><code class="language-python"># Moisture Decay Rate (% / hour)
-temp_factor = 1 + (temp - 25) * 0.08 if temp &gt; 25 else 0.7
-vpd_factor = 1 + (vpd * 0.4)
-time_factor = 1.5 if 10 &lt;= hour &lt;= 16 else 1.0 (Day) or 0.3 (Night)
+<h2>Architecture Diagram</h2>
+<h3>Phase 1: LAN (Local Network)</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                       LAN ARCHITECTURE                              │
+└─────────────────────────────────────────────────────────────────────┘
 
-DecayRate = base_decay * temp_factor * vpd_factor * time_factor
+                           ┌─────────────────┐
+    ┌─────────────┐  WiFi  │   Mosquitto     │
+    │   ESP32     │───────▶│   (localhost)    │
+    │   + DHT22   │  MQTT  │   Port 1883     │
+    │   + Soil    │        └────────┬────────┘
+    │   + Relay   │                 │
+    └─────────────┘                 │ Sub: pwos/sensor/data
+                                    │ Pub: pwos/control/pump
+                                    ▼
+                           ┌─────────────────┐
+                           │   Flask API     │
+                           │   (localhost)   │◀──── OpenWeatherMap API
+                           │   :5000         │
+                           └────────┬────────┘
+                                    │
+                           ┌────────▼────────┐
+                           │   PostgreSQL    │
+                           │   (localhost)   │
+                           └────────┬────────┘
+                                    │
+                           ┌────────▼────────┐
+                           │   React App     │
+                           │   (localhost)   │
+                           │   :5173         │
+                           └─────────────────┘
+</code></pre>
+<h3>Phase 2: Cloud (Production)</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                    PRODUCTION ARCHITECTURE                           │
+└─────────────────────────────────────────────────────────────────────┘
+
+                           ┌─────────────────┐
+    ┌─────────────┐  WiFi  │   HiveMQ Cloud  │
+    │   ESP32     │───────▶│   (MQTT Broker) │
+    │   + DHT22   │  TLS   │   Port 8883     │
+    │   + Soil    │        └────────┬────────┘
+    │   + Relay   │                 │
+    └─────────────┘                 │ Sub: pwos/sensor/data
+                                    │ Pub: pwos/control/pump
+                                    ▼
+                           ┌─────────────────┐
+                           │   Flask API     │
+                           │   (Railway)     │◀──── OpenWeatherMap API
+                           │   /api/*        │
+                           └────────┬────────┘
+                                    │
+                           ┌────────▼────────┐
+                           │   PostgreSQL    │
+                           │   (Railway)     │
+                           └────────┬────────┘
+                                    │
+                           ┌────────▼────────┐
+                           │   React App     │
+                           │   (Vercel)      │
+                           └─────────────────┘
 </code></pre>
 <hr />
-<h2>Part 4: The Autonomous Decision Engine</h2>
-<p>The "Automation Controller" (<code>automation_controller.py</code>) is the executive function that manages the 5-second control loop.</p>
-<h3>4.1 The 5-Second Cycle (Priority List)</h3>
-<p>Every 5 seconds, the controller evaluates these steps in strict priority order:</p>
-<ol>
-<li><strong>Safety Interlock (Saturation):</strong> If Moisture &gt; 85%, kill pump immediately (STOP).</li>
-<li><strong>Safety Interlock (Critical):</strong> If Moisture &lt; <code>crop_critical_moisture</code>, force pump ON (NOW) overriding all modes.</li>
-<li><strong>Rain Confidence:</strong> If rain is expected in &lt; 2 hours, STALL irrigation.</li>
-<li><strong>False Dry Detection:</strong> If Wind &gt; 20 km/h and Humidity &lt; 40%, flag "False Dry" and MONITOR instead of watering.</li>
-<li><strong>VPD Stall:</strong> If VPD &gt; 3.0 kPa (Extreme Dry), STALL irrigation until evening to prevent evaporative loss.</li>
-<li><strong>ML Inference:</strong> If all above pass, execute the ML Model's prediction (NOW/MONITOR).</li>
-</ol>
-<h3>4.2 Rain Confidence Tiers</h3>
+<h2>Components</h2>
+<h3>1. ESP32 Hardware</h3>
+<p><strong>Role:</strong> Field sensor node
+<strong>Firmware:</strong> C++ (Arduino Framework)</p>
+<p><strong>Sensors:</strong>
+- DHT22 (Temperature + Humidity) → GPIO 25
+- Capacitive Soil Moisture Sensor → GPIO 34 (ADC)
+- Relay Module (Pump Control) → GPIO 26</p>
+<p><strong>Libraries:</strong>
+- <code>WiFi.h</code> (built-in)
+- <code>PubSubClient</code> (MQTT)
+- <code>DHT</code> (Adafruit)
+- <code>ArduinoJson</code> (JSON serialization)</p>
+<p><strong>Communication:</strong></p>
+<pre><code class="language-cpp">#include &lt;WiFi.h&gt;
+#include &lt;PubSubClient.h&gt;
+#include &lt;ArduinoJson.h&gt;
+
+// Publish sensor data
+StaticJsonDocument&lt;384&gt; doc;
+doc[&quot;device_id&quot;]    = &quot;ESP32_PWOS_001&quot;;
+doc[&quot;soil_moisture&quot;] = readSoilMoisture();
+doc[&quot;temperature&quot;]   = dht.readTemperature();
+doc[&quot;humidity&quot;]      = dht.readHumidity();
+doc[&quot;pump_active&quot;]   = pumpActive;
+
+char payload[384];
+serializeJson(doc, payload);
+mqttClient.publish(&quot;pwos/sensor/data&quot;, payload);
+</code></pre>
+<hr />
+<h3>2. MQTT Broker</h3>
+<p><strong>Phase 1 — LAN:</strong> Local Mosquitto on <code>localhost:1883</code> (no TLS, no auth)</p>
+<p><strong>Phase 2 — Cloud:</strong> HiveMQ Cloud
+- Free tier: 100 connections, 10GB/month
+- TLS encryption, username/password auth</p>
+<p><strong>Setup:</strong>
+1. Create account at <a href="https://www.hivemq.com/cloud/">hivemq.com/cloud</a>
+2. Create cluster → Get credentials
+3. Store in <code>.env</code>:
+   <code>MQTT_MODE=cloud
+   MQTT_CLOUD_BROKER=your-cluster.hivemq.cloud
+   MQTT_CLOUD_PORT=8883
+   MQTT_CLOUD_USER=your-username
+   MQTT_CLOUD_PASS=your-password</code></p>
+<hr />
+<h3>3. Flask API</h3>
+<p><strong>Backend changes:</strong> None required.</p>
+<p>The backend subscribes to <code>pwos/sensor/data</code> via MQTT. It doesn't care if data comes from <code>esp32_simulator.py</code> or a real ESP32 — the JSON format is identical.</p>
+<p><strong>Configuration:</strong> Set <code>DATA_SOURCE_MODE=hardware</code> in <code>.env</code></p>
+<hr />
+<h3>4. Weather API Integration</h3>
+<p><strong>Provider:</strong> OpenWeatherMap (Free: 1000 calls/day)</p>
+<p>Already implemented in <code>src/backend/weather_api.py</code>. In hardware mode, weather data comes from the API (not the weather simulator).</p>
+<hr />
+<h2>Implementation Phases</h2>
+<h3>Phase 1: LAN (Build &amp; Test Locally)</h3>
+<ul>
+<li>[x] Create C++ Arduino firmware (<code>src/firmware/pwos_esp32/</code>)</li>
+<li>[x] Create config.h.example with pin/credential templates</li>
+<li>[x] Create serial bridge for USB fallback</li>
+<li>[x] Create hardware manager with mode selection</li>
+<li>[x] Update config.py with DATA_SOURCE_MODE</li>
+<li>[ ] Flash firmware to ESP32</li>
+<li>[ ] Calibrate sensors</li>
+<li>[ ] Test end-to-end on LAN</li>
+</ul>
+<h3>Phase 2: Cloud (Go Online)</h3>
+<ul>
+<li>[ ] Add TLS support to firmware (WiFiClientSecure)</li>
+<li>[ ] Deploy Flask to Railway</li>
+<li>[ ] Deploy React to Vercel</li>
+<li>[ ] Test end-to-end over internet</li>
+</ul>
+<hr />
+<h2>Security Considerations</h2>
 <table>
 <thead>
 <tr>
-<th>Time to Rain</th>
-<th>Moisture State</th>
-<th>Action</th>
+<th>Layer</th>
+<th>Protection</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>&lt; 2 hours</td>
-<td>Any</td>
-<td><strong>STALL</strong> (Rain imminent)</td>
+<td>MQTT (LAN)</td>
+<td>Firewall, local network only</td>
 </tr>
 <tr>
-<td>2–6 hours</td>
-<td>&gt; 25%</td>
-<td><strong>STALL</strong> (Wait for rain)</td>
+<td>MQTT (Cloud)</td>
+<td>TLS 1.3, username/password auth</td>
 </tr>
 <tr>
-<td>6–12 hours</td>
-<td>&gt; 40%</td>
-<td><strong>MONITOR</strong> (Keep watching)</td>
+<td>API</td>
+<td>HTTPS only, CORS whitelist</td>
+</tr>
+<tr>
+<td>DB</td>
+<td>Connection string in environment variables</td>
+</tr>
+<tr>
+<td>Secrets</td>
+<td><code>.env</code> and <code>config.h</code> gitignored</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2>Part 5: Agronomic Personalisation</h2>
-<p>P-WOS is "Crop-Aware". Every decision is scaled by the active crop profile and region.</p>
-<h3>5.1 The 5 Pre-defined Crops</h3>
+<h2>Cost Estimate (Free Tier)</h2>
 <table>
 <thead>
 <tr>
-<th>Crop</th>
-<th>Critical</th>
-<th>Low</th>
-<th>Proactive</th>
-<th>Target</th>
-<th>Multiplier</th>
+<th>Service</th>
+<th>Free Tier</th>
+<th>Limit</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Maize</strong></td>
-<td>30%</td>
-<td>45%</td>
-<td>55%</td>
-<td>60%</td>
-<td>1.0x</td>
+<td>HiveMQ Cloud</td>
+<td>✅</td>
+<td>100 connections</td>
 </tr>
 <tr>
-<td><strong>Potato</strong></td>
-<td>45%</td>
-<td>55%</td>
-<td>65%</td>
-<td>70%</td>
-<td>1.4x</td>
+<td>Railway</td>
+<td>✅</td>
+<td>$5 credit/month</td>
 </tr>
 <tr>
-<td><strong>Tomato</strong></td>
-<td>35%</td>
-<td>48%</td>
-<td>58%</td>
-<td>62%</td>
-<td>1.2x</td>
+<td>OpenWeatherMap</td>
+<td>✅</td>
+<td>1000 calls/day</td>
 </tr>
 <tr>
-<td><strong>Onion</strong></td>
-<td>40%</td>
-<td>52%</td>
-<td>60%</td>
-<td>65%</td>
-<td>0.8x</td>
+<td>Vercel</td>
+<td>✅</td>
+<td>Unlimited static</td>
 </tr>
 <tr>
-<td><strong>Sorghum</strong></td>
-<td>20%</td>
-<td>30%</td>
-<td>40%</td>
-<td>50%</td>
-<td>0.6x</td>
+<td>PostgreSQL (Railway)</td>
+<td>✅</td>
+<td>1GB included</td>
 </tr>
 </tbody>
 </table>
-<h3>5.2 Seasonal &amp; Regional Logic</h3>
-<ul>
-<li><strong>Regional Evap Multiplier:</strong> Scaled by agro-ecological zone (e.g., Matabeleland = 1.5x evaporation pressure).</li>
-<li><strong>Seasonal Threshold Shift:</strong> <ul>
-<li><strong>Summer (Nov–Mar):</strong> Thresholds shifted <strong>+5%</strong> (higher moisture required for heat).</li>
-<li><strong>Winter (May–Sep):</strong> Thresholds shifted <strong>-5%</strong> (lower moisture required for cooler periods).</li>
-</ul>
-</li>
-</ul>
-<hr />
-<h2>Part 6: Dataflows &amp; Frontend Analytics</h2>
-<h3>6.1 The MQTT Pipeline</h3>
-<pre><code>[ESP32] --(pwos/sensor/data)--&gt; [MQTT Broker] --(Subscription)--&gt; [Backend API] --(Insert)--&gt; [Postgres]
-</code></pre>
-<h3>6.2 Frontend Formulas</h3>
-<ul>
-<li><strong>Gap-Filling:</strong> The analytics dashboard uses a "Snap-to-Boundary" algorithm to floor timestamps to 5-minute intervals, inserting <code>null</code> for missing buckets to represent sensor outages honestly.</li>
-<li><strong>Water Savings Calculation:</strong><ul>
-<li><code>Saved (L) = TotalStandardUsage (Reactive) - TotalAIUsage (P-WOS)</code></li>
-<li><code>Efficiency (%) = (1 - TotalAI / TotalStandard) * 100</code></li>
-</ul>
-</li>
-</ul>
-<hr />
-<p><em>P-WOS v3.0 | Comprehensive Technical Manual</em></p>
+<p><strong>Total Monthly Cost: $0</strong> (within free tiers)</p>
                             </div>
                         </article>
 
                         <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
-                            <a href="./getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                            <a href="../../getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
                                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
                                 <span>Back to Index</span>
                             </a>
@@ -479,7 +393,7 @@ DecayRate = base_decay * temp_factor * vpd_factor * time_factor
                             <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
                         </div>
                         <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
-                            <a href="./getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                            <a href="../../getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
                                 <i data-lucide="home" class="w-3.5 h-3.5"></i>
                                 <span>Back to Home</span>
                             </a>
@@ -541,7 +455,7 @@ DecayRate = base_decay * temp_factor * vpd_factor * time_factor
                     '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
                         '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
                             group.pages.map(function(page) {
-                                return '<li><a href="./' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                                return '<li><a href="../../' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
                             }).join('') +
                         '</ul>' +
                     '</div>' +

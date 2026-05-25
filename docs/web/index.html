@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-WOS Documentation Portal</title>
+    <title>P-WOS Documentation - P-WOS Documentation Portal</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,15 +33,34 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./search_index.js"></script>
 
     <style>
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         .theme-light ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
         .theme-dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .prose table { width: 100%; margin: 1.5rem 0; border-collapse: collapse; font-size: 0.875rem; }
+        .prose th { background-color: rgba(0,0,0,0.02); font-weight: 600; padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); text-align: left; }
+        .dark .prose th { background-color: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); }
+        .prose td { padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); }
+        .dark .prose td { border-color: rgba(255,255,255,0.08); }
+        .prose blockquote { border-left: 3px solid #16a34a; padding-left: 1rem; font-style: italic; color: #4b5563; }
+        .dark .prose blockquote { color: #9ca3af; }
+        .prose img { border-radius: 8px; margin: 1.5rem auto; max-width: 100%; }
+        .prose pre { border-radius: 10px; background: #f8fafc !important; border: 1px solid #e2e8f0; }
+        .dark .prose pre { background: #0f171a !important; border-color: #1e2a2e; }
+
         .theme-dark { background-color: #0b0f11; color: #f1f5f9; }
         .theme-dark .sidebar-bg { background-color: #101618; border-color: #1a2225; }
+        .theme-dark .content-card { background-color: #12191b; border-color: #1c272a; }
 
         .sidebar-group-enter { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-in-out; }
         .sidebar-group-enter.active { max-height: 500px; }
@@ -68,24 +87,32 @@
                 </div>
             </div>
         </div>
+        <div class="hidden md:block flex-1 max-w-md mx-4">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                </span>
+                <input type="text" id="docSearch" placeholder="Search documentation..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+            </div>
+        </div>
         <div class="flex items-center space-x-2">
             <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300" title="Toggle Light/Dark Mode">
                 <i data-lucide="sun" id="themeIcon" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Theme</span>
             </button>
+            <button onclick="window.print()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Print to PDF">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Export PDF</span>
+            </button>
+            <a href="./getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Home</span>
+            </a>
         </div>
     </header>
 
     <div class="flex flex-1 overflow-hidden">
         <aside id="navSidebar" class="w-64 border-r border-slate-200 dark:border-slate-800/80 overflow-y-auto shrink-0 bg-white dark:bg-[#101618] hidden lg:block z-30">
-            <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                        <i data-lucide="search" class="w-4 h-4"></i>
-                    </span>
-                    <input type="text" id="docSearch" placeholder="Search documentation..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
-                </div>
-            </div>
             <div class="p-3 space-y-1" id="sidebarGroups"></div>
         </aside>
 
@@ -111,256 +138,145 @@
         </aside>
 
         <main class="flex-1 overflow-y-auto min-w-0">
-            <div class="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-10">
-
-                <!-- Hero -->
-                <div class="mb-10">
-                    <div class="flex items-center gap-4 mb-3">
-                        <div class="p-2.5 bg-gradient-to-tr from-emerald-500 to-green-600 rounded-xl text-white shadow-lg">
-                            <i data-lucide="droplet" class="w-7 h-7"></i>
+            <div class="px-4 md:px-8 py-6 md:py-10">
+                <div class="flex gap-6 lg:gap-10">
+                    <div class="flex-1 min-w-0 max-w-4xl">
+                        <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                            <span id="breadcrumbCategory">Home</span>
+                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">index.html</span>
                         </div>
-                        <div>
-                            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">P-WOS</h1>
-                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium tracking-wide">Predictive Water Optimization System</p>
+
+                        <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
+                            <div class="absolute top-6 right-6 flex items-center space-x-2 print:hidden">
+                                <button id="copyDocBtn" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Copy content">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <div id="markdownOutput" class="prose max-w-none dark:prose-invert
+                                prose-headings:font-bold prose-headings:tracking-tight
+                                prose-h1:text-3xl prose-h1:mb-6 prose-h1:text-slate-900 dark:prose-h1:text-white
+                                prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:text-slate-900 dark:prose-h2:text-white
+                                prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-slate-800 dark:prose-h3:text-slate-200
+                                prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
+                                prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                                prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
+<h1>📚 P-WOS Documentation Index</h1>
+<p>Welcome to the documentation for the <strong>Predictive Watering Optimization System (P-WOS)</strong>. This system is a smart irrigation platform that combines IoT soil sensors, real-time meteorological weather forecasts, and a Machine Learning decision engine to save water while maintaining optimal plant health.</p>
+<hr />
+<h2>🚀 Getting Started</h2>
+<p>If you are new to the P-WOS system, start by reading these introductory guides:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Guide</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">🏠 <strong><a href="getting_started/01_project_overview.html">Project Overview</a></strong></td>
+<td style="text-align: left;">Learn about the thesis background, hypothesis, and validated results.</td>
+</tr>
+<tr>
+<td style="text-align: left;">🌱 <strong><a href="getting_started/02_about.html">About P-WOS</a></strong></td>
+<td style="text-align: left;">A conceptual introduction to predictive watering vs. traditional timers.</td>
+</tr>
+<tr>
+<td style="text-align: left;">✨ <strong><a href="getting_started/03_features.html">Core Features</a></strong></td>
+<td style="text-align: left;">Explore the smart capabilities of P-WOS, from crop profiles to regional zones.</td>
+</tr>
+<tr>
+<td style="text-align: left;">🗺️ <strong><a href="getting_started/04_roadmap.html">Development Roadmap</a></strong></td>
+<td style="text-align: left;">High-level milestones and project progress.</td>
+</tr>
+<tr>
+<td style="text-align: left;">📂 <strong><a href="getting_started/05_structure.html">System Structure</a></strong></td>
+<td style="text-align: left;">High-level layout of the directories and tech stack.</td>
+</tr>
+<tr>
+<td style="text-align: left;">🧠 <strong><a href="getting_started/06_summary.html">Core Logic Summary</a></strong></td>
+<td style="text-align: left;">A plain-English summary of the ML brain, physics engine, and priorities.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⚙️ <strong><a href="getting_started/07_architecture.html">System Overview &amp; Autopilot</a></strong></td>
+<td style="text-align: left;">How the autopilot makes decisions every 5 seconds.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>[!TIP]
+Ready to run the code? Head straight to the <strong><a href="core_guides/setup/QUICKSTART.html">Quick Start Guide</a></strong> to launch the simulation or hardware in under 5 minutes.</p>
+</blockquote>
+<hr />
+<h2>🛠️ How-To Guides</h2>
+<p>Technical guides for configuring, deploying, and operating each part of the system:</p>
+<ul>
+<li><strong>Setup &amp; Operations:</strong></li>
+<li><a href="core_guides/setup/installation_guide.html">Installation Guide</a> — Detailed steps to configure PostgreSQL, Mosquitto MQTT, Python, and Node.js.</li>
+<li><a href="core_guides/operations/troubleshooting.html">Troubleshooting Handbook</a> — Common issues and fixes.</li>
+<li><a href="core_guides/operations/tests.html">Test Suite Reference</a> — Overview of the 116 passing unit, integration, and scenario tests.</li>
+<li><strong>Core Components:</strong></li>
+<li><a href="core_guides/technical/database_guide.html">Database Guide</a> — Database design, connection pooling, and indexing strategies.</li>
+<li><a href="core_guides/technical/backend_guide.html">Backend API Guide</a> — Flask architecture, MQTT pipelines, and caching.</li>
+<li><a href="ml/ml_model_guide.html">ML Model Guide</a> — Training pipelines, feature lists, and retraining schedules.</li>
+<li><a href="core_guides/ui/main_dashboard.html">Main Dashboard UI</a> — Premium React dashboard and XAI diagnostics.</li>
+<li><a href="core_guides/ui/mobile_guide.html">Mobile App Guide</a> — React Native Expo mobile interface.</li>
+<li><a href="simulation/simulation_guide.html">Simulator Guide</a> — Virtual plant physics, moisture decay, and weather generation.</li>
+</ul>
+<hr />
+<h2>🧠 System Inner Workings</h2>
+<p>For a deeper understanding of the autonomous logic and mathematical models behind P-WOS, read these system design documents:</p>
+<ul>
+<li><a href="system_architecture/crop_profiles.html">Agro-Ecological Crop Profiles</a> — Moisture thresholds, root profiles, and evaporation multipliers for all 5 crops.</li>
+<li><a href="system_architecture/vpd_and_weather_engine.html">VPD &amp; Weather Engine</a> — The physics of Vapor Pressure Deficit and soil moisture decay.</li>
+<li><a href="ml/ml_model_deep_dive.html">ML Predictor Deep Dive</a> — How the Random Forest model is structured and evaluated.</li>
+<li><a href="system_architecture/dataflow.html">Dataflow &amp; Message Pipelines</a> — MQTT topics, JSON payloads, and PostgreSQL interaction paths.</li>
+<li><a href="system_architecture/analytics_reference.html">Dashboard Analytics Guide</a> — KPI calculations, gap-aware data aggregation, and charts.</li>
+<li><a href="system_architecture/edge_cases_and_scenarios.html">Autopilot Scenarios &amp; Edge Cases</a> — Trace logs for 15 extreme watering and weather scenarios.</li>
+</ul>
+<hr />
+<h2>📁 Reference &amp; Reports</h2>
+<ul>
+<li><a href="technical_reference/specs/api_reference.html">API Reference Specs</a> — Complete REST endpoint documentation.</li>
+<li><a href="technical_reference/specs/mqtt_topics.html">MQTT Topics Catalogue</a> — Message broker topic schemas and QoS configurations.</li>
+<li><a href="technical_reference/guidelines/coding_guidelines.html">Coding Guidelines</a> — Code standards and conventions.</li>
+<li><a href="reports_and_validation/analysis/validation_report.html">Hypothesis Validation Report</a> — A/B simulation methodology and water savings proofs.</li>
+<li><a href="reports_and_validation/analysis/final_report.html">Final Thesis Report</a> — Complete academic thesis document.</li>
+</ul>
+                            </div>
+                        </article>
+
+                        <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
+                            <a href="./getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Back to Index</span>
+                            </a>
                         </div>
                     </div>
-                    <p class="text-base text-slate-700 dark:text-slate-300 leading-relaxed max-w-3xl">
-                        An ML-driven smart irrigation framework that uses real-time sensor telemetry and crop-aware random forest models to forecast water needs, reducing consumption by <strong class="text-emerald-600 dark:text-emerald-400">&ge;15%</strong> compared to traditional reactive threshold systems.
-                    </p>
+
+                    <aside class="hidden lg:block w-56 shrink-0 border-l border-slate-200 dark:border-slate-800/80 pl-6">
+                        <div class="sticky top-0">
+                            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5 mb-4">
+                                <i data-lucide="list-ordered" class="w-3.5 h-3.5 text-emerald-500"></i> On This Page
+                            </h4>
+                            <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                            <a href="./getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                                <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                                <span>Back to Home</span>
+                            </a>
+                        </div>
+                    </aside>
                 </div>
-
-                <!-- Stats Strip -->
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-10">
-                    <div class="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-center">
-                        <div class="text-lg font-bold text-emerald-600 dark:text-emerald-400">16.7%</div>
-                        <div class="text-[10px] text-slate-500 dark:text-slate-400">Water Saved</div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-center">
-                        <div class="text-lg font-bold text-emerald-600 dark:text-emerald-400">93%</div>
-                        <div class="text-[10px] text-slate-500 dark:text-slate-400">ML Accuracy</div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-center">
-                        <div class="text-lg font-bold text-emerald-600 dark:text-emerald-400">0.82</div>
-                        <div class="text-[10px] text-slate-500 dark:text-slate-400">F1 Score</div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-center">
-                        <div class="text-lg font-bold text-emerald-600 dark:text-emerald-400">5</div>
-                        <div class="text-[10px] text-slate-500 dark:text-slate-400">Crop Profiles</div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-center">
-                        <div class="text-lg font-bold text-emerald-600 dark:text-emerald-400">52</div>
-                        <div class="text-[10px] text-slate-500 dark:text-slate-400">Doc Pages</div>
-                    </div>
-                </div>
-
-                <!-- System Architecture Summary -->
-                <section class="mb-10">
-                    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
-                        <i data-lucide="cpu" class="w-5 h-5 text-emerald-500"></i> System Architecture
-                    </h2>
-                    <div class="bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
-                        <div class="grid md:grid-cols-3 gap-4 text-sm">
-                            <div>
-                                <h3 class="font-semibold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5"><i data-lucide="zap" class="w-4 h-4 text-emerald-500"></i> Edge Layer</h3>
-                                <ul class="space-y-1 text-slate-600 dark:text-slate-400">
-                                    <li>ESP32-WROOM-32 microcontrollers</li>
-                                    <li>Capacitive soil moisture sensors</li>
-                                    <li>DHT22 temperature/humidity</li>
-                                    <li>MQTT telemetry publishing</li>
-                                </ul>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5"><i data-lucide="cloud" class="w-4 h-4 text-emerald-500"></i> Inference Layer</h3>
-                                <ul class="space-y-1 text-slate-600 dark:text-slate-400">
-                                    <li>Flask REST API (Python)</li>
-                                    <li>Random Forest classifier</li>
-                                    <li>12-feature engineering pipeline</li>
-                                    <li>VPD & evapotranspiration math</li>
-                                </ul>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-1.5"><i data-lucide="layout-dashboard" class="w-4 h-4 text-emerald-500"></i> Dashboard Layer</h3>
-                                <ul class="space-y-1 text-slate-600 dark:text-slate-400">
-                                    <li>React + Vite frontend</li>
-                                    <li>Real-time sensor telemetry</li>
-                                    <li>Crop configuration panel</li>
-                                    <li>ML insight visualizations</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Tech Stack -->
-                <section class="mb-10">
-                    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
-                        <i data-lucide="layers" class="w-5 h-5 text-emerald-500"></i> Technology Stack
-                    </h2>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div class="bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
-                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Backend</span>
-                            <p class="text-sm font-medium text-slate-800 dark:text-slate-200 mt-1">Flask, SQLAlchemy</p>
-                        </div>
-                        <div class="bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
-                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">ML</span>
-                            <p class="text-sm font-medium text-slate-800 dark:text-slate-200 mt-1">scikit-learn, Random Forest</p>
-                        </div>
-                        <div class="bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
-                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Database</span>
-                            <p class="text-sm font-medium text-slate-800 dark:text-slate-200 mt-1">PostgreSQL</p>
-                        </div>
-                        <div class="bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
-                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Hardware</span>
-                            <p class="text-sm font-medium text-slate-800 dark:text-slate-200 mt-1">ESP32, MQTT</p>
-                        </div>
-                        <div class="bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
-                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Frontend</span>
-                            <p class="text-sm font-medium text-slate-800 dark:text-slate-200 mt-1">React, Tailwind, Vite</p>
-                        </div>
-                        <div class="bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
-                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Simulation</span>
-                            <p class="text-sm font-medium text-slate-800 dark:text-slate-200 mt-1">Python, Mosquitto</p>
-                        </div>
-                        <div class="bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
-                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Deploy</span>
-                            <p class="text-sm font-medium text-slate-800 dark:text-slate-200 mt-1">Docker, Railway</p>
-                        </div>
-                        <div class="bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
-                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Research</span>
-                            <p class="text-sm font-medium text-slate-800 dark:text-slate-200 mt-1">VPD, Evapotranspiration</p>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Key Achievements -->
-                <section class="mb-10">
-                    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
-                        <i data-lucide="trophy" class="w-5 h-5 text-emerald-500"></i> Key Achievements
-                    </h2>
-                    <div class="bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
-                        <ul class="space-y-3 text-sm text-slate-700 dark:text-slate-300">
-                            <li class="flex items-start gap-3">
-                                <span class="mt-0.5 w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shrink-0"><i data-lucide="check" class="w-3 h-3 text-emerald-600"></i></span>
-                                <span><strong>16.7% water savings</strong> validated against baseline threshold irrigation (target: 15%)</span>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <span class="mt-0.5 w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shrink-0"><i data-lucide="check" class="w-3 h-3 text-emerald-600"></i></span>
-                                <span><strong>93% ML prediction accuracy</strong> with F1 score of 0.82 using random forest classifier</span>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <span class="mt-0.5 w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shrink-0"><i data-lucide="check" class="w-3 h-3 text-emerald-600"></i></span>
-                                <span><strong>5 crop profiles</strong> supported with distinct irrigation thresholds and VPD responses</span>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <span class="mt-0.5 w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shrink-0"><i data-lucide="check" class="w-3 h-3 text-emerald-600"></i></span>
-                                <span><strong>116/116</strong> unit validation tests passed across all system components</span>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <span class="mt-0.5 w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shrink-0"><i data-lucide="check" class="w-3 h-3 text-emerald-600"></i></span>
-                                <span>Full-stack implementation: embedded C++ firmware &rarr; Python ML API &rarr; React dashboard</span>
-                            </li>
-                        </ul>
-                    </div>
-                </section>
-
-                <!-- Quick Start -->
-                <section class="mb-10">
-                    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
-                        <i data-lucide="zap" class="w-5 h-5 text-emerald-500"></i> Quick Start
-                    </h2>
-                    <div class="bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
-                        <div class="grid md:grid-cols-3 gap-4 text-sm">
-                            <a href="QUICKSTART.html" class="block p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-emerald-500 dark:hover:border-emerald-400 transition group">
-                                <div class="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 mb-1">1. Setup</div>
-                                <p class="text-xs text-slate-500 dark:text-slate-400">Activate venv & install deps</p>
-                            </a>
-                            <a href="cloud_ml_deployment.html" class="block p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-emerald-500 dark:hover:border-emerald-400 transition group">
-                                <div class="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 mb-1">2. Deploy</div>
-                                <p class="text-xs text-slate-500 dark:text-slate-400">Containerize & cloud deploy</p>
-                            </a>
-                            <a href="hardware_setup.html" class="block p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-emerald-500 dark:hover:border-emerald-400 transition group">
-                                <div class="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 mb-1">3. Hardware</div>
-                                <p class="text-xs text-slate-500 dark:text-slate-400">Wire sensors & controllers</p>
-                            </a>
-                        </div>
-                    </div>
-                </section>
-
-                <footer class="pt-8 border-t border-slate-200 dark:border-slate-700 text-center text-xs text-slate-500 dark:text-slate-400 pb-8">
-                    P-WOS &mdash; Predictive Water Optimization System &bull; 52 documentation pages &bull; Use the sidebar to navigate
-                </footer>
             </div>
         </main>
     </div>
 
     <script>
-        const docs = [
-            { category: 'Getting Started', icon: 'rocket', pages: [
-                { title: 'Project Overview', file: 'PROJECT_OVERVIEW.html' },
-                { title: 'Quickstart Guide', file: 'QUICKSTART.html' },
-                { title: 'Project Roadmap', file: 'PROJECT_ROADMAP.html' }
-            ]},
-            { category: 'System Architecture', icon: 'cpu', pages: [
-                { title: 'System Overview', file: 'system_overview.html' },
-                { title: 'Dataflow', file: 'dataflow.html' },
-                { title: 'Analytics Reference', file: 'analytics_reference.html' },
-                { title: 'Crop Profiles', file: 'crop_profiles.html' },
-                { title: 'Edge Cases & Scenarios', file: 'edge_cases_and_scenarios.html' },
-                { title: 'ML Model Deep Dive', file: 'ml_model_deep_dive.html' },
-                { title: 'VPD & Weather Engine', file: 'vpd_and_weather_engine.html' }
-            ]},
-            { category: 'Core Guides', icon: 'book-open', pages: [
-                { title: 'Installation Guide', file: 'installation_guide.html' },
-                { title: 'Backend API', file: 'backend_guide.html' },
-                { title: 'Database Guide', file: 'database_guide.html' },
-                { title: 'Firmware Guide', file: 'firmware_guide.html' },
-                { title: 'Simulation Guide', file: 'simulation_guide.html' },
-                { title: 'ML Model Guide', file: 'ml_model_guide.html' },
-                { title: 'Performance Guide', file: 'performance_guide.html' },
-                { title: 'Troubleshooting', file: 'troubleshooting.html' },
-                { title: 'Tests Reference', file: 'tests.html' },
-                { title: 'Analytics Dashboard', file: 'analytics_dashboard.html' },
-                { title: 'Main Dashboard', file: 'main_dashboard.html' },
-                { title: 'Mobile Guide', file: 'mobile_guide.html' }
-            ]},
-            { category: 'Hardware Engineering', icon: 'circuit-board', pages: [
-                { title: 'Hardware Architecture', file: 'hardware_architecture.html' },
-                { title: 'Breadboard Assembly', file: 'breadboard_assembly.html' },
-                { title: 'Breadboard Guide', file: 'breadboard.html' },
-                { title: 'Hardware Setup', file: 'hardware_setup.html' },
-                { title: 'Shopping List', file: 'hardware_shopping_list.html' },
-                { title: 'Migration Plan', file: 'hardware_migration_plan.html' },
-                { title: 'Testing Report', file: 'testing_report.html' },
-                { title: 'Hardware Progress', file: 'hardware_progress.html' },
-                { title: 'Phase 1 Report', file: 'phase1_report.html' }
-            ]},
-            { category: 'Scientific Research', icon: 'microscope', pages: [
-                { title: 'Codebase Analysis', file: 'codebase_analysis.html' },
-                { title: 'Codebase Audit', file: 'codebase_audit.html' },
-                { title: 'Crop Integration Plan', file: 'crop_integration_plan.html' }
-            ]},
-            { category: 'Technical Reference', icon: 'code', pages: [
-                { title: 'API Reference', file: 'api_reference.html' },
-                { title: 'MQTT Topics', file: 'mqtt_topics.html' },
-                { title: 'Coding Guidelines', file: 'coding_guidelines.html' },
-                { title: 'Project Structure', file: 'project_structure.html' },
-                { title: 'VPD Scenarios', file: 'vpd_scenarios.html' }
-            ]},
-            { category: 'Deployment & Operations', icon: 'cloud', pages: [
-                { title: 'Cloud ML Deployment', file: 'cloud_ml_deployment.html' },
-                { title: 'Local Implementation', file: 'local_implementation.html' },
-                { title: 'ML Roadmap', file: 'ml_implementation_roadmap.html' }
-            ]},
-            { category: 'Reports & Validation', icon: 'bar-chart-3', pages: [
-                { title: 'Final Report', file: 'final_report.html' },
-                { title: 'Validation Report', file: 'validation_report.html' },
-                { title: 'Simulation Analysis', file: 'simulation_analysis.html' },
-                { title: 'Moisture Analysis', file: 'moisture_analysis.html' },
-                { title: 'Phase 1 Setup Report', file: 'phase_01_setup_report.html' },
-                { title: 'Phase 5 ML Report', file: 'phase_05_ml_report.html' },
-                { title: 'Phase 6 Frontend Report', file: 'phase_06_frontend_report.html' }
-            ]}
-        ];
+        const docs = [{"category": "Getting Started", "icon": "rocket", "pages": [{"title": "P-WOS Documentation Index", "file": "getting_started/README.html"}, {"title": "Project Overview", "file": "getting_started/01_project_overview.html"}, {"title": "About P-WOS", "file": "getting_started/02_about.html"}, {"title": "Core Features", "file": "getting_started/03_features.html"}, {"title": "Project Roadmap", "file": "getting_started/04_roadmap.html"}, {"title": "System Structure", "file": "getting_started/05_structure.html"}, {"title": "Core Logic Summary", "file": "getting_started/06_summary.html"}, {"title": "System Overview & Autopilot", "file": "getting_started/07_architecture.html"}]}, {"category": "Core Guides", "icon": "book-open", "pages": [{"title": "guides", "file": "core_guides/README.html"}, {"title": "P-WOS Cloud-Based ML API Implementation", "file": "core_guides/deployment/cloud_ml_deployment.html"}, {"title": "P-WOS LOCAL IMPLEMENTATION GUIDE", "file": "core_guides/deployment/local_implementation.html"}, {"title": "P-WOS ML Implementation Roadmap", "file": "core_guides/deployment/ml_implementation_roadmap.html"}, {"title": "P-WOS Performance & Architecture Guide (v3.0)", "file": "core_guides/operations/performance_guide.html"}, {"title": "P-WOS Test Suite Documentation", "file": "core_guides/operations/tests.html"}, {"title": "P-WOS Troubleshooting Guide", "file": "core_guides/operations/troubleshooting.html"}, {"title": "P-WOS Documentation Portal - Home Page Guide", "file": "core_guides/setup/HOME_PAGE_GUIDE.html"}, {"title": "P-WOS Installation Guide", "file": "core_guides/setup/installation_guide.html"}, {"title": "P-WOS Quick Start Guide", "file": "core_guides/setup/QUICKSTART.html"}, {"title": "P-WOS Documentation Portal - Restructured", "file": "core_guides/setup/README_RESTRUCTURE.html"}, {"title": "Table of Contents Sidebar - Toggle Feature", "file": "core_guides/setup/SIDEBAR_TOGGLE_GUIDE.html"}, {"title": "Backend Architecture & Guide", "file": "core_guides/technical/backend_guide.html"}, {"title": "P-WOS Database Guide", "file": "core_guides/technical/database_guide.html"}, {"title": "ESP32 Firmware Guide", "file": "core_guides/technical/firmware_guide.html"}, {"title": "Analytics Dashboard Guide", "file": "core_guides/ui/analytics_dashboard.html"}, {"title": "Main Dashboard Guide", "file": "core_guides/ui/main_dashboard.html"}, {"title": "P-WOS React Native Mobile Application Guide", "file": "core_guides/ui/mobile_guide.html"}]}, {"category": "System Architecture", "icon": "cpu", "pages": [{"title": "07 — System Behaviour", "file": "system_architecture/README.html"}, {"title": "Analytics & Dashboard Reference", "file": "system_architecture/analytics_reference.html"}, {"title": "Crop Profiles & Regional Adaptation", "file": "system_architecture/crop_profiles.html"}, {"title": "Dataflow", "file": "system_architecture/dataflow.html"}, {"title": "Edge Cases & Scenario Handbook", "file": "system_architecture/edge_cases_and_scenarios.html"}, {"title": "System Architectures & Development Process", "file": "system_architecture/system_architectures.html"}, {"title": "System Overview Specifications", "file": "system_architecture/system_overview.html"}, {"title": "VPD & Weather Engine", "file": "system_architecture/vpd_and_weather_engine.html"}]}, {"category": "Machine Learning", "icon": "brain", "pages": [{"title": "P-WOS Machine Learning", "file": "ml/README.html"}, {"title": "Feature Engineering & Physics Calculations", "file": "ml/feature_engineering.html"}, {"title": "ML Model Deep Dive", "file": "ml/ml_model_deep_dive.html"}, {"title": "ML Model Guide & Architecture", "file": "ml/ml_model_guide.html"}]}, {"category": "Hardware", "icon": "circuit-board", "pages": [{"title": "P-WOS Hardware Documentation", "file": "hardware/README.html"}, {"title": "P-WOS Hardware & Cloud Architecture", "file": "hardware/architecture/hardware_architecture.html"}, {"title": "GL No.12 Solderless Breadboard", "file": "hardware/guides/breadboard.html"}, {"title": "P-WOS Breadboard Assembly Guide", "file": "hardware/guides/breadboard_assembly.html"}, {"title": "Hardware Setup Guide", "file": "hardware/guides/hardware_setup.html"}, {"title": "P-WOS Hardware Migration Plan", "file": "hardware/planning/hardware_migration_plan.html"}, {"title": "P-WOS Hardware Components Shopping List", "file": "hardware/planning/hardware_shopping_list.html"}, {"title": "reports", "file": "hardware/reports/README.html"}, {"title": "P-WOS Hardware Progress Log", "file": "hardware/reports/hardware_progress.html"}, {"title": "P-WOS Phase 1 Report: ESP32 Setup & First Upload", "file": "hardware/reports/phase1_report.html"}, {"title": "P-WOS Hardware Testing Report", "file": "hardware/reports/testing_report.html"}]}, {"category": "Simulation", "icon": "monitor", "pages": [{"title": "P-WOS Simulation (Digital Twin)", "file": "simulation/README.html"}, {"title": "Data Generation & Database Testing", "file": "simulation/data_generation.html"}, {"title": "Simulation Physics & Environmental Modeling", "file": "simulation/physics_model.html"}, {"title": "Simulation Scenarios Reference", "file": "simulation/scenarios.html"}, {"title": "Simulation Guide", "file": "simulation/simulation_guide.html"}]}, {"category": "Scientific Research", "icon": "flask-conical", "pages": [{"title": "Codebase Analysis: P-WOS (Predictive Watering Optimization System)", "file": "scientific_research/analysis/codebase_analysis.html"}, {"title": "P-WOS Complete Codebase Audit", "file": "scientific_research/analysis/codebase_audit.html"}, {"title": "P-WOS Crop & Region Integration Plan", "file": "scientific_research/planning/crop_integration_plan.html"}]}, {"category": "Reports and Validation", "icon": "bar-chart", "pages": [{"title": "reports", "file": "reports_and_validation/README.html"}, {"title": "P-WOS Final Report", "file": "reports_and_validation/analysis/final_report.html"}, {"title": "Moisture Fluctuation Analysis Report", "file": "reports_and_validation/analysis/moisture_analysis.html"}, {"title": "P-WOS Simulation Analysis Report", "file": "reports_and_validation/analysis/simulation_analysis.html"}, {"title": "P-WOS Validation Report", "file": "reports_and_validation/analysis/validation_report.html"}, {"title": "P-WOS Simulation Phase Report", "file": "reports_and_validation/phases/phase_01_setup_report.html"}, {"title": "P-WOS Data Intelligence Report (Phase 5)", "file": "reports_and_validation/phases/phase_05_ml_report.html"}, {"title": "P-WOS Modernization Report (Phase 3)", "file": "reports_and_validation/phases/phase_06_frontend_report.html"}]}, {"category": "Technical Reference", "icon": "book", "pages": [{"title": "reference", "file": "technical_reference/README.html"}, {"title": "P-WOS Technical Development Roadmap", "file": "technical_reference/development_roadmap.html"}, {"title": "DEVELOPMENT GUIDELINES", "file": "technical_reference/guidelines/coding_guidelines.html"}, {"title": "Project Structure Guide", "file": "technical_reference/guidelines/project_structure.html"}, {"title": "P-WOS API Reference", "file": "technical_reference/specs/api_reference.html"}, {"title": "MQTT Topics Reference", "file": "technical_reference/specs/mqtt_topics.html"}, {"title": "VPD & Weather Scenarios Reference", "file": "technical_reference/specs/vpd_scenarios.html"}]}];
 
         let expandedGroups = {};
 
@@ -410,7 +326,7 @@
                     '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
                         '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
                             group.pages.map(function(page) {
-                                return '<li><a href="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                                return '<li><a href="./' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
                             }).join('') +
                         '</ul>' +
                     '</div>' +
@@ -430,8 +346,32 @@
             if (!input) return;
             input.addEventListener('input', function(e) {
                 const q = e.target.value.toLowerCase().trim();
-                document.querySelectorAll('#' + containerId + ' .sidebar-group').forEach(function(el) {
-                    el.style.display = q === '' || el.textContent.toLowerCase().includes(q) ? '' : 'none';
+                
+                let matchingFiles = new Set();
+                if (q !== '' && typeof searchIndex !== 'undefined') {
+                    for (let i = 0; i < searchIndex.length; i++) {
+                        if (searchIndex[i].title.toLowerCase().includes(q) || searchIndex[i].content.includes(q)) {
+                            matchingFiles.add(searchIndex[i].file);
+                        }
+                    }
+                }
+
+                document.querySelectorAll('#' + containerId + ' .sidebar-group').forEach(function(groupEl) {
+                    let hasVisibleChild = false;
+                    groupEl.querySelectorAll('li a').forEach(function(linkEl) {
+                        const dataFile = linkEl.getAttribute('data-file');
+                        const isMatch = q === '' || (matchingFiles.has(dataFile) || linkEl.textContent.toLowerCase().includes(q));
+                        linkEl.parentElement.style.display = isMatch ? '' : 'none';
+                        if (isMatch) hasVisibleChild = true;
+                    });
+                    groupEl.style.display = hasVisibleChild ? '' : 'none';
+                    
+                    const btnIcon = groupEl.querySelector('button i.lucide-chevron-down');
+                    const groupEnter = groupEl.querySelector('.sidebar-group-enter');
+                    if (q !== '' && hasVisibleChild) {
+                        groupEnter.classList.add('active');
+                        if (btnIcon) btnIcon.classList.remove('-rotate-90');
+                    }
                 });
             });
         }
@@ -457,13 +397,79 @@
         document.getElementById('closeMobileNav').addEventListener('click', closeMobileNav);
         document.getElementById('navOverlay').addEventListener('click', closeMobileNav);
 
-        window.addEventListener('scroll', function() {
-            const main = document.querySelector('main');
-            if (!main) return;
-            const scrollTop = main.scrollTop;
-            const scrollHeight = main.scrollHeight - main.clientHeight;
-            document.getElementById('readingProgress').style.width = (scrollTop / Math.max(scrollHeight, 1)) * 100 + '%';
+        document.addEventListener('DOMContentLoaded', function() {
+            const output = document.getElementById('markdownOutput');
+            if (!output) return;
+
+            output.querySelectorAll('pre code').forEach(function(block) { hljs.highlightElement(block); });
+
+            try {
+                renderMathInElement(output, {
+                    delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}],
+                    throwOnError: false
+                });
+            } catch(e) {}
+
+            try {
+                mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+                mermaid.run({ nodes: output.querySelectorAll('.mermaid') });
+            } catch(e) {}
+
+            buildTOC(output);
         });
+
+        function buildTOC(container) {
+            const list = document.getElementById('tocList');
+            if (!list) return;
+            list.innerHTML = '';
+            const headings = container.querySelectorAll('h2, h3');
+            if (headings.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'text-slate-400 italic';
+                li.textContent = 'No sub-headers on page';
+                list.appendChild(li);
+                return;
+            }
+            headings.forEach(function(heading, idx) {
+                const anchorId = 'toc-anchor-' + idx;
+                heading.setAttribute('id', anchorId);
+                const li = document.createElement('li');
+                const isSub = heading.tagName.toLowerCase() === 'h3';
+                li.className = 'transition-colors duration-150 ' + (isSub ? 'pl-3 border-l border-slate-100 dark:border-slate-800 ml-1 py-0.5' : 'font-medium py-1');
+                const link = document.createElement('a');
+                link.href = '#' + anchorId;
+                link.className = 'hover:text-emerald-500 block truncate transition-colors';
+                link.textContent = heading.textContent;
+                link.onclick = function(e) { e.preventDefault(); heading.scrollIntoView({ behavior: 'smooth' }); };
+                li.appendChild(link);
+                list.appendChild(li);
+            });
+        }
+
+        const mainEl = document.querySelector('main');
+        if (mainEl) {
+            mainEl.addEventListener('scroll', function() {
+                const scrollTop = mainEl.scrollTop;
+                const scrollHeight = mainEl.scrollHeight - mainEl.clientHeight;
+                document.getElementById('readingProgress').style.width = (scrollTop / Math.max(scrollHeight, 1)) * 100 + '%';
+            });
+        }
+
+        const copyBtn = document.getElementById('copyDocBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                const content = document.getElementById('markdownOutput')?.innerText;
+                if (!content) return;
+                navigator.clipboard.writeText(content).then(function() {
+                    copyBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>';
+                    lucide.createIcons();
+                    setTimeout(function() {
+                        copyBtn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
+                        lucide.createIcons();
+                    }, 1500);
+                });
+            });
+        }
 
         initTheme();
         renderSidebar('sidebarGroups');

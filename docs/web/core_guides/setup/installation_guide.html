@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P-WOS Master System Manual - P-WOS Documentation Portal</title>
+    <title>P-WOS Installation Guide - P-WOS Documentation Portal</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,7 +39,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="./search_index.js"></script>
+    <script src="../../search_index.js"></script>
 
     <style>
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -104,7 +104,7 @@
                 <i data-lucide="printer" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Export PDF</span>
             </button>
-            <a href="./getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+            <a href="../../getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
                 <i data-lucide="home" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Home</span>
             </a>
@@ -144,7 +144,7 @@
                         <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
                             <span id="breadcrumbCategory">Documentation</span>
                             <i data-lucide="chevron-right" class="w-3 h-3"></i>
-                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">MASTER_SYSTEM_MANUAL.md</span>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">installation_guide.md</span>
                         </div>
 
                         <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
@@ -162,309 +162,340 @@
                                 prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
                                 prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
                                 prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
-<h1>P-WOS Master System Manual</h1>
-<h2>The Definitive Technical Encyclopedia for the Predictive Water Optimization System</h2>
-<blockquote>
-<p><strong>System Version:</strong> v3.0<br />
-<strong>Status:</strong> Production Reference<br />
-<strong>Scope:</strong> Full-stack technical architecture, from soil sensors and atmospheric physics to machine learning inference and frontend analytics.</p>
-</blockquote>
+<h1>P-WOS Installation Guide</h1>
+<p><strong>Step-by-step setup for all prerequisites</strong></p>
+<p><a href="../README.html">← Back to Docs Index</a></p>
 <hr />
-<h2>Part 1: Data Engineering &amp; Datasets</h2>
-<p>The foundation of P-WOS is a high-density, multi-featured dataset that captures the complex relationship between soil moisture, atmospheric demand (VPD), and crop physiology.</p>
-<h3>1.1 The Primary Training Dataset (<code>training_data.csv</code>)</h3>
-<ul>
-<li><strong>Size:</strong> 10,889 samples (rows)</li>
-<li><strong>Features:</strong> 11 input features + 1 target label</li>
-<li><strong>Sampling Frequency:</strong> 5-second control cycles (simulated and real-world aggregated)</li>
-</ul>
-<h4>Dataset Schema</h4>
+<h2>Prerequisites Summary</h2>
 <table>
 <thead>
 <tr>
-<th>Column</th>
-<th>Type</th>
-<th>Description</th>
-<th>Role in System</th>
+<th>Component</th>
+<th>Version</th>
+<th>Purpose</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>soil_moisture</code></td>
-<td><code>float</code></td>
-<td>Volumetric soil moisture percentage (0–100%)</td>
-<td>Primary drought signal</td>
+<td><strong>PostgreSQL</strong></td>
+<td>15+</td>
+<td>Sensor data storage</td>
 </tr>
 <tr>
-<td><code>temperature</code></td>
-<td><code>float</code></td>
-<td>Ambient air temperature (°C)</td>
-<td>Direct evaporation driver</td>
+<td><strong>Mosquitto</strong></td>
+<td>2.0+</td>
+<td>MQTT message broker</td>
 </tr>
 <tr>
-<td><code>humidity</code></td>
-<td><code>float</code></td>
-<td>Relative humidity percentage (0–100%)</td>
-<td>VPD component</td>
+<td><strong>Python</strong></td>
+<td>3.11+</td>
+<td>Backend &amp; ML engine</td>
 </tr>
 <tr>
-<td><code>forecast_minutes</code></td>
-<td><code>int</code></td>
-<td>Minutes until the next predicted rain event</td>
-<td>Suppress unnecessary watering</td>
-</tr>
-<tr>
-<td><code>hour</code></td>
-<td><code>int</code></td>
-<td>Current hour of the day (0–23)</td>
-<td>Encodes daily evapotranspiration cycle</td>
-</tr>
-<tr>
-<td><code>day_of_week</code></td>
-<td><code>int</code></td>
-<td>Day index (0=Monday, 6=Sunday)</td>
-<td>Captures weekly patterns</td>
-</tr>
-<tr>
-<td><code>is_daytime</code></td>
-<td><code>binary</code></td>
-<td>1 if 6:00 &lt; hour &lt; 18:00</td>
-<td>Broad solar radiation proxy</td>
-</tr>
-<tr>
-<td><code>is_hot_hours</code></td>
-<td><code>binary</code></td>
-<td>1 if 10:00 &lt; hour &lt; 16:00</td>
-<td>Peak VPD window / Stall window</td>
-</tr>
-<tr>
-<td><code>moisture_change_rate</code></td>
-<td><code>float</code></td>
-<td>Rate of moisture change per 5-second interval</td>
-<td>Detects rapid drainage/drying trends</td>
-</tr>
-<tr>
-<td><code>moisture_rolling_6</code></td>
-<td><code>float</code></td>
-<td>30-second rolling average of soil moisture</td>
-<td>Smooths sensor noise &amp; confirms trends</td>
-</tr>
-<tr>
-<td><code>temp_rolling_6</code></td>
-<td><code>float</code></td>
-<td>30-second rolling average of temperature</td>
-<td>Tracks sustained thermal stress</td>
-</tr>
-<tr>
-<td><strong><code>needs_watering_soon</code></strong></td>
-<td><code>binary</code></td>
-<td><strong>Target Label:</strong> 1 if irrigation is required</td>
-<td>The model's prediction goal</td>
+<td><strong>Node.js</strong></td>
+<td>18+</td>
+<td>Frontend dev server</td>
 </tr>
 </tbody>
 </table>
-<h3>1.2 Feature Generation (The Rolling Engine)</h3>
-<p>P-WOS does not rely solely on "static" snapshots. The <code>data_collector.py</code> and <code>ml_predictor.py</code> use a 6-sample sliding window to generate temporal features:</p>
-<pre><code class="language-python"># Feature Engineering Logic
-moisture_change_rate = (current_moisture - previous_moisture) / time_delta
-moisture_rolling_6 = sum(last_6_readings) / 6
-</code></pre>
 <hr />
-<h2>Part 2: The ML Training Pipeline</h2>
-<p>P-WOS utilizes a "Forest of Decision Trees" to map 11 atmospheric and soil features to a binary watering decision.</p>
-<h3>2.1 Model Architecture: Random Forest</h3>
-<ul>
-<li><strong>Estimators (Trees):</strong> 100</li>
-<li><strong>Max Depth:</strong> 10 (tuned to prevent overfitting to noise while capturing non-linear interactions)</li>
-<li><strong>Engine:</strong> <code>RandomForestClassifier</code> (Scikit-Learn)</li>
-</ul>
-<h3>2.2 Performance Metrics (v3.0 Benchmark)</h3>
-<p>The model is evaluated using the F1-Score to ensure performance is maintained even with imbalanced datasets (more "Wait" than "Water" events).</p>
-<table>
-<thead>
-<tr>
-<th>Metric</th>
-<th>Score</th>
-<th>Interpretation</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Accuracy</strong></td>
-<td>83.43%</td>
-<td>Overall correct predictions</td>
-</tr>
-<tr>
-<td><strong>Precision</strong></td>
-<td>96%</td>
-<td>When the model says "Water", it is almost always correct</td>
-</tr>
-<tr>
-<td><strong>Recall</strong></td>
-<td>72%</td>
-<td>The model captures 72% of all actual watering needs</td>
-</tr>
-<tr>
-<td><strong>F1-Score</strong></td>
-<td>82%</td>
-<td>Excellent balance for agricultural decision-making</td>
-</tr>
-</tbody>
-</table>
-<h3>2.3 Training Workflow (<code>train_model.py</code>)</h3>
+<h2>1. PostgreSQL Setup</h2>
+<h3>Windows</h3>
 <ol>
-<li><strong>Load Data:</strong> Imports <code>training_data.csv</code>.</li>
-<li><strong>Pre-processing:</strong> Feature scaling (StandardScaler) is applied to ensure temperature (°C) and moisture (%) are weighted fairly.</li>
-<li><strong>Train/Test Split:</strong> 80/20 random split.</li>
-<li><strong>Serialization:</strong> Model saved as <code>rf_model.pkl</code>, metadata as <code>model_metadata.json</code>.</li>
+<li><strong>Download</strong> from <a href="https://www.postgresql.org/download/windows/">postgresql.org/download/windows</a></li>
+<li><strong>Run the installer</strong> — use default port <code>5432</code></li>
+<li><strong>Set a password</strong> for the <code>postgres</code> user (remember this!)</li>
+<li><strong>Verify installation:</strong>
+   <code>powershell
+   psql -U postgres -c "SELECT version();"</code></li>
+<li><strong>Create the P-WOS database:</strong>
+   <code>powershell
+   psql -U postgres -c "CREATE DATABASE pwos;"</code></li>
+<li><strong>Initialize tables:</strong>
+   <code>powershell
+   python src/backend/database.py</code></li>
+<li><strong>Verify tables were created:</strong>
+   <code>powershell
+   psql -U postgres -d pwos -c "\dt"</code>
+   You should see 5 tables: <code>sensor_readings</code>, <code>watering_events</code>, <code>system_logs</code>, <code>ml_decisions</code>, <code>model_versions</code></li>
 </ol>
-<hr />
-<h2>Part 3: Environmental Physics (VPD &amp; Weather)</h2>
-<p>The "Brain" is supplemented by the "Physics Engine" which applies raw meteorological formulas to refine ML outputs.</p>
-<h3>3.1 VPD (Vapor Pressure Deficit) - The Tetens Formula</h3>
-<p>VPD represents the "thirst" of the air. P-WOS implements the <strong>Tetens approximation</strong> (<code>vpd_calculator.py</code>):</p>
-<pre><code class="language-python"># The Physics of Evaporation
-svp = 0.61078 * exp((17.27 * T) / (T + 237.3))  # Saturation Vapor Pressure
-avp = svp * (RH / 100.0)                        # Actual Vapor Pressure
-VPD = svp - avp                                 # The Deficit (kPa)
-</code></pre>
-<h3>3.2 The Moisture Decay Rate Engine</h3>
-<p>When sensors are idle, the system predicts moisture loss using the following derived formula (<code>ml_predictor.py</code>):</p>
-<pre><code class="language-python"># Moisture Decay Rate (% / hour)
-temp_factor = 1 + (temp - 25) * 0.08 if temp &gt; 25 else 0.7
-vpd_factor = 1 + (vpd * 0.4)
-time_factor = 1.5 if 10 &lt;= hour &lt;= 16 else 1.0 (Day) or 0.3 (Night)
+<h3>Linux (Ubuntu/Debian)</h3>
+<pre><code class="language-bash"># Install
+sudo apt update
+sudo apt install postgresql postgresql-contrib
 
-DecayRate = base_decay * temp_factor * vpd_factor * time_factor
+# Start service
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+
+# Set password
+sudo -u postgres psql -c &quot;ALTER USER postgres PASSWORD 'your_password';&quot;
+
+# Create database
+sudo -u postgres psql -c &quot;CREATE DATABASE pwos;&quot;
+
+# Initialize tables
+python3 src/backend/database.py
+</code></pre>
+<h3>Configuration</h3>
+<p>Database connection is configured in <code>src/config.py</code>:</p>
+<pre><code class="language-python">DB_HOST = os.getenv(&quot;DB_HOST&quot;, &quot;localhost&quot;)
+DB_PORT = os.getenv(&quot;DB_PORT&quot;, &quot;5432&quot;)
+DB_NAME = os.getenv(&quot;DB_NAME&quot;, &quot;pwos&quot;)
+DB_USER = os.getenv(&quot;DB_USER&quot;, &quot;postgres&quot;)
+DB_PASSWORD = os.getenv(&quot;DB_PASSWORD&quot;, &quot;&quot;)
+</code></pre>
+<p>Set your password via environment variable:</p>
+<pre><code class="language-powershell"># Windows
+set DB_PASSWORD=your_password
+
+# Linux
+export DB_PASSWORD=your_password
 </code></pre>
 <hr />
-<h2>Part 4: The Autonomous Decision Engine</h2>
-<p>The "Automation Controller" (<code>automation_controller.py</code>) is the executive function that manages the 5-second control loop.</p>
-<h3>4.1 The 5-Second Cycle (Priority List)</h3>
-<p>Every 5 seconds, the controller evaluates these steps in strict priority order:</p>
+<h2>2. Mosquitto MQTT Broker</h2>
+<h3>Windows</h3>
 <ol>
-<li><strong>Safety Interlock (Saturation):</strong> If Moisture &gt; 85%, kill pump immediately (STOP).</li>
-<li><strong>Safety Interlock (Critical):</strong> If Moisture &lt; <code>crop_critical_moisture</code>, force pump ON (NOW) overriding all modes.</li>
-<li><strong>Rain Confidence:</strong> If rain is expected in &lt; 2 hours, STALL irrigation.</li>
-<li><strong>False Dry Detection:</strong> If Wind &gt; 20 km/h and Humidity &lt; 40%, flag "False Dry" and MONITOR instead of watering.</li>
-<li><strong>VPD Stall:</strong> If VPD &gt; 3.0 kPa (Extreme Dry), STALL irrigation until evening to prevent evaporative loss.</li>
-<li><strong>ML Inference:</strong> If all above pass, execute the ML Model's prediction (NOW/MONITOR).</li>
+<li><strong>Download</strong> from <a href="https://mosquitto.org/download/">mosquitto.org/download</a></li>
+<li><strong>Install</strong> with default options</li>
+<li><strong>Configure</strong> — edit <code>C:\Program Files\mosquitto\mosquitto.conf</code>:</li>
 </ol>
-<h3>4.2 Rain Confidence Tiers</h3>
-<table>
-<thead>
-<tr>
-<th>Time to Rain</th>
-<th>Moisture State</th>
-<th>Action</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>&lt; 2 hours</td>
-<td>Any</td>
-<td><strong>STALL</strong> (Rain imminent)</td>
-</tr>
-<tr>
-<td>2–6 hours</td>
-<td>&gt; 25%</td>
-<td><strong>STALL</strong> (Wait for rain)</td>
-</tr>
-<tr>
-<td>6–12 hours</td>
-<td>&gt; 40%</td>
-<td><strong>MONITOR</strong> (Keep watching)</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2>Part 5: Agronomic Personalisation</h2>
-<p>P-WOS is "Crop-Aware". Every decision is scaled by the active crop profile and region.</p>
-<h3>5.1 The 5 Pre-defined Crops</h3>
-<table>
-<thead>
-<tr>
-<th>Crop</th>
-<th>Critical</th>
-<th>Low</th>
-<th>Proactive</th>
-<th>Target</th>
-<th>Multiplier</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Maize</strong></td>
-<td>30%</td>
-<td>45%</td>
-<td>55%</td>
-<td>60%</td>
-<td>1.0x</td>
-</tr>
-<tr>
-<td><strong>Potato</strong></td>
-<td>45%</td>
-<td>55%</td>
-<td>65%</td>
-<td>70%</td>
-<td>1.4x</td>
-</tr>
-<tr>
-<td><strong>Tomato</strong></td>
-<td>35%</td>
-<td>48%</td>
-<td>58%</td>
-<td>62%</td>
-<td>1.2x</td>
-</tr>
-<tr>
-<td><strong>Onion</strong></td>
-<td>40%</td>
-<td>52%</td>
-<td>60%</td>
-<td>65%</td>
-<td>0.8x</td>
-</tr>
-<tr>
-<td><strong>Sorghum</strong></td>
-<td>20%</td>
-<td>30%</td>
-<td>40%</td>
-<td>50%</td>
-<td>0.6x</td>
-</tr>
-</tbody>
-</table>
-<h3>5.2 Seasonal &amp; Regional Logic</h3>
-<ul>
-<li><strong>Regional Evap Multiplier:</strong> Scaled by agro-ecological zone (e.g., Matabeleland = 1.5x evaporation pressure).</li>
-<li><strong>Seasonal Threshold Shift:</strong> <ul>
-<li><strong>Summer (Nov–Mar):</strong> Thresholds shifted <strong>+5%</strong> (higher moisture required for heat).</li>
-<li><strong>Winter (May–Sep):</strong> Thresholds shifted <strong>-5%</strong> (lower moisture required for cooler periods).</li>
-</ul>
-</li>
-</ul>
-<hr />
-<h2>Part 6: Dataflows &amp; Frontend Analytics</h2>
-<h3>6.1 The MQTT Pipeline</h3>
-<pre><code>[ESP32] --(pwos/sensor/data)--&gt; [MQTT Broker] --(Subscription)--&gt; [Backend API] --(Insert)--&gt; [Postgres]
+<p>```ini
+   # Standard MQTT listener (for backend + ESP32)
+   listener 1883
+   protocol mqtt</p>
+<p># WebSocket listener (for React frontend)
+   listener 9001
+   protocol websockets</p>
+<p># Allow unauthenticated connections (dev only)
+   allow_anonymous true
+   ```</p>
+<blockquote>
+<p>⚠️ <strong>Critical:</strong> The WebSocket listener on port <code>9001</code> is required for the React frontend to connect via <code>mqtt.js</code>. Without this, the dashboard will not receive real-time sensor data.</p>
+</blockquote>
+<ol>
+<li><strong>Start Mosquitto:</strong>
+   ```powershell
+   # As a Windows service
+   net start mosquitto</li>
+</ol>
+<p># Or run manually (shows logs in console)
+   &amp; "C:\Program Files\mosquitto\mosquitto.exe" -c "C:\Program Files\mosquitto\mosquitto.conf" -v
+   ```</p>
+<ol>
+<li><strong>Verify:</strong>
+   ```powershell
+   # In terminal 1 — subscribe
+   mosquitto_sub -h localhost -t "test"</li>
+</ol>
+<p># In terminal 2 — publish
+   mosquitto_pub -h localhost -t "test" -m "hello"
+   <code>``
+   You should see</code>hello` appear in terminal 1.</p>
+<h3>Linux (Ubuntu/Debian)</h3>
+<pre><code class="language-bash"># Install
+sudo apt install mosquitto mosquitto-clients
+
+# Configure WebSocket support
+sudo nano /etc/mosquitto/conf.d/pwos.conf
 </code></pre>
-<h3>6.2 Frontend Formulas</h3>
-<ul>
-<li><strong>Gap-Filling:</strong> The analytics dashboard uses a "Snap-to-Boundary" algorithm to floor timestamps to 5-minute intervals, inserting <code>null</code> for missing buckets to represent sensor outages honestly.</li>
-<li><strong>Water Savings Calculation:</strong><ul>
-<li><code>Saved (L) = TotalStandardUsage (Reactive) - TotalAIUsage (P-WOS)</code></li>
-<li><code>Efficiency (%) = (1 - TotalAI / TotalStandard) * 100</code></li>
-</ul>
-</li>
-</ul>
+<p>Add to the config file:</p>
+<pre><code class="language-ini">listener 1883
+protocol mqtt
+
+listener 9001
+protocol websockets
+
+allow_anonymous true
+</code></pre>
+<pre><code class="language-bash"># Restart
+sudo systemctl restart mosquitto
+sudo systemctl enable mosquitto
+
+# Verify
+mosquitto_sub -h localhost -t &quot;test&quot; &amp;
+mosquitto_pub -h localhost -t &quot;test&quot; -m &quot;hello&quot;
+</code></pre>
+<h3>MQTT Topics Used by P-WOS</h3>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Direction</th>
+<th>Protocol</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pwos/sensor/data</code></td>
+<td>ESP32 → Backend</td>
+<td>JSON</td>
+</tr>
+<tr>
+<td><code>pwos/system/hardware</code></td>
+<td>ESP32 → Backend (LWT)</td>
+<td>Plain text</td>
+</tr>
+<tr>
+<td><code>pwos/weather/current</code></td>
+<td>Backend → ESP32</td>
+<td>JSON</td>
+</tr>
+<tr>
+<td><code>pwos/control/pump</code></td>
+<td>Backend → ESP32</td>
+<td>JSON</td>
+</tr>
+<tr>
+<td><code>pwos/system/mode</code></td>
+<td>Bidirectional</td>
+<td>Plain text</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="../../technical_reference/specs/mqtt_topics.html">MQTT Topics Reference</a> for full details.</p>
 <hr />
-<p><em>P-WOS v3.0 | Comprehensive Technical Manual</em></p>
+<h2>3. Python Setup</h2>
+<h3>Windows</h3>
+<ol>
+<li><strong>Download</strong> Python 3.11+ from <a href="https://www.python.org/downloads/">python.org</a></li>
+<li><strong>Install</strong> — ✅ Check "Add Python to PATH"</li>
+<li><strong>Create virtual environment:</strong>
+   <code>powershell
+   cd C:\path\to\pwos
+   python -m venv .venv
+   .venv\Scripts\activate</code></li>
+<li><strong>Install dependencies:</strong>
+   <code>powershell
+   pip install -r requirements.txt</code></li>
+</ol>
+<h3>Linux</h3>
+<pre><code class="language-bash">cd /path/to/pwos
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+</code></pre>
+<hr />
+<h2>4. Node.js &amp; Mobile App Setup</h2>
+<ol>
+<li><strong>Download</strong> Node.js 18+ from <a href="https://nodejs.org/">nodejs.org</a></li>
+<li><strong>Install</strong> with default options</li>
+<li><strong>Install web frontend dependencies:</strong>
+   <code>powershell
+   cd src/frontend
+   npm install</code></li>
+<li><strong>Install React Native Mobile App dependencies:</strong>
+   <code>powershell
+   cd src/mobile
+   npm install --legacy-peer-deps</code>
+   <em>(Note: <code>--legacy-peer-deps</code> resolves peer dependency resolution parameters in the Expo SDK ecosystem).</em></li>
+</ol>
+<hr />
+<h2>5. Environment Configuration</h2>
+<h3>Weather API (Optional)</h3>
+<p>To use real weather data instead of the simulator:</p>
+<ol>
+<li>Get a free API key from <a href="https://openweathermap.org/api">OpenWeatherMap</a></li>
+<li>Set environment variables:
+   <code>powershell
+   set OPENWEATHERMAP_API_KEY=your_api_key_here
+   set WEATHER_API_MODE=openweathermap</code></li>
+</ol>
+<p>Without an API key, the system uses simulated weather data by default (<code>WEATHER_API_MODE=simulation</code>).</p>
+<hr />
+<h2>6. Verification Checklist</h2>
+<p>Run these checks to confirm everything is working:</p>
+<pre><code class="language-powershell"># 1. PostgreSQL is running
+pg_isready -h localhost -p 5432
+# Expected: localhost:5432 - accepting connections
+
+# 2. Database exists with tables
+psql -U postgres -d pwos -c &quot;\dt&quot;
+# Expected: 5 tables listed
+
+# 3. Mosquitto is running
+mosquitto_sub -h localhost -t &quot;pwos/#&quot; -v
+# (leave running, should show no errors)
+
+# 4. Backend starts
+python src/backend/app.py
+# Expected: &quot;API Connected to MQTT Broker&quot; in logs
+
+# 5. Frontend starts (new terminal)
+cd src/frontend &amp;&amp; npm run dev
+# Expected: opens at http://localhost:5173
+
+# 6. Mobile app starts (new terminal)
+cd src/mobile
+npx.cmd tsc --noEmit
+npx.cmd expo start
+# Expected: Type checks successfully and starts the Metro bundler interface.
+</code></pre>
+<hr />
+<h2>Troubleshooting</h2>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>psql: command not found</code></td>
+<td>Add PostgreSQL bin to PATH: <code>C:\Program Files\PostgreSQL\15\bin</code></td>
+</tr>
+<tr>
+<td><code>Connection refused</code> on port 5432</td>
+<td>Start PostgreSQL: <code>net start postgresql-x64-15</code> (Windows)</td>
+</tr>
+<tr>
+<td><code>Connection refused</code> on port 1883</td>
+<td>Start Mosquitto: <code>net start mosquitto</code> (Windows)</td>
+</tr>
+<tr>
+<td><code>Password authentication failed</code></td>
+<td>Set <code>DB_PASSWORD</code> env var or edit <code>pg_hba.conf</code></td>
+</tr>
+<tr>
+<td><code>npm install</code> fails</td>
+<td>Delete <code>node_modules</code> and <code>package-lock.json</code>, then retry</td>
+</tr>
+<tr>
+<td><code>ModuleNotFoundError</code></td>
+<td>Activate venv: <code>.venv\Scripts\activate</code></td>
+</tr>
+<tr>
+<td>Frontend can't connect to MQTT</td>
+<td>Ensure Mosquitto has WebSocket listener on port 9001</td>
+</tr>
+<tr>
+<td>Backend says "Model not found"</td>
+<td>Run training: <code>python src/backend/models/train_model.py</code></td>
+</tr>
+<tr>
+<td>Mobile app can't connect to backend</td>
+<td>Settings host IP configuration must point to local Wi-Fi router IP (not <code>localhost</code>)</td>
+</tr>
+<tr>
+<td>Mobile app has type errors / SVG errors</td>
+<td>Run <code>npx.cmd tsc --noEmit</code> and ensure all tags inside Svg components are capitalized (e.g. <code>&lt;Path&gt;</code>, not <code>&lt;path&gt;</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Next Steps</h2>
+<p>After installation:
+1. <strong>Start the system</strong> — see <a href="QUICKSTART.html">Quick Start Guide</a>
+2. <strong>Understand the ML model</strong> — see <a href="../../ml/ml_model_guide.html">ML Model Guide</a>
+3. <strong>Explore the database</strong> — see <a href="../technical/database_guide.html">Database Guide</a>
+4. <strong>Debug MQTT</strong> — see <a href="../../technical_reference/specs/mqtt_topics.html">MQTT Topics Reference</a>
+5. <strong>Mobile Setup &amp; Guide</strong> — see <a href="../ui/mobile_guide.html">Mobile App Guide</a></p>
                             </div>
                         </article>
 
                         <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
-                            <a href="./getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                            <a href="../../getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
                                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
                                 <span>Back to Index</span>
                             </a>
@@ -479,7 +510,7 @@ DecayRate = base_decay * temp_factor * vpd_factor * time_factor
                             <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
                         </div>
                         <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
-                            <a href="./getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                            <a href="../../getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
                                 <i data-lucide="home" class="w-3.5 h-3.5"></i>
                                 <span>Back to Home</span>
                             </a>
@@ -541,7 +572,7 @@ DecayRate = base_decay * temp_factor * vpd_factor * time_factor
                     '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
                         '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
                             group.pages.map(function(page) {
-                                return '<li><a href="./' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                                return '<li><a href="../../' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
                             }).join('') +
                         '</ul>' +
                     '</div>' +
