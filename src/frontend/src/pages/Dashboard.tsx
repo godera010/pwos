@@ -3,6 +3,7 @@ import { api } from '../services/api';
 import type { SensorData, PredictionData, SystemLog, WeatherForecast, SystemSettings } from '../services/api';
 import { CircularGauge } from '../components/CircularGauge';
 import { WeatherCard } from '../components/WeatherCard';
+import type { Crop } from '../services/api';
 import {
     Activity,
     AlertTriangle,
@@ -20,7 +21,9 @@ import {
     ChevronDown,
     ChevronUp,
     TrendingUp,
-    TrendingDown
+    TrendingDown,
+    Sparkles,
+    Cpu
 } from 'lucide-react';
 import { LoadChart } from '../components/LoadChart';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +32,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from 'sonner';
 import { useMqtt } from '../hooks/useMqtt';
 import { QuickActions } from '../components/QuickActions';
+import { MLDecisionLog } from '../components/MLDecisionLog';
 
 const MOISTURE_SAFETY_THRESHOLD = 95;
 
@@ -57,6 +61,8 @@ export const Dashboard: React.FC = () => {
     const [history, setHistory] = useState<SensorData[]>([]);
     const [backendOffline, setBackendOffline] = useState(false);
     const [settings, setSettings] = useState<SystemSettings | null>(null);
+    const [crops, setCrops] = useState<Crop[]>([]);
+    const [activeCrop, setActiveCrop] = useState<Crop | null>(null);
     const [switchingCrop, setSwitchingCrop] = useState<string | null>(null);
     const [isXaiOpen, setIsXaiOpen] = useState(false);
     
@@ -110,7 +116,7 @@ export const Dashboard: React.FC = () => {
                     description: 'Predictive intelligence and history logs are unavailable. Operating in local telemetry mode.',
                     duration: 8000
                 });
-            } else {
+            } else if (!backendOffline && prevBackendOffline.current === true) {
                 toast.success('Backend API Connected', {
                     description: 'Predictive models and operational history logs are fully synchronized.',
                     duration: 4000
@@ -122,16 +128,20 @@ export const Dashboard: React.FC = () => {
 
     const fetchApiData = useCallback(async () => {
         try {
-            const [w, p, h, s] = await Promise.all([
+            const [w, p, h, s, cList, cActive] = await Promise.all([
                 api.getWeatherForecast(),
                 api.getPrediction(),
                 api.getHistory(1),
-                api.getSettings()
+                api.getSettings(),
+                api.getCrops(),
+                api.getActiveCrop()
             ]);
             setWeather(w);
             setPrediction(p);
             setHistory(h.reverse());
             setSettings(s);
+            setCrops(cList);
+            setActiveCrop(cActive);
             setBackendOffline(false);
         } catch (e) {
             console.error("Dashboard Fetch Error:", e);
@@ -162,17 +172,18 @@ export const Dashboard: React.FC = () => {
         };
     }, [fetchApiData, fetchLogs]);
 
-    const MOISTURE_CRITICAL_LOW = settings?.crop_critical_moisture ?? 15;
-    const MOISTURE_SATURATION_HIGH = settings?.crop_high_threshold ?? MOISTURE_SAFETY_THRESHOLD;
+    const MOISTURE_CRITICAL_LOW = activeCrop?.wilting_point_threshold ?? 15;
+    const MOISTURE_SATURATION_HIGH = (activeCrop?.target_moisture ?? 60) + 15;
 
     useEffect(() => {
-        const moisture = sensors.soil_moisture ?? 50;
+        if (!isHardwareOnline) return;
+        const moisture = Number(sensors.soil_moisture) || 0;
 
-        if (!isAuto && moisture < MOISTURE_CRITICAL_LOW) {
+        if (!isAuto && moisture >= 1.0 && moisture < MOISTURE_CRITICAL_LOW) {
             pumpManuallyOn.current = false;
             publishSystemMode('AUTO');
             toast.error('Critical Override: Soil Too Dry', {
-                description: `Soil moisture dropped to ${moisture.toFixed(0)}%. System automatically switched to AUTO mode to protect ${settings?.active_crop?.toUpperCase() || 'crop'} roots (critical limit is ${MOISTURE_CRITICAL_LOW}%).`,
+                description: `Soil moisture dropped to ${moisture.toFixed(0)}%. System automatically switched to AUTO mode to protect ${activeCrop?.name.toUpperCase() || 'crop'} roots (critical limit is ${MOISTURE_CRITICAL_LOW}%).`,
                 duration: 10000,
             });
             return;
@@ -187,7 +198,7 @@ export const Dashboard: React.FC = () => {
                 duration: 10000,
             });
         }
-    }, [sensors.soil_moisture, isAuto, backendOffline, publishPumpControl, publishSystemMode, MOISTURE_CRITICAL_LOW, MOISTURE_SATURATION_HIGH, settings]);
+    }, [sensors.soil_moisture, isAuto, backendOffline, publishPumpControl, publishSystemMode, MOISTURE_CRITICAL_LOW, MOISTURE_SATURATION_HIGH, settings, isHardwareOnline]);
 
     const toggleMode = () => {
         const newMode = isAuto ? 'MANUAL' : 'AUTO';
@@ -250,65 +261,73 @@ export const Dashboard: React.FC = () => {
     const isMoistureSaturated = moisture >= MOISTURE_SAFETY_THRESHOLD;
     const action = prediction?.recommended_action || 'MONITOR';
 
-    const themeMap: Record<string, {
-        cardBg: string;
-        border: string;
-        badge: string;
-        title: string;
-        titleText: string;
-        descText: string;
-        iconColor: string;
-        iconBg: string;
-    }> = {
+    const STATE_STYLING = {
+        STOP: {
+            badgeText: 'Autopilot Locked',
+            statusText: 'Autopilot Halted',
+            subtitle: 'Safety override active',
+            accentColor: 'rose',
+            glowColor: 'bg-rose-500/10 dark:bg-rose-950/20',
+            borderStyle: 'border-rose-200/80 dark:border-rose-900/40',
+            accentBorder: 'border-rose-500/20',
+            shadowColor: 'shadow-rose-500/[0.04]',
+            badgeStyle: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+            barGradient: 'from-rose-500 to-pink-500',
+            accentText: 'text-rose-600 dark:text-rose-400',
+            icon: ServerOff
+        },
         NOW: {
-            cardBg: 'bg-gradient-to-br from-indigo-950/10 via-violet-950/5 to-transparent dark:from-indigo-950/30 dark:via-violet-950/10 dark:to-black/30',
-            border: 'border-indigo-500/20 dark:border-indigo-500/35 shadow-[0_0_30px_rgba(99,102,241,0.04)]',
-            badge: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20 hover:bg-indigo-500/20',
-            title: 'Watering Recommended Now',
-            titleText: 'text-indigo-600 dark:text-indigo-400',
-            descText: 'text-indigo-700/80 dark:text-indigo-300/80',
-            iconColor: 'text-indigo-500',
-            iconBg: 'bg-indigo-500/10 border-indigo-500/20'
+            badgeText: 'Water Dispatched',
+            statusText: 'Irrigation Recommended',
+            subtitle: 'Optimal watering cycle active',
+            accentColor: 'indigo',
+            glowColor: 'bg-indigo-500/10 dark:bg-indigo-950/20',
+            borderStyle: 'border-indigo-200/80 dark:border-indigo-900/40',
+            accentBorder: 'border-indigo-500/20',
+            shadowColor: 'shadow-indigo-500/[0.04]',
+            badgeStyle: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+            barGradient: 'from-indigo-500 to-violet-500',
+            accentText: 'text-indigo-600 dark:text-indigo-400',
+            icon: Droplets
         },
         STALL: {
-            cardBg: 'bg-gradient-to-br from-amber-950/10 via-orange-950/5 to-transparent dark:from-amber-950/30 dark:via-orange-950/10 dark:to-black/30',
-            border: 'border-amber-500/20 dark:border-amber-500/35 shadow-[0_0_30px_rgba(245,158,11,0.04)]',
-            badge: 'bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20',
-            title: 'Irrigation Stalled (Delay Active)',
-            titleText: 'text-amber-600 dark:text-amber-500',
-            descText: 'text-amber-700/80 dark:text-amber-300/80',
-            iconColor: 'text-amber-500',
-            iconBg: 'bg-amber-500/10 border-amber-500/20'
-        },
-        STOP: {
-            cardBg: 'bg-gradient-to-br from-rose-950/10 via-pink-950/5 to-transparent dark:from-rose-950/30 dark:via-rose-950/10 dark:to-black/30',
-            border: 'border-rose-500/20 dark:border-rose-500/35 shadow-[0_0_30px_rgba(244,63,94,0.04)]',
-            badge: 'bg-rose-500/10 text-rose-500 border-rose-500/20 hover:bg-rose-500/20',
-            title: 'Autopilot Halted (Safety Override)',
-            titleText: 'text-rose-600 dark:text-rose-400',
-            descText: 'text-rose-700/80 dark:text-rose-300/80',
-            iconColor: 'text-rose-500',
-            iconBg: 'bg-rose-500/10 border-rose-500/20'
+            badgeText: 'Stall Mode Active',
+            statusText: 'Irrigation Stalled',
+            subtitle: 'Environmental safety delay',
+            accentColor: 'amber',
+            glowColor: 'bg-amber-500/10 dark:bg-amber-950/20',
+            borderStyle: 'border-amber-200/80 dark:border-amber-900/40',
+            accentBorder: 'border-amber-500/20',
+            shadowColor: 'shadow-amber-500/[0.04]',
+            badgeStyle: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+            barGradient: 'from-amber-500 to-orange-500',
+            accentText: 'text-amber-600 dark:text-amber-400',
+            icon: AlertTriangle
         },
         MONITOR: {
-            cardBg: 'bg-gradient-to-br from-emerald-950/10 via-teal-950/5 to-transparent dark:from-emerald-950/30 dark:via-teal-950/10 dark:to-black/30',
-            border: 'border-emerald-500/20 dark:border-emerald-500/35 shadow-[0_0_30px_rgba(16,185,129,0.04)]',
-            badge: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20',
-            title: 'System Optimal & Monitoring',
-            titleText: 'text-emerald-600 dark:text-emerald-400',
-            descText: 'text-emerald-700/80 dark:text-emerald-300/80',
-            iconColor: 'text-emerald-500',
-            iconBg: 'bg-emerald-500/10 border-emerald-500/20'
+            badgeText: 'System Optimal',
+            statusText: 'Surveillance Active',
+            subtitle: 'Soil values balanced',
+            accentColor: 'emerald',
+            glowColor: 'bg-emerald-500/10 dark:bg-emerald-950/20',
+            borderStyle: 'border-emerald-200/80 dark:border-emerald-900/40',
+            accentBorder: 'border-emerald-500/20',
+            shadowColor: 'shadow-emerald-500/[0.04]',
+            badgeStyle: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+            barGradient: 'from-emerald-500 to-teal-500',
+            accentText: 'text-emerald-600 dark:text-emerald-400',
+            icon: CheckCircle2
         }
     };
 
-    const activeTheme = themeMap[action] || themeMap.MONITOR;
+    const activeTheme = STATE_STYLING[action as keyof typeof STATE_STYLING] || STATE_STYLING.MONITOR;
+    const StatusIcon = activeTheme.icon;
 
     const activeReason = prediction?.ml_analysis?.reason || 
-        (action === 'STALL' ? "Environmental conditions require a delay to preserve soil resources." :
-         action === 'NOW' ? "Soil moisture trending low. ML model suggests hydration cycle." :
-         action === 'STOP' ? "Failsafe condition engaged. Pump operation disabled." :
-         "Soil moisture stable and optimal based on live evapotranspiration.");
+        (action === 'STALL' ? "High wind speed detected. Postponing irrigation program to prevent water waste and drift." :
+         action === 'NOW' ? "Soil moisture is trending below optimal range. Initiating target crop hydration program." :
+         action === 'STOP' ? "Hardware node disconnected. The physical safety interlock has been triggered to prevent pump damage." :
+         "Moisture and temperature balances are stable. System continuing passive surveillance loops.");
 
     const deduplicatedLogs = logs.reduce<SystemLog[]>((acc, log) => {
         if (acc.length === 0 || acc[acc.length - 1].message !== log.message) {
@@ -369,7 +388,7 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* Active Crop Context Manager */}
-            {settings && (
+            {activeCrop && (
                 <div className="relative overflow-hidden border border-slate-200 dark:border-slate-800 bg-card p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="flex items-center gap-4">
                         <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-500">
@@ -377,37 +396,28 @@ export const Dashboard: React.FC = () => {
                         </div>
                         <div>
                             <h2 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
-                                Active Crop: {settings.active_crop.toUpperCase()}
+                                Active Crop: {activeCrop.name.toUpperCase()}
                                 <span className="text-xs font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                                    Target {settings.crop_target_moisture ?? 60}%
+                                    Target {activeCrop.target_moisture}%
                                 </span>
                             </h2>
-                            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                                Autopilot safety overrides will trigger below <span className="text-red-400 font-bold">{settings.crop_critical_moisture ?? 15}%</span> or above <span className="text-indigo-400 font-bold">{settings.crop_high_threshold ?? 85}%</span> moisture.
-                            </p>
                         </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
-                        {/* Climate bounding badges */}
-                        <div className="flex items-center gap-2 bg-sky-500/10 border border-sky-500/20 px-3 py-2 rounded-xl text-sky-400 font-bold text-xs">
-                            <Compass className="size-3.5" />
-                            <span>Region: {settings.active_region.toUpperCase()}</span>
-                        </div>
-                        
                         {/* Quick selector dropdown */}
                         <div className="relative">
                             <select
-                                value={settings.active_crop}
+                                value={activeCrop.id}
                                 disabled={switchingCrop !== null}
                                 onChange={async (e) => {
-                                    const nextCrop = e.target.value;
-                                    setSwitchingCrop(nextCrop);
+                                    const nextCropId = e.target.value;
+                                    setSwitchingCrop(nextCropId);
                                     try {
-                                        const res = await api.saveSettings({ active_crop: nextCrop });
+                                        const res = await api.setActiveCrop(nextCropId);
                                         if (res.status === 'success') {
-                                            setSettings(res.settings);
-                                            toast.success(`Synchronized Active Crop to ${nextCrop.toUpperCase()}`, {
+                                            setActiveCrop(res.active_crop);
+                                            toast.success(`Synchronized Active Crop to ${res.active_crop.name.toUpperCase()}`, {
                                                 description: `Autopilot controller limits dynamically updated.`
                                             });
                                             fetchApiData();
@@ -420,11 +430,11 @@ export const Dashboard: React.FC = () => {
                                 }}
                                 className="bg-secondary/35 border border-border focus:border-emerald-500/50 focus:outline-none rounded-xl px-4 py-2 text-xs font-bold tracking-wide text-foreground transition-all cursor-pointer hover:bg-secondary/60 appearance-none pr-8 h-10"
                             >
-                                <option value="maize" className="bg-slate-900 text-white">Maize (Zea mays)</option>
-                                <option value="potato" className="bg-slate-900 text-white">Potato (Solanum tuberosum)</option>
-                                <option value="tomato" className="bg-slate-900 text-white">Tomato (Solanum lycopersicum)</option>
-                                <option value="onion" className="bg-slate-900 text-white">Onion (Allium cepa)</option>
-                                <option value="sorghum" className="bg-slate-900 text-white">Sorghum (Sorghum bicolor)</option>
+                                {crops.map(crop => (
+                                    <option key={crop.id} value={crop.id} className="bg-slate-900 text-white">
+                                        {crop.name}
+                                    </option>
+                                ))}
                             </select>
                             <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
                         </div>
@@ -443,41 +453,54 @@ export const Dashboard: React.FC = () => {
                         </div>
                     </CardHeader>
                     <CardContent className="flex flex-col items-center pt-2 pb-6">
-                        <CircularGauge
-                            value={sensors.soil_moisture}
-                            unit="%"
-                            size={180}
-                            thickness={14}
-                        />
-                        <div className="mt-4 text-center max-w-xs">
-                            <span className={`text-xs font-black uppercase px-3 py-1 rounded-full border ${
-                                sensors.soil_moisture < MOISTURE_CRITICAL_LOW
-                                    ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
-                                    : sensors.soil_moisture < (settings?.moisture_threshold ?? 35)
-                                    ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20'
-                                    : sensors.soil_moisture < MOISTURE_SATURATION_HIGH
-                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                                    : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 animate-pulse'
-                            }`}>
-                                {sensors.soil_moisture < MOISTURE_CRITICAL_LOW ? 'Critical Dry' :
-                                 sensors.soil_moisture < (settings?.moisture_threshold ?? 35) ? 'Low Moisture' :
-                                 sensors.soil_moisture < MOISTURE_SATURATION_HIGH ? 'Optimal' : 'Saturated Limit'}
-                            </span>
-                            <p className={`text-[10px] mt-3 font-semibold tracking-wide leading-relaxed ${
-                                sensors.soil_moisture < MOISTURE_CRITICAL_LOW
-                                    ? 'text-rose-500 animate-pulse'
-                                    : sensors.soil_moisture < (settings?.moisture_threshold ?? 35)
-                                    ? 'text-orange-500'
-                                    : sensors.soil_moisture < MOISTURE_SATURATION_HIGH
-                                    ? 'text-emerald-500'
-                                    : 'text-cyan-500'
-                            }`}>
-                                {sensors.soil_moisture < MOISTURE_CRITICAL_LOW ? `Soil critically dry (<${MOISTURE_CRITICAL_LOW}%). Failsafe auto-irrigation engaged.` :
-                                 sensors.soil_moisture < (settings?.moisture_threshold ?? 35) ? `Moisture low. Autopilot scheduled to trigger soon.` :
-                                 sensors.soil_moisture < MOISTURE_SATURATION_HIGH ? `Moisture optimal for ${settings?.active_crop || 'crop'} growth.` :
-                                 `Soil saturated (≥${MOISTURE_SATURATION_HIGH}%). Pump locked out to prevent root rot.`}
-                            </p>
-                        </div>
+                        {(() => {
+                            const displayMoisture = Number(sensors.soil_moisture) || 0;
+                            return (
+                                <>
+                                    <CircularGauge
+                                        value={displayMoisture}
+                                        unit="%"
+                                        size={180}
+                                        thickness={14}
+                                    />
+                                    <div className="mt-4 text-center max-w-xs">
+                                        <span className={`text-xs font-black uppercase px-3 py-1 rounded-full border ${
+                                            displayMoisture < 1.0
+                                                ? 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
+                                                : displayMoisture < MOISTURE_CRITICAL_LOW
+                                                ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                                                : displayMoisture < (settings?.moisture_threshold ?? 35)
+                                                ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20'
+                                                : displayMoisture < MOISTURE_SATURATION_HIGH
+                                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                                : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 animate-pulse'
+                                        }`}>
+                                            {displayMoisture < 1.0 ? 'Sensor Error' :
+                                             displayMoisture < MOISTURE_CRITICAL_LOW ? 'Critical Dry' :
+                                             displayMoisture < (settings?.moisture_threshold ?? 35) ? 'Low Moisture' :
+                                             displayMoisture < MOISTURE_SATURATION_HIGH ? 'Optimal' : 'Saturated Limit'}
+                                        </span>
+                                        <p className={`text-[10px] mt-3 font-semibold tracking-wide leading-relaxed ${
+                                            displayMoisture < 1.0
+                                                ? 'text-red-500 animate-pulse'
+                                                : displayMoisture < MOISTURE_CRITICAL_LOW
+                                                ? 'text-rose-500 animate-pulse'
+                                                : displayMoisture < (settings?.moisture_threshold ?? 35)
+                                                ? 'text-orange-500'
+                                                : displayMoisture < MOISTURE_SATURATION_HIGH
+                                                ? 'text-emerald-500'
+                                                : 'text-cyan-500'
+                                        }`}>
+                                            {displayMoisture < 1.0 ? `Broken or disconnected sensor detected. Auto-irrigation halted.` :
+                                             displayMoisture < MOISTURE_CRITICAL_LOW ? `Soil critically dry (<${MOISTURE_CRITICAL_LOW}%). Failsafe auto-irrigation engaged.` :
+                                             displayMoisture < (settings?.moisture_threshold ?? 35) ? `Moisture low. Autopilot scheduled to trigger soon.` :
+                                             displayMoisture < MOISTURE_SATURATION_HIGH ? `Moisture optimal for ${activeCrop?.name || 'crop'} growth.` :
+                                             `Soil saturated (≥${MOISTURE_SATURATION_HIGH}%). Pump locked out to prevent root rot.`}
+                                        </p>
+                                    </div>
+                                </>
+                            );
+                        })()}
                     </CardContent>
                 </Card>
 
@@ -616,13 +639,19 @@ export const Dashboard: React.FC = () => {
 
             {/* Live Sensor Feed Chart */}
             <Card className="shadow-none border border-slate-200 dark:border-slate-800 bg-card rounded-2xl relative overflow-hidden">
-                {backendOffline && (
+                {backendOffline ? (
                     <div className="absolute inset-0 bg-transparent flex flex-col justify-end p-2 pointer-events-none">
                         <Badge variant="destructive" className="self-end text-[10px] uppercase font-bold tracking-wider opacity-80 z-10 w-fit">
                             History Tracking Offline
                         </Badge>
                     </div>
-                )}
+                ) : !isHardwareOnline ? (
+                    <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] flex items-center justify-center z-10 pointer-events-none">
+                        <Badge variant="secondary" className="border-red-500/50 text-red-500 text-[10px] uppercase font-bold tracking-wider">
+                            Sensor Stream Offline
+                        </Badge>
+                    </div>
+                ) : null}
                 <CardHeader className="flex flex-row items-baseline justify-between">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
@@ -661,157 +690,165 @@ export const Dashboard: React.FC = () => {
 
             {/* AI Prediction + Recent System Events Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* AI Prediction Engine Card */}
-                <Card className={`shadow-none border transition-all duration-500 rounded-2xl ${backendOffline ? 'bg-amber-500/10 border-amber-500/20' : `bg-card text-card-foreground ${activeTheme.cardBg} ${activeTheme.border}`}`}>
-                    <CardContent className="p-6 md:p-8">
-                        <div className="flex flex-col gap-6">
-                            <div className="flex-1 space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <Badge className={`uppercase tracking-widest text-[9px] font-black px-2.5 py-0.5 rounded-full ${backendOffline ? 'bg-amber-500/20 text-amber-700 dark:text-amber-400' : activeTheme.badge}`}>
-                                        {backendOffline ? 'AI Engine Disconnected' : 'AI Prediction Engine'}
-                                    </Badge>
-                                    {!backendOffline && (
-                                        <div className="flex items-center gap-1">
+                {/* ── Main Premium AI Prediction Card ── */}
+                <div className={`w-full bg-card text-card-foreground border ${activeTheme.borderStyle} ${activeTheme.shadowColor} shadow-2xl rounded-2xl relative overflow-hidden transition-all duration-700 ease-out flex flex-col`}>
+                    
+                    {/* Dynamic Abstract Cinematic Ambient Glow */}
+                    {!backendOffline && <div className={`absolute -top-32 right-[-10%] w-72 h-72 rounded-full blur-[110px] transition-all duration-1000 opacity-60 pointer-events-none mix-blend-screen ${activeTheme.glowColor}`} />}
+
+                    {/* Outer Grid Spacer */}
+                    <div className="p-8 md:p-10 space-y-7 relative z-10 flex-1 flex flex-col">
+
+                        {/* ── Clean Inline Brand Header Row ── */}
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
+                                <Brain className="size-4" />
+                                <span className="text-[10px] font-bold tracking-[0.25em] uppercase">
+                                    {backendOffline ? 'AI Engine Disconnected' : 'P-WOS Intelligence'}
+                                </span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                {!backendOffline && (
+                                    isHardwareOnline ? (
+                                        <div className="flex items-center gap-1.5 mr-2">
                                             <div className="size-1.5 rounded-full bg-indigo-500 animate-pulse" />
                                             <span className="text-[9px] font-black uppercase text-indigo-500/80 tracking-wider">Live Inference</span>
                                         </div>
-                                    )}
+                                    ) : (
+                                        <Badge variant="outline" className="text-amber-500 border-amber-500/20 text-[9px] uppercase tracking-wider font-black mr-2">
+                                            Stale Telemetry
+                                        </Badge>
+                                    )
+                                )}
+                                <span className={`text-[9px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border transition-all duration-500 ${backendOffline ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' : activeTheme.badgeStyle}`}>
+                                    {backendOffline ? 'Offline' : activeTheme.badgeText}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* ── Visual Title Section ── */}
+                        {backendOffline ? (
+                            <div className="space-y-1">
+                                <h1 className="text-3xl font-extrabold tracking-tight transition-colors duration-500 text-amber-700 dark:text-amber-500">
+                                    Database API Offline
+                                </h1>
+                                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                                    Machine learning inference is temporarily unavailable.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-1">
+                                <h1 className={`text-3xl font-extrabold tracking-tight transition-colors duration-500 ${activeTheme.accentText}`}>
+                                    {activeTheme.statusText}
+                                </h1>
+                                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                                    {activeTheme.subtitle}
+                                </p>
+                            </div>
+                        )}
+
+                        {/* ── Elegant Quote Highlight Panel ── */}
+                        <div className="p-5 bg-slate-50/70 dark:bg-slate-950/40 border-l-[3px] border-slate-900 dark:border-white rounded-r-2xl flex gap-4 transition-all duration-500">
+                            <div className="mt-0.5">
+                                {backendOffline ? <ServerOff className="size-4 text-amber-500" /> : <StatusIcon className={`size-4 ${activeTheme.accentText}`} />}
+                            </div>
+                            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                                {backendOffline ? "System is running exclusively on raw hardware logic over MQTT. Manual interaction may be required." : activeReason}
+                            </p>
+                        </div>
+
+                        {/* ── Ultra-Sleek Fine-Line Confidence Meter ── */}
+                        {!backendOffline && (
+                            <div className="space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase">Model Certainty</span>
+                                    <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+                                        {prediction?.ml_analysis.confidence || 94}<span className="text-[10px] font-bold text-slate-400">%</span>
+                                    </span>
                                 </div>
-                                
-                                {backendOffline ? (
-                                    <div className="py-2">
-                                        <h2 className="text-xl font-black text-amber-700 dark:text-amber-500">Database API Offline</h2>
-                                        <p className="text-sm mt-2 text-slate-500 dark:text-slate-400 font-medium">Machine learning inference is temporarily unavailable. System is running exclusively on raw hardware logic over MQTT. Manual interaction may be required.</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        <h2 className={`text-2xl md:text-3xl font-black leading-tight tracking-tight ${activeTheme.titleText}`}>
-                                            {activeTheme.title}
-                                        </h2>
-                                        <p className="text-slate-600 dark:text-neutral-300 text-xs md:text-sm font-semibold leading-relaxed p-4 rounded-xl bg-secondary/35 border border-border">
-                                            {activeReason}
-                                        </p>
+
+                                {/* Premium Fine-Line Meter Track */}
+                                <div className="relative h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div 
+                                        style={{ width: `${prediction?.ml_analysis.confidence || 94}%` }}
+                                        className={`h-full rounded-full bg-gradient-to-r transition-all duration-1000 ${activeTheme.barGradient}`}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── Minimalist Collapsible ML Diagnostics Drawer ── */}
+                        {!backendOffline && (
+                            <div className="pt-2 border-t border-slate-100 dark:border-slate-800/60 mt-auto">
+                                <button
+                                    onClick={() => setIsXaiOpen(!isXaiOpen)}
+                                    className="flex items-center justify-between w-full text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors py-1 group"
+                                >
+                                    <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                        <Sparkles className="size-3.5" />
+                                        Explainable ML Metrics
+                                    </span>
+                                    {isXaiOpen ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                                </button>
+
+                                {isXaiOpen && (
+                                    <div className="mt-4 grid grid-cols-2 gap-3 animate-in slide-in-from-top-2 duration-300">
+                                        {(() => {
+                                            const features = prediction?.ml_analysis?.features_used || {};
+                                            return (
+                                                <>
+                                                    <div className="p-4 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-800/40 space-y-1">
+                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Moisture Deficit</span>
+                                                        <div className="flex items-center gap-1.5 text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">
+                                                            {features.moisture_change_rate !== undefined ? (
+                                                                <>
+                                                                    {features.moisture_change_rate > 0 ? (
+                                                                        <TrendingUp className="size-3.5 text-emerald-500" />
+                                                                    ) : (
+                                                                        <TrendingDown className="size-3.5 text-indigo-500" />
+                                                                    )}
+                                                                    <span>{features.moisture_change_rate.toFixed(2)} %/h</span>
+                                                                </>
+                                                            ) : (
+                                                                <span className="text-slate-400">N/A</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="p-4 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-800/40 space-y-1">
+                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Atmosphere VPD</span>
+                                                        <div className="flex items-center gap-1.5 text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">
+                                                            {features.vpd !== undefined ? (
+                                                                <>
+                                                                    <TrendingUp className="size-3.5 text-amber-500" />
+                                                                    <span>{features.vpd.toFixed(2)} kPa</span>
+                                                                </>
+                                                            ) : (
+                                                                <span className="text-slate-400">N/A</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            );
+                                        })()}
                                     </div>
                                 )}
                             </div>
-                            
-                            {!backendOffline && (
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-4 p-4 bg-secondary/35 border border-border rounded-xl">
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-neutral-400">Confidence</span>
-                                            <span className="text-2xl font-black text-slate-800 dark:text-white">{prediction?.ml_analysis.confidence || 94}%</span>
-                                        </div>
-                                        <Progress value={prediction?.ml_analysis.confidence || 94} className="flex-1 h-2.5" />
-                                    </div>
-
-                                    {/* Collapsible Diagnostics Drawer */}
-                                    <div className="pt-2 border-t border-border/40">
-                                        <button
-                                            onClick={() => setIsXaiOpen(!isXaiOpen)}
-                                            className="flex items-center justify-between w-full px-4 py-3 bg-secondary/30 hover:bg-secondary/60 border border-border rounded-xl text-xs font-bold transition-all duration-300 group text-slate-700 dark:text-neutral-300 animate-in"
-                                        >
-                                            <span className="flex items-center gap-2">
-                                                <Brain className={`size-4 ${activeTheme.iconColor} animate-pulse`} />
-                                                Explainable ML Telemetry & Features
-                                            </span>
-                                            {isXaiOpen ? <ChevronUp className="size-4 text-muted-foreground group-hover:text-foreground" /> : <ChevronDown className="size-4 text-muted-foreground group-hover:text-foreground" />}
-                                        </button>
-
-                                        {isXaiOpen && (
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 p-4 rounded-xl bg-secondary/20 dark:bg-secondary/40 border border-border text-xs text-foreground backdrop-blur-md animate-in slide-in-from-top duration-300">
-                                                {(() => {
-                                                    const features = prediction?.ml_analysis?.features_used || {};
-                                                    return (
-                                                        <>
-                                                            <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-secondary/30 border border-border">
-                                                                <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider">Moisture Rate</span>
-                                                                <div className="flex items-center gap-1.5 mt-0.5">
-                                                                    {features.moisture_change_rate !== undefined ? (
-                                                                        <>
-                                                                            {features.moisture_change_rate > 0 ? (
-                                                                                <TrendingUp className="size-4 text-emerald-500" />
-                                                                            ) : (
-                                                                                <TrendingDown className="size-4 text-indigo-500" />
-                                                                            )}
-                                                                            <span className="font-mono font-bold text-slate-800 dark:text-neutral-200 text-sm">
-                                                                                {features.moisture_change_rate.toFixed(2)} %/h
-                                                                            </span>
-                                                                        </>
-                                                                    ) : (
-                                                                        <span className="font-mono text-slate-400">N/A</span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-secondary/30 border border-border">
-                                                                <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider">Midday Peak Guard</span>
-                                                                <div className="flex items-center gap-1.5 mt-0.5 font-bold text-slate-800 dark:text-neutral-200">
-                                                                    {features.is_hot_hours !== undefined ? (
-                                                                        <span className={features.is_hot_hours === 1 ? 'text-amber-500 font-bold' : 'text-slate-400'}>
-                                                                            {features.is_hot_hours === 1 ? 'ACTIVE (Midday)' : 'INACTIVE (Cool)'}
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="text-slate-400">N/A</span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-secondary/30 border border-border">
-                                                                <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider">Vapor Deficit (VPD)</span>
-                                                                <span className="font-mono font-bold text-slate-800 dark:text-neutral-200 text-sm mt-0.5">
-                                                                    {features.vpd !== undefined ? `${features.vpd.toFixed(2)} kPa` : 'N/A'}
-                                                                </span>
-                                                            </div>
-
-                                                            <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-secondary/30 border border-border">
-                                                                <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider">High Wind Guard</span>
-                                                                <div className="flex items-center gap-1.5 mt-0.5 font-bold text-slate-800 dark:text-neutral-200">
-                                                                    {features.is_high_wind !== undefined ? (
-                                                                        <span className={features.is_high_wind === 1 ? 'text-red-500 font-black animate-pulse' : 'text-slate-400'}>
-                                                                            {features.is_high_wind === 1 ? '⚠️ HIGH WIND DELAY' : '✓ Normal Winds'}
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="text-slate-400">N/A</span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-secondary/30 border border-border">
-                                                                <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider">Rolling Moisture (6h)</span>
-                                                                <span className="font-mono font-bold text-slate-800 dark:text-neutral-200 text-sm mt-0.5">
-                                                                    {features.moisture_rolling_6 !== undefined ? `${features.moisture_rolling_6.toFixed(1)}%` : 'N/A'}
-                                                                </span>
-                                                            </div>
-
-                                                            <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-secondary/30 border border-border">
-                                                                <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-400 uppercase tracking-wider">Rolling Temp (6h)</span>
-                                                                <span className="font-mono font-bold text-slate-800 dark:text-neutral-200 text-sm mt-0.5">
-                                                                    {features.temp_rolling_6 !== undefined ? `${features.temp_rolling_6.toFixed(1)}°C` : 'N/A'}
-                                                                </span>
-                                                            </div>
-                                                        </>
-                                                    );
-                                                })()}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
+                        )}
+                    </div>
+                </div>
 
                 {/* Recent System Events Card */}
-                <Card className="shadow-none border border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl flex flex-col bg-slate-950 text-slate-100 font-mono">
-                    <CardHeader className="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md px-6 py-4 flex flex-row items-center justify-between">
+                <Card className="shadow-none border border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl flex flex-col bg-card text-card-foreground font-mono">
+                    <CardHeader className="border-b border-border bg-card/80 backdrop-blur-md px-6 py-4 flex flex-row items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-1.5">
                                 <div className="size-2.5 rounded-full bg-rose-500" />
                                 <div className="size-2.5 rounded-full bg-amber-500" />
                                 <div className="size-2.5 rounded-full bg-emerald-500" />
                             </div>
-                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em] flex items-center gap-2 pl-2 border-l border-slate-800">
+                            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.15em] flex items-center gap-2 pl-2 border-l border-border">
                                 <Terminal className="size-3.5 text-indigo-400" /> p-wos://system-events
                             </span>
                         </div>
@@ -820,11 +857,11 @@ export const Dashboard: React.FC = () => {
                         ) : (
                             <div className="flex items-center gap-1.5">
                                 <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[9px] font-bold text-emerald-400 tracking-wider">LIVE FEED</span>
+                                <span className="text-[9px] font-bold text-emerald-500 tracking-wider">LIVE FEED</span>
                             </div>
                         )}
                     </CardHeader>
-                    <CardContent className="flex-1 p-6 max-h-[360px] overflow-y-auto scrollbar-thin scrollbar-track-slate-950 scrollbar-thumb-slate-800">
+                    <CardContent className="flex-1 p-6 max-h-[360px] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
                         <div className="space-y-3.5">
                             {deduplicatedLogs.slice(0, 10).map((log) => {
                                 const bulletColor = log.type === 'ERROR'
@@ -840,33 +877,33 @@ export const Dashboard: React.FC = () => {
                                         : '[INF]';
 
                                 const typeColor = log.type === 'ERROR'
-                                    ? 'text-rose-400 font-bold'
+                                    ? 'text-rose-500 font-bold'
                                     : log.type === 'ACTION'
-                                        ? 'text-violet-400 font-bold'
-                                        : 'text-sky-400 font-bold';
+                                        ? 'text-violet-500 font-bold'
+                                        : 'text-sky-500 font-bold';
 
                                 return (
-                                    <div key={log.id} className="flex items-start justify-between gap-4 p-2 rounded-xl bg-slate-900/30 hover:bg-slate-900/60 border border-transparent hover:border-slate-900 transition-all duration-300 group">
+                                    <div key={log.id} className="flex items-start justify-between gap-4 p-2 rounded-xl bg-secondary/30 hover:bg-secondary/60 border border-transparent hover:border-border transition-all duration-300 group">
                                         <div className="flex items-start gap-3">
                                             <div className={`size-2 rounded-full mt-1.5 flex-shrink-0 ${bulletColor}`} />
                                             <div className="space-y-0.5">
                                                 <div className="flex items-center gap-2">
                                                     <span className={`text-[10px] ${typeColor} tracking-wide`}>{typeTag}</span>
-                                                    <span className="text-[10px] text-slate-500 font-medium">
+                                                    <span className="text-[10px] text-muted-foreground font-medium">
                                                         {new Date(log.timestamp.replace(/ GMT$/, '').replace(/Z$/, '')).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                                                     </span>
                                                 </div>
-                                                <p className="text-xs text-slate-200 font-medium leading-relaxed tracking-wide group-hover:text-white transition-colors">{log.message}</p>
+                                                <p className="text-xs text-foreground font-medium leading-relaxed tracking-wide transition-colors">{log.message}</p>
                                             </div>
                                         </div>
-                                        <span className="text-[10px] font-black text-slate-500 group-hover:text-slate-400 flex-shrink-0 pt-0.5 font-mono">
+                                        <span className="text-[10px] font-black text-muted-foreground group-hover:text-foreground flex-shrink-0 pt-0.5 font-mono">
                                             {getRelativeTime(log.timestamp)}
                                         </span>
                                     </div>
                                 );
                             })}
                             {deduplicatedLogs.length === 0 && (
-                                <div className="flex flex-col items-center justify-center py-12 text-slate-600">
+                                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                                     <Terminal className="size-8 mb-2 opacity-30" />
                                     <p className="text-xs font-semibold">No recent system events logged.</p>
                                 </div>

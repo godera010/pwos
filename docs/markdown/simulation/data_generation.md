@@ -50,7 +50,7 @@ The flow of information from raw simulation processes to the final trained Machi
 2. **MQTT Broker**: Relays data packets over topic channels.
 3. **Flask API**: Receives broker updates, checks thresholds, and writes records into database tables.
 4. **PostgreSQL Database**: Stores tables for sensor logs, weather forecasts, and automation state events.
-5. **CSV Dataset Extractor**: Compiles tables into structured columns representing the 12 features evaluated by the brain.
+5. **CSV Dataset Extractor**: Compiles tables into structured columns representing the 17 features evaluated by the brain.
 6. **Model Training**: Evaluates training data using a Random Forest classifier to generate `rf_model.pkl`.
 
 ---

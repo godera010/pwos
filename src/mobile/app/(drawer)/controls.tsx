@@ -29,9 +29,9 @@ export default function ControlsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#090d16]" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-[#000000]" edges={['top']}>
       {/* HEADER */}
-      <View className="px-6 py-4 border-b border-[#131b2e] bg-[#0c1220] flex-row items-center justify-between">
+      <View className="px-6 py-4 border-b border-[#1f1f23] bg-[#09090b] flex-row items-center justify-between">
         <View>
           <Text className="text-white text-xl font-bold tracking-tight">SYSTEM CONTROLS</Text>
           <Text className="text-slate-400 text-xs mt-0.5">Watering Override Center</Text>
@@ -48,7 +48,7 @@ export default function ControlsScreen() {
       <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingVertical: 20 }}>
         
         {/* MODE OVERRIDE CONTROLLER CARD */}
-        <View className="bg-[#0c1220] border border-[#131b2e] rounded-3xl p-5 mb-5 shadow-lg relative overflow-hidden">
+        <View className="bg-[#09090b] border border-[#1f1f23] rounded-3xl p-5 mb-5 shadow-lg relative overflow-hidden">
           <View className="absolute top-0 right-0 w-32 h-32 bg-sky-500/5 rounded-full blur-2xl" />
           
           <View className="flex-row items-center justify-between mb-4">
@@ -71,7 +71,7 @@ export default function ControlsScreen() {
           </View>
 
           {systemMode === 'AUTO' ? (
-            <View className="bg-[#131b2e] rounded-2xl p-3 flex-row items-center space-x-2">
+            <View className="bg-[#1f1f23] rounded-2xl p-3 flex-row items-center space-x-2">
               <View className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
               <Text className="text-emerald-400 text-xs font-semibold flex-1">
                 Autopilot Active. Physical valves and solenoids are governed by AI algorithms.
@@ -88,7 +88,7 @@ export default function ControlsScreen() {
         </View>
 
         {/* MANUAL VALVE INITIATION CARD */}
-        <View className="bg-[#0c1220] border border-[#131b2e] rounded-3xl p-5 mb-5 shadow-lg relative overflow-hidden">
+        <View className="bg-[#09090b] border border-[#1f1f23] rounded-3xl p-5 mb-5 shadow-lg relative overflow-hidden">
           <View className="absolute top-0 left-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl" />
           
           <Text className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-4">Manual Solenoid Trigger</Text>
@@ -99,7 +99,7 @@ export default function ControlsScreen() {
             <View className="flex-row items-center space-x-5 mt-2">
               <Pressable
                 onPress={() => adjustDuration(-5)}
-                className="w-11 h-11 bg-[#131b2e] border border-slate-700 rounded-full items-center justify-center active:bg-slate-700"
+                className="w-11 h-11 bg-[#1f1f23] border border-slate-700 rounded-full items-center justify-center active:bg-slate-700"
               >
                 <Text className="text-white text-2xl font-bold">-</Text>
               </Pressable>
@@ -111,7 +111,7 @@ export default function ControlsScreen() {
 
               <Pressable
                 onPress={() => adjustDuration(5)}
-                className="w-11 h-11 bg-[#131b2e] border border-slate-700 rounded-full items-center justify-center active:bg-slate-700"
+                className="w-11 h-11 bg-[#1f1f23] border border-slate-700 rounded-full items-center justify-center active:bg-slate-700"
               >
                 <Text className="text-white text-2xl font-bold">+</Text>
               </Pressable>
@@ -148,8 +148,8 @@ export default function ControlsScreen() {
         </View>
 
         {/* MQTT BROADCAST TERMINAL LOG */}
-        <View className="bg-[#0c1220] border border-[#131b2e] rounded-3xl p-5 shadow-lg overflow-hidden">
-          <View className="flex-row items-center justify-between border-b border-[#131b2e] pb-3.5 mb-3">
+        <View className="bg-[#09090b] border border-[#1f1f23] rounded-3xl p-5 shadow-lg overflow-hidden">
+          <View className="flex-row items-center justify-between border-b border-[#1f1f23] pb-3.5 mb-3">
             <View className="flex-row items-center space-x-2">
               <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
                 <Polyline points="4 17 10 11 4 5" />
@@ -157,13 +157,13 @@ export default function ControlsScreen() {
               </Svg>
               <Text className="text-white font-bold tracking-tight">MQTT Broadcast Console</Text>
             </View>
-            <View className="bg-[#131b2e] px-2.5 py-0.5 rounded-full border border-slate-700">
+            <View className="bg-[#1f1f23] px-2.5 py-0.5 rounded-full border border-slate-700">
               <Text className="text-slate-400 text-[9px] font-bold uppercase tracking-wide">Live Frame Listener</Text>
             </View>
           </View>
 
           {/* Black Matrix Screen */}
-          <View className="bg-[#04060b] border border-[#131b2e] rounded-2xl p-3 h-64 overflow-hidden relative">
+          <View className="bg-[#09090b] border border-[#1f1f23] rounded-2xl p-3 h-64 overflow-hidden relative">
             {mqttLogs.length === 0 ? (
               <View className="flex-1 items-center justify-center">
                 <Text className="text-emerald-500/40 text-xs font-mono">Listening for MQTT frames...</Text>

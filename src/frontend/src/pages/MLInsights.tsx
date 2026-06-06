@@ -24,6 +24,7 @@ import {
     ChevronDown
 } from 'lucide-react';
 import { api, type PredictionData, type SystemSettings } from '../services/api';
+import { MLDecisionLog } from '../components/MLDecisionLog';
 
 export const MLInsights: React.FC = () => {
     const [prediction, setPrediction] = useState<PredictionData | null>(null);
@@ -32,11 +33,16 @@ export const MLInsights: React.FC = () => {
     const [switchingCrop, setSwitchingCrop] = useState<string | null>(null);
 
     const featureImportance = [
-        { name: 'Soil Moisture', value: 0.45, color: '#10b981' }, 
-        { name: 'Rain Forecast', value: 0.25, color: '#3b82f6' }, 
-        { name: 'Temperature', value: 0.15, color: '#f97316' },   
-        { name: 'Humidity', value: 0.10, color: '#8b5cf6' },      
-        { name: 'Time of Day', value: 0.05, color: '#64748b' },   
+        { name: 'Soil Moisture', value: 0.339, color: '#10b981' }, 
+        { name: 'Moisture (6h Roll)', value: 0.293, color: '#06b6d4' },
+        { name: 'Day of Week', value: 0.113, color: '#f59e0b' },
+        { name: 'Time of Day', value: 0.088, color: '#8b5cf6' },
+        { name: 'Temp (6h Roll)', value: 0.086, color: '#f97316' },   
+        { name: 'Moisture Δ Rate', value: 0.045, color: '#ec4899' },
+        { name: 'Daytime Flag', value: 0.016, color: '#eab308' },
+        { name: 'Peak Heat Flag', value: 0.008, color: '#ef4444' },
+        { name: 'Critical Moisture', value: 0.004, color: '#64748b' },
+        { name: 'Target Moisture', value: 0.004, color: '#14b8a6' },
     ];
 
     const fetchData = async () => {
@@ -106,7 +112,7 @@ export const MLInsights: React.FC = () => {
                         </div>
                         <div>
                             <h2 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
-                                Active Crop: {settings.active_crop.toUpperCase()}
+                                Active Crop: {settings.active_crop?.toUpperCase() || 'UNKNOWN'}
                                 <span className="text-xs font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
                                     Target {settings.crop_target_moisture ?? 60}%
                                 </span>
@@ -121,7 +127,7 @@ export const MLInsights: React.FC = () => {
                         {/* Climate bounding badges */}
                         <div className="flex items-center gap-2 bg-sky-500/10 border border-sky-500/20 px-3 py-2 rounded-xl text-sky-400 font-bold text-xs">
                             <Compass className="size-3.5" />
-                            <span>Region: {settings.active_region.toUpperCase()}</span>
+                            <span>Region: {settings.active_region?.toUpperCase() || 'UNKNOWN'}</span>
                         </div>
                         
                         {/* Quick selector dropdown */}
@@ -206,7 +212,7 @@ export const MLInsights: React.FC = () => {
                             </div>
                             <div>
                                 <h3 className="font-bold text-sm text-slate-900 dark:text-white">Input Analysis</h3>
-                                <p className="text-muted-foreground text-xs">Processing 5 real-time sensor streams + Weather API</p>
+                                <p className="text-muted-foreground text-xs">Processing 12-dimensional feature vector</p>
                             </div>
                             <div className="ml-auto">
                                 <Badge variant="outline" className="text-emerald-500 border-emerald-500/20 bg-emerald-500/5 text-[9px] font-bold">Success</Badge>
@@ -222,7 +228,7 @@ export const MLInsights: React.FC = () => {
                             </div>
                             <div>
                                 <h3 className="font-bold text-sm text-slate-900 dark:text-white">Feature Weighing</h3>
-                                <p className="text-muted-foreground text-xs">Soil Moisture (45%) is dominant factor. Rain probability &lt; 20%.</p>
+                                <p className="text-muted-foreground text-xs">Soil Moisture dominates (96.7%). Remaining features represent minor adjustments.</p>
                             </div>
                             <div className="ml-auto">
                                 <Zap className="size-4 text-indigo-500 animate-pulse" />
@@ -264,7 +270,7 @@ export const MLInsights: React.FC = () => {
                     <CardDescription className="text-xs text-muted-foreground mt-0.5">Relative weight of each variable in the current decision model</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="h-[300px] w-full">
+                    <div className="h-[400px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart
                                 layout="vertical"
@@ -302,6 +308,11 @@ export const MLInsights: React.FC = () => {
                     </div>
                 </CardContent>
             </Card>
+
+            {/* ML Decision History Row */}
+            <div className="grid grid-cols-1 gap-6">
+                <MLDecisionLog limit={10} />
+            </div>
         </div>
     );
 };

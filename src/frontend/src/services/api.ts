@@ -147,7 +147,6 @@ export interface MLDecision {
     recommended_duration: number;
     features_json: string | null;
 }
-
 export interface ModelVersion {
     id: number;
     timestamp: string;
@@ -159,6 +158,19 @@ export interface ModelVersion {
     training_samples: number;
     model_path: string;
     is_active: boolean;
+}
+
+export interface Crop {
+    id: number;
+    name: string;
+    target_moisture: number;
+    wilting_point_threshold: number;
+    root_depth_cm: number;
+    growth_stage: number;
+    optimal_vpd_min: number;
+    optimal_vpd_max: number;
+    created_at?: string;
+    is_active?: boolean;
 }
 
 export interface EfficiencyRecentEvent {
@@ -290,5 +302,27 @@ export const api = {
         const res = await fetch(`${API_BASE_URL}/efficiency/summary?hours=${hours}`);
         return handleResponse(res);
     },
+    getCrops: async (): Promise<Crop[]> => {
+        const res = await fetch(`${API_BASE_URL}/crops`);
+        return handleResponse(res);
+    },
+    getActiveCrop: async (): Promise<Crop> => {
+        const res = await fetch(`${API_BASE_URL}/crops/active`);
+        return handleResponse(res);
+    },
+    setActiveCrop: async (cropId: number): Promise<{ status: string; active_crop: Crop }> => {
+        const res = await fetch(`${API_BASE_URL}/crops/active`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ crop_id: cropId })
+        });
+        return handleResponse(res);
+    },
+    retrainModel: async (): Promise<{ status: string; message: string }> => {
+        const res = await fetch(`${API_BASE_URL}/models/retrain`, {
+            method: 'POST'
+        });
+        return handleResponse(res);
+    }
 };
 

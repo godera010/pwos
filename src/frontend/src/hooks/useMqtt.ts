@@ -17,7 +17,7 @@ export function useMqtt() {
     const [connected, setConnected] = useState(mqttClient.isConnected());
     const [sensorData, setSensorData] = useState<MqttSensorData | null>(null);
     const [systemMode, setSystemMode] = useState<'AUTO' | 'MANUAL' | null>(null);
-    const [hardwareStatus, setHardwareStatus] = useState<'ONLINE' | 'OFFLINE'>('OFFLINE');
+    const [hardwareStatus, setHardwareStatus] = useState<'ONLINE' | 'OFFLINE'>('ONLINE');
 
     const prevConnected = useRef(connected);
     const prevHardwareStatus = useRef(hardwareStatus);
@@ -33,12 +33,12 @@ export function useMqtt() {
         }
 
         if (connected !== prevConnected.current) {
-            if (connected) {
+            if (connected && prevConnected.current === false) {
                 toast.success('MQTT Broker Connected', {
                     description: 'Real-time telemetry and control feeds have been re-established.',
                     duration: 4000
                 });
-            } else {
+            } else if (!connected) {
                 toast.error('MQTT Broker Disconnected', {
                     description: 'Lost server connection. Sensor telemetry is frozen and commands are disabled.',
                     duration: 10000
@@ -57,12 +57,12 @@ export function useMqtt() {
         }
 
         if (hardwareStatus !== prevHardwareStatus.current) {
-            if (hardwareStatus === 'ONLINE') {
+            if (hardwareStatus === 'ONLINE' && prevHardwareStatus.current === 'OFFLINE') {
                 toast.success('ESP32 Controller Online', {
                     description: 'Physical sensor unit has re-established hardware communication.',
                     duration: 4000
                 });
-            } else {
+            } else if (hardwareStatus === 'OFFLINE') {
                 toast.error('ESP32 Controller Offline', {
                     description: 'The physical controller is currently unreachable. Live signals are stale.',
                     duration: 10000

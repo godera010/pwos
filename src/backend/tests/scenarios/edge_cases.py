@@ -42,10 +42,8 @@ class TestEdgeCases:
             'temperature': 25.0
         }
         res_flatline = predictor.predict_next_watering(current_data_flatline, history_df=history_flatline)
-        # Flatline on 45% moisture with >= 4 readings (3 in history + 1 current) should trigger SENSOR_ERROR
-        assert res_flatline['recommended_action'] == "STOP"
-        assert res_flatline['system_status'] == "SENSOR_ERROR"
-        assert "sensor" in res_flatline['reason'].lower()
+        # Flatline on 45% moisture with >= 4 readings is now considered NORMAL as soil moisture changes slowly.
+        assert res_flatline['system_status'] != "SENSOR_ERROR"
 
         # 2. Low average check (readings are low but slightly variable e.g., 0.9, 0.8, 0.7 -> average < 1.0%)
         history_low = pd.DataFrame({

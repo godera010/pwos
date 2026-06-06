@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -23,6 +23,7 @@ import {
     Eye,
 } from 'lucide-react';
 import { api, type MLDecision } from '../services/api';
+import { toast } from 'sonner';
 
 // ─── Decision Config ──────────────────────────────────────────────────────────
 
@@ -56,7 +57,7 @@ function formatTimestamp(ts: string): string {
 
 function fmtPct(v: number | null): string {
     if (v === null || v === undefined) return '—';
-    return `${(v * 100).toFixed(1)}%`;
+    return `${v.toFixed(1)}%`;
 }
 
 function fmtNum(v: number | null, decimals = 1): string {
@@ -67,12 +68,14 @@ function fmtNum(v: number | null, decimals = 1): string {
 // ─── Distribution Chart ───────────────────────────────────────────────────────
 
 function DecisionDistributionChart({ decisions }: { decisions: MLDecision[] }) {
-    const counts: Record<string, number> = { NOW: 0, STALL: 0, STOP: 0, MONITOR: 0 };
-    for (const d of decisions) {
-        const key = d.decision?.toUpperCase();
-        if (key && key in counts) counts[key]++;
-    }
-    const data = Object.entries(counts).map(([name, value]) => ({ name, value }));
+    const data = useMemo(() => {
+        const counts: Record<string, number> = { NOW: 0, STALL: 0, STOP: 0, MONITOR: 0 };
+        for (const d of decisions) {
+            const key = d.decision?.toUpperCase();
+            if (key && key in counts) counts[key]++;
+        }
+        return Object.entries(counts).map(([name, value]) => ({ name, value }));
+    }, [decisions]);
 
     return (
         <ResponsiveContainer width="100%" height={180}>
@@ -105,7 +108,7 @@ function DecisionRow({ d }: { d: MLDecision }) {
         icon: Brain,
     };
     const conf = d.confidence !== null ? d.confidence : 0;
-    const confPct = (conf * 100).toFixed(0);
+    const confPct = conf.toFixed(0);
 
     return (
         <tr className="border-b border-border/50 hover:bg-secondary/30 transition-colors group">
@@ -130,7 +133,7 @@ function DecisionRow({ d }: { d: MLDecision }) {
                             className="h-full rounded-full transition-all"
                             style={{
                                 width: `${confPct}%`,
-                                background: conf >= 0.8 ? '#10b981' : conf >= 0.6 ? '#f59e0b' : '#ef4444',
+                                background: conf >= 80 ? '#10b981' : conf >= 60 ? '#f59e0b' : '#ef4444',
                             }}
                         />
                     </div>
@@ -161,7 +164,7 @@ function DecisionRow({ d }: { d: MLDecision }) {
             </td>
 
             {/* Reason */}
-            <td className="py-3 px-4 text-[10px] text-muted-foreground max-w-[200px] truncate">
+            <td className="py-3 px-4 text-[10px] text-muted-foreground whitespace-normal min-w-[250px] max-w-[350px]">
                 {d.reason ?? '—'}
             </td>
         </tr>
@@ -175,30 +178,48 @@ export const MLAudit: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<FilterOption>('ALL');
     const [refreshing, setRefreshing] = useState(false);
+    const [retraining, setRetraining] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchDecisions = useCallback(async (showSpinner = false) => {
+    const isMounted = useRef(true);
+    useEffect(() => {
+        isMounted.current = true;
+        return () => { isMounted.current = false; };
+    }, []);
+
+    const fetchDecisions = useCallback(async (showSpinner = false, signal?: AbortSignal) => {
         if (showSpinner) setRefreshing(true);
         try {
             const data = await api.getMLDecisions(200);
+            if (signal?.aborted) return;
             setDecisions(data);
             setError(null);
-        } catch (err: any) {
+        } catch (err: unknown) {
+            if (signal?.aborted) return;
             console.error('Failed to fetch ML decisions:', err);
-            setError(err.message || 'Failed to load decisions. Make sure the backend server is running.');
+            const message = err instanceof Error ? err.message : String(err);
+            setError(message || 'Failed to load decisions. Make sure the backend server is running.');
         } finally {
-            setLoading(false);
-            setRefreshing(false);
+            if (!signal?.aborted) {
+                setLoading(false);
+                setRefreshing(false);
+            }
         }
     }, []);
 
     useEffect(() => {
-        fetchDecisions();
-        const interval = setInterval(() => fetchDecisions(), 30000);
-        return () => clearInterval(interval);
+        const controller = new AbortController();
+        fetchDecisions(false, controller.signal);
+        const interval = setInterval(() => fetchDecisions(false, controller.signal), 30000);
+        return () => {
+            clearInterval(interval);
+            controller.abort();
+        };
     }, [fetchDecisions]);
 
-    const filtered = filter === 'ALL' ? decisions : decisions.filter(d => d.decision?.toUpperCase() === filter);
+    const filtered = useMemo(() => {
+        return filter === 'ALL' ? decisions : decisions.filter(d => d.decision?.toUpperCase() === filter);
+    }, [decisions, filter]);
 
     // Stats
     const total = decisions.length;
@@ -227,14 +248,41 @@ export const MLAudit: React.FC = () => {
                         Historical decision audit trail · Last {total} predictions
                     </p>
                 </div>
-                <button
-                    onClick={() => fetchDecisions(true)}
-                    disabled={refreshing}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border bg-secondary/50 hover:bg-secondary text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all active:scale-95 disabled:opacity-50"
-                >
-                    <RefreshCw className={`size-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-                    Refresh
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={async () => {
+                            setRetraining(true);
+                            try {
+                                const res = await api.retrainModel();
+                                toast.success('Retraining Triggered', {
+                                    description: res.message
+                                });
+                            } catch (err: unknown) {
+                                const message = err instanceof Error ? err.message : String(err);
+                                toast.error('Retraining Failed', {
+                                    description: message
+                                });
+                            } finally {
+                                setTimeout(() => {
+                                    if (isMounted.current) setRetraining(false);
+                                }, 2000);
+                            }
+                        }}
+                        disabled={retraining}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                        <Brain className={`size-3.5 ${retraining ? 'animate-pulse' : ''}`} />
+                        {retraining ? 'Started...' : 'Trigger Retraining'}
+                    </button>
+                    <button
+                        onClick={() => fetchDecisions(true)}
+                        disabled={refreshing}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border bg-secondary/50 hover:bg-secondary text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all active:scale-95 disabled:opacity-50"
+                    >
+                        <RefreshCw className={`size-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+                        Refresh
+                    </button>
+                </div>
             </div>
 
             {/* Stat Strip */}

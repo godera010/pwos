@@ -64,7 +64,11 @@ export const SystemHealth: React.FC = () => {
 
         try {
             const startTime = performance.now();
-            const healthRes = await fetch(`${API_BASE_URL}/health`, { signal: AbortSignal.timeout(5000) });
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            
+            const healthRes = await fetch(`${API_BASE_URL}/health`, { signal: controller.signal });
+            clearTimeout(timeoutId);
             const latency = Math.round(performance.now() - startTime);
 
             if (healthRes.ok) {
@@ -336,7 +340,7 @@ export const SystemHealth: React.FC = () => {
                         <div className="space-y-4">
                             <div className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-secondary/35">
                                 <div className="flex items-center gap-3">
-                                    <div className={`size-10 rounded-xl border-2 transition-all flex items-center justify-center font-black text-xs ${pumping ? 'border-emerald-500 bg-emerald-500/20 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'border-slate-300 dark:border-slate-800 text-slate-400'}`}>
+                                    <div className={`size-10 rounded-xl border-2 transition-all flex items-center justify-center font-black text-xs ${pumping && deviceOnline ? 'border-emerald-500 bg-emerald-500/20 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'border-slate-300 dark:border-slate-800 text-slate-400'}`}>
                                         P27
                                     </div>
                                     <div>
@@ -344,8 +348,8 @@ export const SystemHealth: React.FC = () => {
                                         <p className="text-[10px] text-slate-400 font-bold uppercase">Digital • Output</p>
                                     </div>
                                 </div>
-                                <Badge className={`text-[10px] font-black uppercase ${pumping ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
-                                    {pumping ? 'Pumping' : 'Idle'}
+                                <Badge className={`text-[10px] font-black uppercase ${pumping && deviceOnline ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
+                                    {pumping && deviceOnline ? 'Pumping' : 'Idle'}
                                 </Badge>
                             </div>
 

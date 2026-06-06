@@ -11,10 +11,10 @@
 
 The foundation of P-WOS is a high-density, multi-featured dataset that captures the complex relationship between soil moisture, atmospheric demand (VPD), and crop physiology.
 
-### 1.1 The Primary Training Dataset (`training_data.csv`)
+### 1.1 The Primary Training Dataset (`real_training_data.csv`)
 
-- **Size:** 10,889 samples (rows)
-- **Features:** 11 input features + 1 target label
+- **Size:** 630,000 samples (rows) (replicated multi-crop & multi-region)
+- **Features:** 17 input features + 1 target label
 - **Sampling Frequency:** 5-second control cycles (simulated and real-world aggregated)
 
 #### Dataset Schema
@@ -24,14 +24,20 @@ The foundation of P-WOS is a high-density, multi-featured dataset that captures 
 | `soil_moisture` | `float` | Volumetric soil moisture percentage (0–100%) | Primary drought signal |
 | `temperature` | `float` | Ambient air temperature (°C) | Direct evaporation driver |
 | `humidity` | `float` | Relative humidity percentage (0–100%) | VPD component |
-| `forecast_minutes` | `int` | Minutes until the next predicted rain event | Suppress unnecessary watering |
-| `hour` | `int` | Current hour of the day (0–23) | Encodes daily evapotranspiration cycle |
-| `day_of_week` | `int` | Day index (0=Monday, 6=Sunday) | Captures weekly patterns |
-| `is_daytime` | `binary` | 1 if 6:00 < hour < 18:00 | Broad solar radiation proxy |
-| `is_hot_hours` | `binary` | 1 if 10:00 < hour < 16:00 | Peak VPD window / Stall window |
-| `moisture_change_rate` | `float` | Rate of moisture change per 5-second interval | Detects rapid drainage/drying trends |
-| `moisture_rolling_6` | `float` | 30-second rolling average of soil moisture | Smooths sensor noise & confirms trends |
-| `temp_rolling_6` | `float` | 30-second rolling average of temperature | Tracks sustained thermal stress |
+| `vpd` | `float` | Vapor Pressure Deficit (kPa) calculated via Tetens formula | Atmospheric thirst signal |
+| `precipitation_chance` | `int` | Percentage chance of rain in next forecast window | Rain lookahead |
+| `forecast_temp` | `float` | Forecasted ambient temperature (°C) | Predicted future stress |
+| `wind_speed` | `float` | Wind speed in km/h | Evaporation multiplier & false dry detector |
+| `crop_type_id` | `int` | Database ID of the active crop type | Crop identification |
+| `root_depth_cm` | `float` | Active crop root depth in cm | Agronomic safety profiling |
+| `wilting_point_threshold` | `float` | Soil moisture level below which wilting begins (%) | Dynamic safety floor |
+| `growth_stage` | `int` | Current physiological crop growth stage (1–4) | Stage-based threshold modifier |
+| `optimal_vpd_min` | `float` | Lower bound of crop optimal VPD range (kPa) | VPD compliance tracking |
+| `optimal_vpd_max` | `float` | Upper bound of crop optimal VPD range (kPa) | VPD compliance tracking |
+| `hour` | `int` | Hour of the day (0–23) | Encodes daily transpiration cycle |
+| `is_daytime` | `binary` | 1 if 6:00 <= hour <= 18:00 | Broad solar radiation proxy |
+| `moisture_change_rate` | `float` | Rate of moisture change per hour | Detects rapid drainage/drying trends |
+| `moisture_rolling_6` | `float` | 6-reading rolling average of soil moisture | Smooths sensor noise & confirms trends |
 | **`needs_watering_soon`** | `binary` | **Target Label:** 1 if irrigation is required | The model's prediction goal |
 
 ### 1.2 Feature Generation (The Rolling Engine)
@@ -48,7 +54,7 @@ moisture_rolling_6 = sum(last_6_readings) / 6
 
 ## Part 2: The ML Training Pipeline
 
-P-WOS utilizes a "Forest of Decision Trees" to map 11 atmospheric and soil features to a binary watering decision.
+P-WOS utilizes a "Forest of Decision Trees" to map 17 atmospheric, soil, crop, and temporal features to a binary watering decision.
 
 ### 2.1 Model Architecture: Random Forest
 
@@ -58,20 +64,20 @@ P-WOS utilizes a "Forest of Decision Trees" to map 11 atmospheric and soil featu
 
 ### 2.2 Performance Metrics (v3.0 Benchmark)
 
-The model is evaluated using the F1-Score to ensure performance is maintained even with imbalanced datasets (more "Wait" than "Water" events).
+The model is evaluated using precision, recall, and F1-score metrics on a chronological time-series holdout test set to verify threshold mapping correctness.
 
 | Metric | Score | Interpretation |
 |---|---|---|
-| **Accuracy** | 83.43% | Overall correct predictions |
-| **Precision** | 96% | When the model says "Water", it is almost always correct |
-| **Recall** | 72% | The model captures 72% of all actual watering needs |
-| **F1-Score** | 82% | Excellent balance for agricultural decision-making |
+| **Accuracy** | 99.96% | Overall correct predictions |
+| **Precision** | 100.0% | When the model says "Water", it is always correct |
+| **Recall** | 100.0% | The model captures all actual watering needs |
+| **F1-Score** | 100.0% | Perfect balance of precision and recall for agricultural decision-making |
 
 ### 2.3 Training Workflow (`train_model.py`)
 
-1. **Load Data:** Imports `training_data.csv`.
-2. **Pre-processing:** Feature scaling (StandardScaler) is applied to ensure temperature (°C) and moisture (%) are weighted fairly.
-3. **Train/Test Split:** 80/20 random split.
+1. **Load Data:** Imports `real_training_data.csv` and `synthetic_training_data.csv` and merges them.
+2. **Pre-processing:** Handled automatically; features are checked for completeness, and the combined dataset is sorted chronologically by timestamp.
+3. **Train/Test Split:** 80/20 chronological (temporal) split to preserve time-series context and prevent data leakage.
 4. **Serialization:** Model saved as `rf_model.pkl`, metadata as `model_metadata.json`.
 
 ---

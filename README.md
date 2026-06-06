@@ -162,7 +162,7 @@ ESP32 Simulator → MQTT Broker → Flask API → ML Predictor (Crop-Aware)
 | Edge | ESP32 Simulation | VPD-based sensor + pump |
 | Messaging | MQTT (Mosquitto) | Pub/Sub message broker |
 | Backend | Flask API | REST endpoints + PostgreSQL (ThreadedConnectionPool) |
-| ML | Random Forest | 12 features, 630k samples, crop & region aware |
+| ML | Random Forest | 17 features, 630k samples, crop & region aware |
 | Frontend | React + Vite | Real-time dashboard + Crop Manager page |
 
 ---

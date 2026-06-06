@@ -27,7 +27,7 @@ ESP32 Hardware / Simulator
       ▼
 ┌───────────────────────────────────────────────┐
 │ ML Predictor (Crop-Aware, Region-Aware)        │
-│  • 12 features (incl. crop thresholds)         │
+│  • 17 features (incl. crop thresholds)         │
 │  • Settings injected in-memory (no disk I/O)   │
 └───────────────────────────────────────────────┘
 ```
@@ -137,7 +137,7 @@ This prevents thread leaks under high-frequency pump commands.
 
 | File | Purpose |
 |------|---------|
-| `ml_predictor.py` | Multi-crop prediction engine (12 features, 4 actions, in-memory settings) |
+| `ml_predictor.py` | Multi-crop prediction engine (17 features, 4 actions, in-memory settings) |
 | `train_model.py` | Random Forest training pipeline (630k sample multi-crop dataset) |
 | `data_collector.py` | Legacy training data preparation |
 | `artifacts/rf_model.pkl` | Serialized trained model |
@@ -151,7 +151,7 @@ This prevents thread leaks under high-frequency pump commands.
 | **Physics** | vpd, is_extreme_vpd, is_raining, is_high_wind |
 | **Crop Context** | crop_target_moisture, crop_critical_moisture, region_evap_multiplier |
 
-> **Note:** The Random Forest model uses 12 features. Additional derived features (hour, day_of_week, is_daytime, is_hot_hours, forecast_minutes, moisture_change_rate, moisture_rolling_6, temp_rolling_6) are calculated at inference time and used only by the Decision Engine.
+> **Note:** The Random Forest model is trained on 17 features, including primary sensor telemetry, weather forecasts, crop characteristics, and derived temporal metrics (hour, is_daytime, moisture_change_rate, moisture_rolling_6) calculated at inference time.
 
 ### Decision Actions
 

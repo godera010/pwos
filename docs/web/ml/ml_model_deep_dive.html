@@ -197,9 +197,9 @@ Scope: Target label definitions, class imbalance weights, self-retraining, and m
 <h2>2. The Labeling Strategy</h2>
 <h3>Dataset Scale</h3>
 <ul>
-<li><strong>Training Set</strong>: 504,000 samples (80%)</li>
-<li><strong>Testing Set</strong>: 126,000 samples (20%)</li>
-<li><strong>Total Labeled Records</strong>: 630,000</li>
+<li><strong>Training Set</strong>: 504,480 samples (80%)</li>
+<li><strong>Testing Set</strong>: 126,120 samples (20%)</li>
+<li><strong>Total Labeled Records</strong>: 630,600 (630,000 hybrid real/augmented + 600 synthetic)</li>
 </ul>
 <p>These records are compiled by <code>data_extractor.py</code> matching PostgreSQL historical sensor reading timestamps with logged watering events.</p>
 <h3>Production Labeling — 2-Hour Lookback</h3>
@@ -216,7 +216,7 @@ Scope: Target label definitions, class imbalance weights, self-retraining, and m
 <h3>The Correction: <code>class_weight='balanced'</code></h3>
 <p>To prevent the model from always predicting Class 0 to achieve cheap accuracy, we weight each training classification error inversely proportional to class frequency:</p>
 <p>$$\text{Weight}<em>c = \frac{n</em>{\text{samples}}}{n_{\text{classes}} \times n_{\text{samples_c}}}$$</p>
-<p>This forces the optimizer to penalize false negatives (missing dry soil) more heavily, yielding <strong>96% Precision</strong> and <strong>72% Recall</strong> for the minority Class 1.</p>
+<p>This forces the optimizer to penalize false negatives (missing dry soil) more heavily, yielding <strong>100% Precision</strong> and <strong>100% Recall</strong> for Class 1 on held-out chronological test data.</p>
 <hr />
 <h2>4. Reading the Confidence Score</h2>
 <p>At inference time, <code>RandomForestClassifier.predict_proba()</code> returns a float in $[0, 1]$ representing the probability that the soil needs water.
@@ -241,9 +241,9 @@ Scope: Target label definitions, class imbalance weights, self-retraining, and m
                    │
 ┌─────────────────▼───────────────────────────────────────┐
 │  train_model.py                                         │
-│  → Feature engineering (all 20 features)                │
+│  → Feature engineering (all 17 features)                │
 │  → RandomForestClassifier(n_estimators=100, …)          │
-│  → Evaluate on held-out 20% test split                  │
+│  → Evaluate on held-out 20% chronological test split    │
 │  → Assert accuracy ≥ threshold before saving            │
 └──────────────────────┬──────────────────────────────────┘
                        │

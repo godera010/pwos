@@ -13,7 +13,7 @@ import {
     MapPin
 } from 'lucide-react';
 import { api } from '../services/api';
-import type { SystemSettings } from '../services/api';
+import type { SystemSettings, Crop } from '../services/api';
 import { toast } from 'sonner';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,19 +52,19 @@ const CROP_PROFILES: CropProfile[] = [
         borderColorClass: 'border-amber-500/30'
     },
     {
-        id: 'potato',
-        name: 'Potato',
-        scientificName: 'Solanum tuberosum',
-        description: 'Shallow-rooted and highly water-sensitive. Under-watering results in major tuber size degradation.',
-        critical: 45,
-        target: 70,
-        high: 85,
-        evapMultiplier: 1.4,
-        rootDepth: 'Shallow (30-40 cm)',
+        id: 'lettuce',
+        name: 'Lettuce',
+        scientificName: 'Lactuca sativa',
+        description: 'Leafy green highly sensitive to drought. Requires constantly moist upper soil to prevent bolting and bitterness.',
+        critical: 50,
+        target: 75,
+        high: 90,
+        evapMultiplier: 1.1,
+        rootDepth: 'Very Shallow (15-30 cm)',
         transpiration: 'High',
-        iconColor: 'text-yellow-600',
-        gradient: 'from-yellow-600/10 to-amber-700/5',
-        borderColorClass: 'border-yellow-600/30'
+        iconColor: 'text-green-500',
+        gradient: 'from-green-500/10 to-emerald-600/5',
+        borderColorClass: 'border-green-500/30'
     },
     {
         id: 'tomato',
@@ -97,19 +97,19 @@ const CROP_PROFILES: CropProfile[] = [
         borderColorClass: 'border-purple-400/30'
     },
     {
-        id: 'sorghum',
-        name: 'Sorghum',
-        scientificName: 'Sorghum bicolor',
-        description: 'Superbly drought-resilient. Relies on deep roots and waxy leaves to restrict transpiration in arid soil.',
-        critical: 20,
-        target: 50,
-        high: 65,
-        evapMultiplier: 0.6,
-        rootDepth: 'Deep (90-120 cm)',
-        transpiration: 'Low',
-        iconColor: 'text-emerald-500',
-        gradient: 'from-emerald-500/10 to-teal-600/5',
-        borderColorClass: 'border-emerald-500/30'
+        id: 'cabbage',
+        name: 'Cabbage',
+        scientificName: 'Brassica oleracea',
+        description: 'Heavy water feeder especially during head formation. Uneven watering causes head splitting and poor yield.',
+        critical: 45,
+        target: 70,
+        high: 85,
+        evapMultiplier: 1.2,
+        rootDepth: 'Medium (45-60 cm)',
+        transpiration: 'High',
+        iconColor: 'text-teal-500',
+        gradient: 'from-teal-500/10 to-cyan-600/5',
+        borderColorClass: 'border-teal-500/30'
     }
 ];
 
@@ -121,6 +121,8 @@ const PRESETS = [
 
 export const CropSettings: React.FC = () => {
     const [settings, setSettings] = useState<SystemSettings | null>(null);
+    const [dbCrops, setDbCrops] = useState<Crop[]>([]);
+    const [activeDbCrop, setActiveDbCrop] = useState<Crop | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [saving, setSaving] = useState<string | null>(null);
     
@@ -135,8 +137,14 @@ export const CropSettings: React.FC = () => {
     const loadCurrentSettings = async () => {
         try {
             setLoading(true);
-            const data = await api.getSettings();
+            const [data, cList, cActive] = await Promise.all([
+                api.getSettings(),
+                api.getCrops(),
+                api.getActiveCrop()
+            ]);
             setSettings(data);
+            setDbCrops(cList);
+            setActiveDbCrop(cActive);
             setLat(data.latitude);
             setLon(data.longitude);
         } catch (error) {
@@ -150,12 +158,19 @@ export const CropSettings: React.FC = () => {
         if (!settings) return;
         setSaving(cropId);
         try {
-            const res = await api.saveSettings({ active_crop: cropId });
-            if (res.status === 'success') {
-                setSettings(res.settings);
-                toast.success(`Active crop changed to ${CROP_PROFILES.find(c => c.id === cropId)?.name}`, {
-                    description: `Model limits dynamically calibrated for ${cropId.toUpperCase()}`
-                });
+            const uiProfile = CROP_PROFILES.find(c => c.id === cropId);
+            const dbCrop = dbCrops.find(c => c.name.toLowerCase() === uiProfile?.name.toLowerCase());
+            
+            if (dbCrop) {
+                const res = await api.setActiveCrop(dbCrop.id);
+                if (res.status === 'success') {
+                    setActiveDbCrop(res.active_crop);
+                    toast.success(`Active crop changed to ${dbCrop.name}`, {
+                        description: `Model limits dynamically calibrated for ${dbCrop.name.toUpperCase()}`
+                    });
+                }
+            } else {
+                toast.error("Crop not found in database");
             }
         } catch (e) {
             toast.error("Failed to update active crop");
@@ -204,7 +219,7 @@ export const CropSettings: React.FC = () => {
         );
     }
 
-    const activeCropId = settings?.active_crop || 'maize';
+    const activeCropId = activeDbCrop?.name.toLowerCase() || 'maize';
     const activeCrop = CROP_PROFILES.find(c => c.id === activeCropId) || CROP_PROFILES[0];
     const activeRegion = settings?.active_region || 'matabeleland';
 

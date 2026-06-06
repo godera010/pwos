@@ -188,6 +188,53 @@ class PWOSDatabase:
                     is_active BOOLEAN
                 );
             ''')
+            # Crops Table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS crops (
+                    id SERIAL PRIMARY KEY,
+                    name TEXT UNIQUE NOT NULL,
+                    target_moisture REAL NOT NULL,
+                    wilting_point_threshold REAL NOT NULL,
+                    root_depth_cm REAL NOT NULL,
+                    optimal_vpd_min REAL NOT NULL,
+                    optimal_vpd_max REAL NOT NULL,
+                    growth_stage INTEGER NOT NULL DEFAULT 2
+                );
+            ''')
+
+            # System Settings Table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS system_settings (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL
+                );
+            ''')
+
+            # Seed data for crops
+            cursor.execute('SELECT COUNT(*) FROM crops')
+            if cursor.fetchone()[0] == 0:
+                seed_crops = [
+                    ('Tomato', 62.0, 35.0, 60.0, 0.8, 1.2, 2),
+                    ('Maize', 60.0, 30.0, 40.0, 1.0, 1.5, 2),
+                    ('Lettuce', 75.0, 50.0, 15.0, 0.4, 0.8, 2),
+                    ('Cabbage', 70.0, 45.0, 30.0, 0.6, 1.0, 2),
+                    ('Onion', 65.0, 40.0, 20.0, 0.8, 1.2, 2)
+                ]
+                cursor.executemany('''
+                    INSERT INTO crops (name, target_moisture, wilting_point_threshold, 
+                                       root_depth_cm, optimal_vpd_min, optimal_vpd_max, growth_stage)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ''', seed_crops)
+                
+            # Seed active crop setting
+            cursor.execute("SELECT value FROM system_settings WHERE key = 'active_crop_id'")
+            if cursor.fetchone() is None:
+                cursor.execute("INSERT INTO system_settings (key, value) VALUES ('active_crop_id', '1')")
+                
+            # Seed pump scale factor
+            cursor.execute("SELECT value FROM system_settings WHERE key = 'pump_scale_factor'")
+            if cursor.fetchone() is None:
+                cursor.execute("INSERT INTO system_settings (key, value) VALUES ('pump_scale_factor', '1.0')")
             
             # Performance Optimization: Indexes for heavy time-range queries
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_sensor_readings_timestamp ON sensor_readings(timestamp DESC);')
@@ -420,6 +467,38 @@ class PWOSDatabase:
         except Exception as e:
             logger.error(f"Failed to update moisture_after: {e}")
 
+    def get_system_setting(self, key, default=None):
+        """Get a generic system setting from the database"""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT value FROM system_settings WHERE key = %s", (key,))
+            row = cursor.fetchone()
+            conn.close()
+            if row:
+                return row[0]
+            return default
+        except Exception as e:
+            logger.error(f"Failed to get system setting {key}: {e}")
+            return default
+
+    def set_system_setting(self, key, value):
+        """Set or update a generic system setting"""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT value FROM system_settings WHERE key = %s", (key,))
+            if cursor.fetchone() is None:
+                cursor.execute("INSERT INTO system_settings (key, value) VALUES (%s, %s)", (key, str(value)))
+            else:
+                cursor.execute("UPDATE system_settings SET value = %s WHERE key = %s", (str(value), key))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            logger.error(f"Failed to set system setting {key}: {e}")
+            return False
+
     def insert_ml_decision(self, data):
         """Log an ML decision for audit/training purposes"""
         try:
@@ -468,8 +547,10 @@ class PWOSDatabase:
             conn = self.get_connection()
             cursor = conn.cursor()
             
-            # Deactivate previous active models?
-            # For now, just log. Logic to set active can be separate.
+            # Deactivate previous active models
+            cursor.execute('''
+                UPDATE model_versions SET is_active = FALSE WHERE is_active = TRUE
+            ''')
             
             cursor.execute('''
                 INSERT INTO model_versions
@@ -528,6 +609,38 @@ class PWOSDatabase:
         except Exception as e:
             logger.warning(f"Failed to get stats: {e}")
             return {'total_readings': 0, 'total_waterings': 0, 'total_ml_decisions': 0, 'avg_moisture': 0}
+
+    def get_crops(self):
+        """Get all available crops"""
+        conn = self.get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute('SELECT * FROM crops ORDER BY id')
+        rows = cursor.fetchall()
+        conn.close()
+        return rows
+
+    def get_active_crop(self):
+        """Get the currently active crop profile"""
+        conn = self.get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute('''
+            SELECT c.* FROM crops c
+            JOIN system_settings s ON CAST(c.id AS TEXT) = s.value
+            WHERE s.key = 'active_crop_id'
+        ''')
+        row = cursor.fetchone()
+        conn.close()
+        return row
+
+    def set_active_crop(self, crop_id):
+        """Set the active crop ID"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE system_settings SET value = %s WHERE key = 'active_crop_id'
+        ''', (str(crop_id),))
+        conn.commit()
+        conn.close()
 
 if __name__ == "__main__":
     # Test database

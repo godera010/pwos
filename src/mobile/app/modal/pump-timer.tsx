@@ -32,7 +32,7 @@ export default function PumpTimerModal() {
   return (
     <View className="flex-1 bg-black/60 items-center justify-center p-6 backdrop-blur-md">
       {/* Container glassmorphism card */}
-      <View className="bg-[#0c1220]/90 border border-emerald-500/20 rounded-3xl p-8 items-center w-full max-w-[340px] shadow-2xl relative">
+      <View className="bg-[#09090b]/90 border border-emerald-500/20 rounded-3xl p-8 items-center w-full max-w-[340px] shadow-2xl relative">
         <View className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl" />
         
         <Text className="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-6">Irrigation Cycle Active</Text>
@@ -45,7 +45,7 @@ export default function PumpTimerModal() {
               cx={size / 2}
               cy={size / 2}
               r={radius}
-              stroke="#131b2e"
+              stroke="#1f1f23"
               strokeWidth={strokeWidth}
               fill="transparent"
             />

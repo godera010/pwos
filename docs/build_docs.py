@@ -1,6 +1,13 @@
 import os
 import re
 import json
+import sys
+
+# Prevent importing the local 'docs/markdown' directory as a package
+# by removing the script's directory from sys.path before importing markdown
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != script_dir]
+
 import markdown
 
 MD_DIR = os.path.abspath(r"docs/markdown")

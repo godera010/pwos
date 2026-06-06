@@ -65,9 +65,9 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#090d16]" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-[#000000]" edges={['top']}>
       {/* HEADER */}
-      <View className="px-6 py-4 border-b border-[#131b2e] bg-[#0c1220]">
+      <View className="px-6 py-4 border-b border-[#1f1f23] bg-[#09090b]">
         <Text className="text-white text-xl font-bold tracking-tight">SYSTEM SETTINGS</Text>
         <Text className="text-slate-400 text-xs mt-0.5">Configuration & Network Profiles</Text>
       </View>
@@ -88,7 +88,7 @@ export default function SettingsScreen() {
         )}
 
         {/* SERVER HOST NETWORK CONTROLLER */}
-        <View className="bg-[#0c1220] border border-[#131b2e] rounded-3xl p-5 mb-5 shadow-lg relative overflow-hidden">
+        <View className="bg-[#09090b] border border-[#1f1f23] rounded-3xl p-5 mb-5 shadow-lg relative overflow-hidden">
           <Text className="text-white font-bold text-base mb-1">Server Host Configuration</Text>
           <Text className="text-slate-400 text-xs mb-4 leading-relaxed">
             By default, P-WOS maps to simulator loopbacks. Input your computer's local Wi-Fi IP to link physical mobile hardware.
@@ -102,7 +102,7 @@ export default function SettingsScreen() {
               onChangeText={setServerIp}
               placeholder="e.g. 192.168.1.15"
               placeholderTextColor="#475569"
-              className="bg-[#070b13] border border-[#131b2e] rounded-2xl p-4 text-white font-semibold font-mono placeholder:text-slate-700"
+              className="bg-[#09090b] border border-[#1f1f23] rounded-2xl p-4 text-white font-semibold font-mono placeholder:text-slate-700"
               keyboardType="numeric"
             />
             <Text className="text-slate-500 text-[10px] mt-1.5 leading-relaxed">
@@ -122,7 +122,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* THRESHOLD IRRIGATION THRESHOLDS */}
-        <View className="bg-[#0c1220] border border-[#131b2e] rounded-3xl p-5 mb-5 shadow-lg relative overflow-hidden">
+        <View className="bg-[#09090b] border border-[#1f1f23] rounded-3xl p-5 mb-5 shadow-lg relative overflow-hidden">
           <Text className="text-white font-bold text-base mb-1">Irrigation Firing Bounds</Text>
           <Text className="text-slate-400 text-xs mb-4">Autonomous trigger limits governed by the OS</Text>
 
@@ -134,7 +134,7 @@ export default function SettingsScreen() {
               onChangeText={setMoistureThreshold}
               placeholder="30"
               placeholderTextColor="#475569"
-              className="bg-[#070b13] border border-[#131b2e] rounded-2xl p-4 text-white font-semibold font-mono"
+              className="bg-[#09090b] border border-[#1f1f23] rounded-2xl p-4 text-white font-semibold font-mono"
               keyboardType="numeric"
             />
           </View>
@@ -147,7 +147,7 @@ export default function SettingsScreen() {
               onChangeText={setMaxDuration}
               placeholder="60"
               placeholderTextColor="#475569"
-              className="bg-[#070b13] border border-[#131b2e] rounded-2xl p-4 text-white font-semibold font-mono"
+              className="bg-[#09090b] border border-[#1f1f23] rounded-2xl p-4 text-white font-semibold font-mono"
               keyboardType="numeric"
             />
           </View>
@@ -169,7 +169,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* WEATHER COORDINATES / GEOLOCATION PROFILE */}
-        <View className="bg-[#0c1220] border border-[#131b2e] rounded-3xl p-5 shadow-lg relative overflow-hidden">
+        <View className="bg-[#09090b] border border-[#1f1f23] rounded-3xl p-5 shadow-lg relative overflow-hidden">
           <Text className="text-white font-bold text-base mb-1">Weather Station Coordinates</Text>
           <Text className="text-slate-400 text-xs mb-4">Target GPS coordinate parameters mapping weather calls</Text>
 
@@ -181,7 +181,7 @@ export default function SettingsScreen() {
                 onChangeText={setLatitude}
                 placeholder="-1.2921"
                 placeholderTextColor="#475569"
-                className="bg-[#070b13] border border-[#131b2e] rounded-2xl p-4 text-white font-semibold font-mono"
+                className="bg-[#09090b] border border-[#1f1f23] rounded-2xl p-4 text-white font-semibold font-mono"
                 keyboardType="numeric"
               />
             </View>
@@ -192,7 +192,7 @@ export default function SettingsScreen() {
                 onChangeText={setLongitude}
                 placeholder="36.8219"
                 placeholderTextColor="#475569"
-                className="bg-[#070b13] border border-[#131b2e] rounded-2xl p-4 text-white font-semibold font-mono"
+                className="bg-[#09090b] border border-[#1f1f23] rounded-2xl p-4 text-white font-semibold font-mono"
                 keyboardType="numeric"
               />
             </View>

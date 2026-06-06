@@ -11,22 +11,22 @@ module.exports = {
       colors: {
         // Deep slate dark-mode palette
         slate: {
-          900: "#090d16",
-          850: "#0c1220",
-          800: "#131b2e",
+          900: "#000000",
+          850: "#09090b",
+          800: "#1f1f23",
         },
         primary: {
           emerald: "#10b981",
           'emerald-dark': "#34d399",
         },
         background: {
-          dark: "#0b0f19",
+          dark: "#000000",
         },
         card: {
-          dark: "#161b2a",
+          dark: "#09090b",
         },
         border: {
-          dark: "#1f2937",
+          dark: "#27272a",
         }
       },
       keyframes: {

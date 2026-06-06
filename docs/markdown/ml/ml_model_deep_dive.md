@@ -22,9 +22,9 @@ The target variable is intentionally predictive, not reactive. A reading of `1` 
 ## 2. The Labeling Strategy
 
 ### Dataset Scale
-*   **Training Set**: 504,000 samples (80%)
-*   **Testing Set**: 126,000 samples (20%)
-*   **Total Labeled Records**: 630,000
+*   **Training Set**: 504,480 samples (80%)
+*   **Testing Set**: 126,120 samples (20%)
+*   **Total Labeled Records**: 630,600 (630,000 hybrid real/augmented + 600 synthetic)
 
 These records are compiled by `data_extractor.py` matching PostgreSQL historical sensor reading timestamps with logged watering events.
 
@@ -49,7 +49,7 @@ To prevent the model from always predicting Class 0 to achieve cheap accuracy, w
 
 $$\text{Weight}_c = \frac{n_{\text{samples}}}{n_{\text{classes}} \times n_{\text{samples\_c}}}$$
 
-This forces the optimizer to penalize false negatives (missing dry soil) more heavily, yielding **96% Precision** and **72% Recall** for the minority Class 1.
+This forces the optimizer to penalize false negatives (missing dry soil) more heavily, yielding **100% Precision** and **100% Recall** for Class 1 on held-out chronological test data.
 
 ---
 
@@ -82,9 +82,9 @@ The system is equipped with an automated self-retraining daemon:
                    │
 ┌─────────────────▼───────────────────────────────────────┐
 │  train_model.py                                         │
-│  → Feature engineering (all 20 features)                │
+│  → Feature engineering (all 17 features)                │
 │  → RandomForestClassifier(n_estimators=100, …)          │
-│  → Evaluate on held-out 20% test split                  │
+│  → Evaluate on held-out 20% chronological test split    │
 │  → Assert accuracy ≥ threshold before saving            │
 └──────────────────────┬──────────────────────────────────┘
                        │

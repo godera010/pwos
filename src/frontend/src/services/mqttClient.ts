@@ -6,6 +6,7 @@ class MqttService {
     client: mqtt.MqttClient | null = null;
     listeners: { [topic: string]: ((message: any) => void)[] } = {};
     connectionStatusListeners: ((status: boolean) => void)[] = [];
+    lastMessages: { [topic: string]: any } = {};
 
     connect() {
         if (this.client) return;
@@ -40,6 +41,9 @@ class MqttService {
             } catch (e) {
                 // Not JSON
             }
+            
+            this.lastMessages[topic] = parsedMessage;
+
             if (this.listeners[topic]) {
                 this.listeners[topic].forEach(cb => cb(parsedMessage));
             }
@@ -81,6 +85,10 @@ class MqttService {
             this.listeners[topic] = [];
         }
         this.listeners[topic].push(callback);
+
+        if (topic in this.lastMessages) {
+            callback(this.lastMessages[topic]);
+        }
     }
 
     unsubscribe(topic: string, callback: (message: any) => void) {

@@ -27,14 +27,14 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
     const isSystemDown = !connected || !isHardwareOnline;
 
     return (
-        <div className={`w-full rounded-[1.5rem] shadow-lg overflow-hidden border-2 transition-all duration-500 flex flex-col h-full bg-white dark:bg-slate-900 ${
+        <div className={`w-full rounded-2xl shadow-lg overflow-hidden border-2 transition-all duration-500 flex flex-col h-full bg-card text-card-foreground ${
             isSystemDown ? 'border-red-500/50' : 'border-slate-100 dark:border-slate-800'
         }`}>
             {/* Header Section */}
-            <div className={`px-4 py-3 shrink-0 border-b flex items-center justify-between ${
-                isSystemDown ? 'bg-red-500/5 border-red-500/10' : 'bg-white dark:bg-slate-900 border-slate-50 dark:border-slate-800/50'
+            <div className={`px-4 py-3 shrink-0 flex items-center justify-between ${
+                isSystemDown ? 'bg-red-500/5' : ''
             }`}>
-                <h1 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">
+                <h1 className="text-[11px] font-black text-foreground uppercase tracking-[0.2em]">
                     Quick Actions
                 </h1>
                 <div className="flex gap-1">
@@ -47,19 +47,15 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
             <div className="flex-1 p-4 pt-2">
                 <div className="grid grid-cols-2 gap-3 h-full relative">
                     
-                    {/* Column 1: AI Autopilot — Inner Panel */}
-                    <div className={`rounded-2xl border p-3 sm:p-6 flex flex-col items-center justify-center min-h-[120px] sm:min-h-[160px] transition-all duration-500 ${
-                        isAuto 
-                            ? 'bg-emerald-950/40 border-emerald-500/20 shadow-[inset_0_1px_0_rgba(16,185,129,0.1)]' 
-                            : 'bg-secondary/50 border-border'
-                    }`}>
+                    {/* Column 1: AI Autopilot — No inner panel */}
+                    <div className="p-3 sm:p-6 flex flex-col items-center justify-center min-h-[120px] sm:min-h-[160px] transition-all duration-500">
                         <button
-                            disabled={!connected}
+                            disabled={!connected || !isHardwareOnline}
                             onClick={onToggleMode}
                             className={`relative inline-flex h-10 sm:h-12 w-20 sm:w-24 items-center rounded-full transition-all duration-300 border-2 ${isAuto
                                     ? 'bg-emerald-900/40 border-emerald-500'
                                     : 'bg-secondary border-border'
-                                } ${!connected ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer hover:shadow-sm'}`}
+                                } ${(!connected || !isHardwareOnline) ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer hover:shadow-sm'}`}
                         >
                             <span className="sr-only">Toggle AI Autopilot</span>
                             <span className={`${isAuto ? 'translate-x-[42px] sm:translate-x-[52px] bg-emerald-500' : 'translate-x-1 sm:translate-x-1.5 bg-muted-foreground/40'} inline-block h-6 sm:h-8 w-6 sm:w-8 transform rounded-full transition-all duration-500 ease-in-out shadow-md flex items-center justify-center`}>
@@ -129,13 +125,10 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="bg-slate-50 dark:bg-slate-800/30 p-2.5 border-t border-slate-100 dark:border-slate-800 shrink-0">
-                <Link to="/control" className="w-full flex items-center justify-between px-4 py-1.5 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all group bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-xl shadow-sm">
-                    <div className="flex items-center gap-3">
-                        <Settings size={14} className="group-hover:rotate-90 transition-transform duration-1000 text-slate-400" />
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em]">Global Config</span>
-                    </div>
-                    <ChevronRight size={14} className="text-slate-300 group-hover:translate-x-1 transition-transform" />
+            <div className="p-3 shrink-0 flex justify-center pb-4">
+                <Link to="/control" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group">
+                    <Settings size={12} className="group-hover:rotate-90 transition-transform duration-1000" />
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em]">More Settings</span>
                 </Link>
             </div>
         </div>

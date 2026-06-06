@@ -165,8 +165,8 @@
 <h1>Feature Engineering &amp; Physics Calculations</h1>
 <p><strong>P-WOS Machine Learning — Input Vectors and Environmental Calculations</strong></p>
 <hr />
-<h2>1. Input Feature Space (12 Base Features)</h2>
-<p>The Random Forest model accepts exactly <strong>12 base features</strong> in positional order at inference time:</p>
+<h2>1. Input Feature Space (17 Crop-Aware Features)</h2>
+<p>The Random Forest model accepts exactly <strong>17 features</strong> in positional order at inference time, fusing hardware telemetry, weather forecasts, and dynamic crop biology:</p>
 <table>
 <thead>
 <tr>
@@ -205,22 +205,6 @@
 </tr>
 <tr>
 <td>4</td>
-<td><code>wind_speed</code></td>
-<td><code>float</code></td>
-<td>km/h</td>
-<td>Weather forecast</td>
-<td>Evaporation accelerator</td>
-</tr>
-<tr>
-<td>5</td>
-<td><code>rain_intensity</code></td>
-<td><code>float</code></td>
-<td>0–100</td>
-<td>Weather forecast</td>
-<td>Suppresses watering need</td>
-</tr>
-<tr>
-<td>6</td>
 <td><code>vpd</code></td>
 <td><code>float</code></td>
 <td>kPa</td>
@@ -228,145 +212,137 @@
 <td>Atmospheric water demand</td>
 </tr>
 <tr>
+<td>5</td>
+<td><code>precipitation_chance</code></td>
+<td><code>float</code></td>
+<td>0–100 %</td>
+<td>Weather forecast</td>
+<td>Suppresses watering need if rain is likely</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>forecast_temp</code></td>
+<td><code>float</code></td>
+<td>°C</td>
+<td>Weather forecast</td>
+<td>Anticipates future heat stress</td>
+</tr>
+<tr>
 <td>7</td>
-<td><code>is_extreme_vpd</code></td>
-<td><code>binary</code></td>
-<td>0 or 1</td>
-<td>Derived (VPD &gt; 2.0)</td>
-<td>Heatwave stress flag</td>
+<td><code>wind_speed</code></td>
+<td><code>float</code></td>
+<td>km/h</td>
+<td>Weather forecast</td>
+<td>Evaporation accelerator</td>
 </tr>
 <tr>
 <td>8</td>
-<td><code>is_raining</code></td>
-<td><code>binary</code></td>
-<td>0 or 1</td>
-<td>Derived (Rain &gt; 0)</td>
-<td>Natural watering flag</td>
+<td><code>crop_type_id</code></td>
+<td><code>int</code></td>
+<td>1–5</td>
+<td>Database</td>
+<td>Categorical crop identifier</td>
 </tr>
 <tr>
 <td>9</td>
-<td><code>is_high_wind</code></td>
-<td><code>binary</code></td>
-<td>0 or 1</td>
-<td>Derived (Wind &gt; 20)</td>
-<td>Evaporation risk flag</td>
+<td><code>root_depth_cm</code></td>
+<td><code>float</code></td>
+<td>cm</td>
+<td>Database</td>
+<td>Determines how deep water must penetrate</td>
 </tr>
 <tr>
 <td>10</td>
-<td><code>crop_target_moisture</code></td>
+<td><code>wilting_point_threshold</code></td>
 <td><code>float</code></td>
 <td>%</td>
-<td>Active settings</td>
-<td>Target moisture ceiling</td>
+<td>Database</td>
+<td>Hard biological limit for drought stress</td>
 </tr>
 <tr>
 <td>11</td>
-<td><code>crop_critical_moisture</code></td>
-<td><code>float</code></td>
-<td>%</td>
-<td>Active settings</td>
-<td>Emergency-trigger floor</td>
+<td><code>growth_stage</code></td>
+<td><code>int</code></td>
+<td>1-4</td>
+<td>Database</td>
+<td>Influences water consumption rates</td>
 </tr>
 <tr>
 <td>12</td>
-<td><code>region_evap_multiplier</code></td>
+<td><code>optimal_vpd_min</code></td>
 <td><code>float</code></td>
-<td>dimensionless</td>
-<td>Region settings</td>
-<td>Regional climate scaling</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2>2. Derived Temporal Features (8 Appended Features)</h2>
-<p>In addition to the 12 base features, <strong>8 temporal features</strong> are calculated from the sensor history buffers on every 5-second tick:</p>
-<table>
-<thead>
-<tr>
-<th>Feature</th>
-<th>Calculation</th>
-<th>Window</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>moisture_change_rate</code></td>
-<td>$(M_{\text{now}} - M_{\text{prev}}) / \Delta t$</td>
-<td>Last 2 readings</td>
-<td>Detects rapid moisture drainage</td>
+<td>kPa</td>
+<td>Database</td>
+<td>Lower bound for optimal transpiration</td>
 </tr>
 <tr>
-<td><code>moisture_rolling_6</code></td>
-<td>Mean of last 6 readings</td>
-<td>~30 min</td>
-<td>Smooths sensor signal noise</td>
+<td>13</td>
+<td><code>optimal_vpd_max</code></td>
+<td><code>float</code></td>
+<td>kPa</td>
+<td>Database</td>
+<td>Upper bound before stomata close</td>
 </tr>
 <tr>
-<td><code>temp_rolling_6</code></td>
-<td>Mean of last 6 readings</td>
-<td>~30 min</td>
-<td>Tracks heating trends</td>
-</tr>
-<tr>
-<td><code>forecast_minutes</code></td>
-<td>Minutes until next forecast rain</td>
-<td>Weather API</td>
-<td>Delays pump if rain is coming</td>
-</tr>
-<tr>
+<td>14</td>
 <td><code>hour</code></td>
-<td><code>datetime.now().hour</code></td>
+<td><code>int</code></td>
 <td>0–23</td>
+<td><code>datetime</code></td>
 <td>Encodes diurnal climate patterns</td>
 </tr>
 <tr>
-<td><code>day_of_week</code></td>
-<td><code>datetime.now().weekday()</code></td>
-<td>0–6</td>
-<td>Encodes weekly cycles</td>
-</tr>
-<tr>
+<td>15</td>
 <td><code>is_daytime</code></td>
-<td>1 if $6 \le \text{hour} \le 18$</td>
-<td>Point in time</td>
+<td><code>binary</code></td>
+<td>0 or 1</td>
+<td>Derived</td>
 <td>Broad daylight/night flag</td>
 </tr>
 <tr>
-<td><code>is_hot_hours</code></td>
-<td>1 if $10 \le \text{hour} \le 16$</td>
-<td>Point in time</td>
-<td>Peak midday VPD delay window</td>
+<td>16</td>
+<td><code>moisture_change_rate</code></td>
+<td><code>float</code></td>
+<td>$\Delta M / \Delta t$</td>
+<td>Derived</td>
+<td>Detects rapid moisture drainage</td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>moisture_rolling_6</code></td>
+<td><code>float</code></td>
+<td>%</td>
+<td>Derived</td>
+<td>Smooths sensor signal noise</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2>3. Vapor Pressure Deficit (VPD) Mathematics</h2>
+<h2>2. Vapor Pressure Deficit (VPD) Mathematics</h2>
 <p>VPD represents the pressure difference between saturated water vapor inside leaves and the surrounding ambient air. The model calculates saturation vapor pressure ($e_s$) using the <strong>Tetens Equation</strong>:</p>
 <p>$$e_s = 0.6108 \times e^{\left(\frac{17.27 \times T}{T + 237.3}\right)}$$</p>
 <p>$$e_a = e_s \times \left(\frac{RH}{100}\right)$$</p>
 <p>$$VPD = \max(0, e_s - e_a)$$</p>
 <hr />
-<h2>4. In-Memory Settings Injection</h2>
-<p>The 3 context features (<code>crop_target_moisture</code>, <code>crop_critical_moisture</code>, and <code>region_evap_multiplier</code>) are injected <strong>directly into the feature vector in memory</strong> on every prediction cycle:</p>
+<h2>3. Dynamic Database Injection</h2>
+<p>Unlike previous versions that relied on hardcoded thresholds, the 17-feature matrix incorporates 6 crop-specific features injected dynamically from the SQLite <code>crops</code> table at inference time:</p>
 <pre><code class="language-python"># ml_predictor.py
-def predict_next_watering(self, current_data, active_settings=None):
-    # Retrieve configurations in-memory from app.py
-    crop_info = active_settings or self.get_default_settings()
-
-    # Inject context directly
-    features['crop_target_moisture']   = crop_info['target']
-    features['crop_critical_moisture'] = crop_info['critical']
-    features['region_evap_multiplier'] = crop_info['evap_mult']
-
-    # Run prediction...
+def _prepare_features(self, sensors, forecast, crop_info):
+    features = {
+        'soil_moisture': float(sensors.get('soil_moisture', 0)),
+        ...
+        'crop_type_id': int(crop_info.get('id', 1)),
+        'root_depth_cm': float(crop_info.get('root_depth_cm', 30.0)),
+        'wilting_point_threshold': float(crop_info.get('wilting_point_threshold', 20.0)),
+        ...
+    }
+    return features
 </code></pre>
-<h3>Why We Avoid Disk/DB Queries on the Hot Path:</h3>
-<p>At a 5-second tick rate, P-WOS makes <strong>17,280 predictions per day</strong>. Reading settings from PostgreSQL or a JSON file on disk for every cycle would introduce:
-*   <strong>Disk wear</strong> and high disk I/O load.
-*   <strong>Database connection bloat</strong> and query latencies (up to 50ms).
-*   <strong>Point of failure</strong>: if the DB goes offline temporarily, predictions crash.</p>
-<p>In-memory injection executes in <strong>&lt; 1 microsecond</strong>, ensuring the autopilot loop remains resilient and fast.</p>
+<h3>Why Database Injection is Powerful:</h3>
+<ul>
+<li><strong>Scale</strong>: Adding a new crop requires zero code changes. You simply add a new row to the database.</li>
+<li><strong>Precision</strong>: The Random Forest naturally learns complex interactions between environmental telemetry (e.g., Temperature and VPD) and botanical parameters (e.g., <code>optimal_vpd_max</code> and <code>wilting_point_threshold</code>), creating a highly tailored irrigation schedule for each specific plant.</li>
+</ul>
                             </div>
                         </article>
 

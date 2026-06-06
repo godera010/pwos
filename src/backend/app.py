@@ -17,7 +17,7 @@ import random
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from src.config import CORS_ORIGINS, FLASK_DEBUG
-from src.backend.models.ml_predictor import MLPredictor, CROP_PARAMS
+from src.backend.models.ml_predictor import MLPredictor
 from src.backend.utils.vpd_calculator import calculate_vpd
 
 import logging
@@ -351,9 +351,11 @@ def control_pump():
         moisture_before = readings[0][2] if readings else None
         
         # Send MQTT command
+        # Convert duration to integer because ESP32 ArduinoJson parsing expects an int
+        # and may default to 30 seconds if it fails to parse a float.
         payload = json.dumps({
             'action': action,
-            'duration': duration
+            'duration': int(round(float(duration)))
         })
         
         result = mqtt_client.publish('pwos/control/pump', payload)
@@ -850,7 +852,6 @@ operational_settings = {
     'max_duration': 45,
     'latitude': -20.1492,
     'longitude': 28.5833,
-    'active_crop': 'maize',
     'active_region': 'matabeleland'
 }
 
@@ -875,7 +876,7 @@ def load_settings():
                 for k, v in saved.items():
                     if k in ('latitude', 'longitude'):
                         operational_settings[k] = float(v)
-                    elif k in ('active_crop', 'active_region'):
+                    elif k == 'active_region':
                         operational_settings[k] = str(v)
                     else:
                         operational_settings[k] = int(v)
@@ -903,8 +904,7 @@ def api_settings():
             'moisture_threshold', 'moisture_max',
             'temp_min', 'temp_max',
             'max_duration',
-            'latitude', 'longitude',
-            'active_crop'
+            'latitude', 'longitude'
         ]
         for key in updatable_keys:
             if key in data:
@@ -918,8 +918,6 @@ def api_settings():
                         operational_settings[key] = val
                     except (ValueError, TypeError):
                         return jsonify({"error": f"Invalid format for coordinate: {key}"}), 400
-                elif key == 'active_crop':
-                    operational_settings[key] = str(data[key])
                 else:
                     try:
                         operational_settings[key] = int(data[key])
@@ -937,26 +935,97 @@ def api_settings():
             f"Settings updated: threshold={operational_settings['moisture_threshold']}%, "
             f"max={operational_settings['moisture_max']}%, "
             f"duration={operational_settings['max_duration']}s, "
-            f"crop={operational_settings['active_crop']}, "
             f"region={operational_settings['active_region']}",
             category="ACTION"
         )
         
         response_data = operational_settings.copy()
-        crop = operational_settings.get('active_crop', 'maize')
-        if crop in CROP_PARAMS:
-            response_data['crop_critical_moisture'] = CROP_PARAMS[crop]['critical']
-            response_data['crop_target_moisture'] = CROP_PARAMS[crop]['target']
-            response_data['crop_high_threshold'] = CROP_PARAMS[crop]['high']
         return jsonify({"status": "success", "settings": response_data})
     
     response_data = operational_settings.copy()
-    crop = operational_settings.get('active_crop', 'maize')
-    if crop in CROP_PARAMS:
-        response_data['crop_critical_moisture'] = CROP_PARAMS[crop]['critical']
-        response_data['crop_target_moisture'] = CROP_PARAMS[crop]['target']
-        response_data['crop_high_threshold'] = CROP_PARAMS[crop]['high']
     return jsonify(response_data)
+
+@app.route('/api/crops', methods=['GET'])
+def get_crops():
+    """Get all available crops"""
+    try:
+        crops = db.get_crops()
+        return jsonify(crops)
+    except Exception as e:
+        app.logger.error(f"Failed to fetch crops: {e}")
+        return jsonify([]), 500
+
+@app.route('/api/crops/active', methods=['GET', 'PUT'])
+def active_crop():
+    """Get or update active crop"""
+    if request.method == 'PUT':
+        data = request.json
+        crop_id = data.get('crop_id')
+        if crop_id:
+            try:
+                db.set_active_crop(crop_id)
+                active = db.get_active_crop()
+                add_log(f"Active crop changed to {active.get('name') if active else 'Unknown'}", category="ACTION")
+                # Immediately update MLPredictor's active settings in memory if needed
+                return jsonify({'status': 'success', 'active_crop': active})
+            except Exception as e:
+                app.logger.error(f"Failed to set active crop: {e}")
+                return jsonify({'error': str(e)}), 500
+        return jsonify({'error': 'crop_id is required'}), 400
+        
+    try:
+        active = db.get_active_crop()
+        if not active:
+            # Fallback to crop 1 if setting is missing
+            db.set_active_crop('1')
+            active = db.get_active_crop()
+        return jsonify(active)
+    except Exception as e:
+        app.logger.error(f"Failed to fetch active crop: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/model/reload-check', methods=['GET'])
+def model_reload_check():
+    """Check if the retrain pipeline flagged a new model for reload."""
+    try:
+        needs_reload = db.get_system_setting('model_needs_reload', 'false')
+        return jsonify({'reload_needed': needs_reload == 'true'})
+    except Exception as e:
+        app.logger.error(f"Model reload check error: {e}")
+        return jsonify({'reload_needed': False})
+
+@app.route('/api/model/reload', methods=['POST'])
+def model_reload():
+    """Reload the ML model in the running MLPredictor instance."""
+    try:
+        predictor._load_model()
+        db.set_system_setting('model_needs_reload', 'false')
+        add_log("ML model reloaded via API", category="SYSTEM")
+        return jsonify({'status': 'success', 'message': 'Model reloaded.'})
+    except Exception as e:
+        app.logger.error(f"Model reload error: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/models/retrain', methods=['POST'])
+def trigger_retrain():
+    """Manually trigger the model retraining pipeline"""
+    try:
+        import threading
+        from ai_service.retrain_pipeline import run_retraining_pipeline
+        
+        # Run in background to avoid blocking the HTTP request
+        thread = threading.Thread(target=run_retraining_pipeline)
+        thread.daemon = True
+        thread.start()
+        
+        add_log("Manual model retraining triggered via API", category="SYSTEM")
+        return jsonify({
+            'status': 'success', 
+            'message': 'Retraining pipeline started in the background. Check logs or Model Registry for updates.'
+        })
+    except Exception as e:
+        app.logger.error(f"Failed to trigger retraining: {e}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     print("\n" + "=" * 60)

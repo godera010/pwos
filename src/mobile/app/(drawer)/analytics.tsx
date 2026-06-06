@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable, SafeAreaView } from '../../src/components/ui';
 import { useAppStore, actions } from '../../src/store/useAppStore';
 import { api, SensorData, SystemStats, WateringEvent } from '../../src/services/api';
-import { Svg, Path, LinearGradient, Stop, Circle, Line, Rect, Text as SvgText } from 'react-native-svg';
+import { Svg, Path, LinearGradient, Stop, Circle, Line, Rect, Text as SvgText, Defs } from 'react-native-svg';
 
 export default function AnalyticsScreen() {
   const [history, setHistory] = useState<SensorData[]>([]);
@@ -60,7 +60,7 @@ export default function AnalyticsScreen() {
 
   useEffect(() => {
     fetchAnalytics();
-  }, [currentMoisture]);
+  }, []);
 
   // Construct coordinates for custom high-fidelity SVG chart
   const chartWidth = 320;
@@ -89,9 +89,9 @@ export default function AnalyticsScreen() {
     : '';
 
   return (
-    <SafeAreaView className="flex-1 bg-[#090d16]" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-[#000000]" edges={['top']}>
       {/* HEADER */}
-      <View className="px-6 py-4 border-b border-[#131b2e] bg-[#0c1220] flex-row items-center justify-between">
+      <View className="px-6 py-4 border-b border-[#1f1f23] bg-[#09090b] flex-row items-center justify-between">
         <View>
           <Text className="text-white text-xl font-bold tracking-tight">ANALYTICS & CHARTS</Text>
           <Text className="text-slate-400 text-xs mt-0.5">Environmental Soil Intelligence</Text>
@@ -99,7 +99,7 @@ export default function AnalyticsScreen() {
 
         <Pressable
           onPress={fetchAnalytics}
-          className="bg-[#131b2e] border border-slate-700 rounded-xl p-2 active:bg-slate-700"
+          className="bg-[#1f1f23] border border-slate-700 rounded-xl p-2 active:bg-slate-700"
         >
           <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5">
             <Path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
@@ -110,26 +110,26 @@ export default function AnalyticsScreen() {
       <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingVertical: 20 }}>
         
         {/* INTERACTIVE HIGH-FIDELITY CHART CARD */}
-        <View className="bg-[#0c1220] border border-[#131b2e] rounded-3xl p-5 mb-5 shadow-lg relative overflow-hidden">
+        <View className="bg-[#09090b] border border-[#1f1f23] rounded-3xl p-5 mb-5 shadow-lg relative overflow-hidden">
           <Text className="text-white font-bold text-base mb-1">Moisture History (24 Hours)</Text>
           <Text className="text-slate-400 text-xs mb-4">Graphed soil capacitance and watering curves</Text>
 
           {/* SVG CHART CONTAINER */}
-          <View className="items-center justify-center bg-[#070b13] border border-[#131b2e] rounded-2xl py-4">
+          <View className="items-center justify-center bg-[#09090b] border border-[#1f1f23] rounded-2xl py-4">
             {points.length > 0 && (
               <Svg width={chartWidth} height={chartHeight}>
-                <defs>
+                <Defs>
                   {/* Glowing Emerald Chart Area Gradient */}
                   <LinearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
                     <Stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
                     <Stop offset="100%" stopColor="#10b981" stopOpacity="0.00" />
                   </LinearGradient>
-                </defs>
+                </Defs>
 
                 {/* Y-axis gridlines */}
-                <Line x1={padding} y1={padding} x2={chartWidth - padding} y2={padding} stroke="#131b2e" strokeWidth="1" strokeDasharray="4 4" />
-                <Line x1={padding} y1={chartHeight / 2} x2={chartWidth - padding} y2={chartHeight / 2} stroke="#131b2e" strokeWidth="1" strokeDasharray="4 4" />
-                <Line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="#131b2e" strokeWidth="1.5" />
+                <Line x1={padding} y1={padding} x2={chartWidth - padding} y2={padding} stroke="#1f1f23" strokeWidth="1" strokeDasharray="4 4" />
+                <Line x1={padding} y1={chartHeight / 2} x2={chartWidth - padding} y2={chartHeight / 2} stroke="#1f1f23" strokeWidth="1" strokeDasharray="4 4" />
+                <Line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="#1f1f23" strokeWidth="1.5" />
 
                 {/* Area Gradient Shading */}
                 <Path d={areaD} fill="url(#chartGradient)" />
@@ -144,7 +144,7 @@ export default function AnalyticsScreen() {
                     cx={p.x}
                     cy={p.y}
                     r="4"
-                    fill="#090d16"
+                    fill="#000000"
                     stroke="#10b981"
                     strokeWidth="2.5"
                   />
@@ -180,7 +180,7 @@ export default function AnalyticsScreen() {
                 Given a moisture baseline of {currentMoisture.toFixed(0)}% and a Vapor Pressure Deficit (VPD) of {currentVpd.toFixed(2)} kPa, the system predicts target dryness thresholds will not be breached for approximately 18.5 hours.
               </Text>
             </View>
-            <View className="bg-[#0c1220] border border-[#131b2e] p-3 rounded-2xl items-center justify-center min-w-[70px]">
+            <View className="bg-[#09090b] border border-[#1f1f23] p-3 rounded-2xl items-center justify-center min-w-[70px]">
               <Text className="text-purple-400 text-lg font-black">-0.34%</Text>
               <Text className="text-slate-500 text-[8px] font-bold uppercase mt-0.5">Per Hour</Text>
             </View>
@@ -188,8 +188,8 @@ export default function AnalyticsScreen() {
         </View>
 
         {/* SYSTEM ANALYTICS BOARDS */}
-        <View className="bg-[#0c1220] border border-[#131b2e] rounded-3xl p-5 shadow-lg">
-          <Text className="text-white font-bold text-base border-b border-[#131b2e] pb-3 mb-4">Historical Statistics Summary</Text>
+        <View className="bg-[#09090b] border border-[#1f1f23] rounded-3xl p-5 shadow-lg">
+          <Text className="text-white font-bold text-base border-b border-[#1f1f23] pb-3 mb-4">Historical Statistics Summary</Text>
 
           <View className="flex-row flex-wrap justify-between">
             {/* Stat Item 1 */}

@@ -186,7 +186,7 @@
       ▼
 ┌───────────────────────────────────────────────┐
 │ ML Predictor (Crop-Aware, Region-Aware)        │
-│  • 12 features (incl. crop thresholds)         │
+│  • 17 features (incl. crop thresholds)         │
 │  • Settings injected in-memory (no disk I/O)   │
 └───────────────────────────────────────────────┘
 </code></pre>
@@ -328,7 +328,7 @@ timer.start()
 <tbody>
 <tr>
 <td><code>ml_predictor.py</code></td>
-<td>Multi-crop prediction engine (12 features, 4 actions, in-memory settings)</td>
+<td>Multi-crop prediction engine (17 features, 4 actions, in-memory settings)</td>
 </tr>
 <tr>
 <td><code>train_model.py</code></td>
@@ -372,7 +372,7 @@ timer.start()
 </tbody>
 </table>
 <blockquote>
-<p><strong>Note:</strong> The Random Forest model uses 12 features. Additional derived features (hour, day_of_week, is_daytime, is_hot_hours, forecast_minutes, moisture_change_rate, moisture_rolling_6, temp_rolling_6) are calculated at inference time and used only by the Decision Engine.</p>
+<p><strong>Note:</strong> The Random Forest model is trained on 17 features, including primary sensor telemetry, weather forecasts, crop characteristics, and derived temporal metrics (hour, is_daytime, moisture_change_rate, moisture_rolling_6) calculated at inference time.</p>
 </blockquote>
 <h3>Decision Actions</h3>
 <p><code>NOW</code> · <code>STALL</code> · <code>STOP</code> · <code>MONITOR</code> — with 13 status sub-codes: CRITICAL, DRY_TRIGGER, PREHEAT, EMERGENCY, VPD_DELAY, WIND_DELAY, RAIN_EXPECTED, RAINING, SATURATED, HARDWARE_OFFLINE, WATCHING, OPTIMAL, FALSE_DRY_CHECK</p>

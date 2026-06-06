@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { api, SensorData, PredictionData, SystemLog, SystemState, updateApiBaseUrl } from '../services/api';
+import { useState, useEffect, useRef } from 'react';
+import { api, SensorData, PredictionData, SystemLog, SystemState, updateApiBaseUrl, Crop, SystemSettings } from '../services/api';
 import { mqttClient, updateMqttBrokerUrl } from '../services/mqtt';
 
 export interface AppState {
@@ -34,10 +34,15 @@ export interface AppState {
   // Connection states
   mqttConnected: boolean;
   apiConnected: boolean;
+  hardwareOnline: boolean;
   
-  // Configuration
+  // Configuration & History
   customServerIp: string;
   isFetching: boolean;
+  history: SensorData[];
+  crops: Crop[];
+  activeCrop: Crop | null;
+  settings: SystemSettings | null;
 }
 
 const initialState: AppState = {
@@ -61,8 +66,13 @@ const initialState: AppState = {
   mqttLogs: [],
   mqttConnected: false,
   apiConnected: false,
+  hardwareOnline: false,
   customServerIp: '',
   isFetching: false,
+  history: [],
+  crops: [],
+  activeCrop: null,
+  settings: null,
 };
 
 type Listener = () => void;
@@ -97,14 +107,24 @@ const store = new StateStore<AppState>(initialState);
 
 // Reusable hook mimicking Zustand API signature
 export function useAppStore<U>(selector: (state: AppState) => U): U {
+  // Store selector in a ref so the subscription closure always has the latest version
+  // without needing to re-subscribe every time the selector reference changes
+  const selectorRef = useRef(selector);
+  selectorRef.current = selector;
+
   const [value, setValue] = useState(() => selector(store.getState()));
 
   useEffect(() => {
+    // Subscribe once; always call the latest selector via the ref
     const unsubscribe = store.subscribe(() => {
-      setValue(selector(store.getState()));
+      const nextValue = selectorRef.current(store.getState());
+      setValue(prev => {
+        if (Object.is(prev, nextValue)) return prev;
+        return nextValue;
+      });
     });
     return unsubscribe;
-  }, [selector]);
+  }, []); // Empty deps - stable subscription for component lifetime
 
   return value;
 }
@@ -137,28 +157,35 @@ export const actions = {
     mqttClient.subscribe('pwos/sensor/data', (msg) => {
       actions.addMqttLog(`[MQTT Received] Topic: pwos/sensor/data, Payload: ${JSON.stringify(msg)}`);
       if (msg && typeof msg === 'object') {
+        const soilMoisture = typeof msg.soil_moisture === 'number' ? msg.soil_moisture : store.getState().soilMoisture;
         useAppStore.setState({
-          soilMoisture: typeof msg.soil_moisture === 'number' ? msg.soil_moisture : store.getState().soilMoisture,
+          soilMoisture,
           temperature: typeof msg.temperature === 'number' ? msg.temperature : store.getState().temperature,
           humidity: typeof msg.humidity === 'number' ? msg.humidity : store.getState().humidity,
           vpd: typeof msg.vpd === 'number' ? msg.vpd : store.getState().vpd,
-          apiConnected: true
+          pumpActive: typeof msg.pump_active === 'boolean' ? msg.pump_active : store.getState().pumpActive,
+          apiConnected: true,
+          hardwareOnline: true
         });
+        actions.checkSafetyOverrides(soilMoisture);
       }
     });
 
     mqttClient.subscribe('pwos/system/hardware', (msg) => {
-      actions.addMqttLog(`[MQTT Received] Topic: pwos/system/hardware, Payload: ${JSON.stringify(msg)}`);
-      if (msg && typeof msg === 'object') {
-        const active = msg.pump_active === true || msg.pump === 'ON';
-        useAppStore.setState({ pumpActive: active });
+      actions.addMqttLog(`[MQTT Received] Topic: pwos/system/hardware, Payload: ${msg}`);
+      if (typeof msg === 'string') {
+        const isOnline = msg.toUpperCase() === 'ONLINE';
+        useAppStore.setState({ hardwareOnline: isOnline });
       }
     });
 
     mqttClient.subscribe('pwos/system/mode', (msg) => {
-      actions.addMqttLog(`[MQTT Received] Topic: pwos/system/mode, Payload: ${JSON.stringify(msg)}`);
-      if (msg && typeof msg === 'object') {
-        useAppStore.setState({ systemMode: msg.mode === 'MANUAL' ? 'MANUAL' : 'AUTO' });
+      actions.addMqttLog(`[MQTT Received] Topic: pwos/system/mode, Payload: ${msg}`);
+      if (typeof msg === 'string') {
+        const mode = msg.toUpperCase().trim();
+        if (mode === 'AUTO' || mode === 'MANUAL') {
+          useAppStore.setState({ systemMode: mode });
+        }
       }
     });
 
@@ -178,12 +205,16 @@ export const actions = {
     
     try {
       // Parallel fetches for speed and premium responsive UI
-      const [sensorsRes, stateRes, predictRes, logsRes, weatherRes] = await Promise.allSettled([
+      const [sensorsRes, stateRes, predictRes, logsRes, weatherRes, historyRes, settingsRes, cropsRes, activeCropRes] = await Promise.allSettled([
         api.getLatestSensors(),
         api.getSystemState(),
         api.getPrediction(),
         api.getLogs(),
-        api.getWeatherForecast()
+        api.getWeatherForecast(),
+        api.getHistory(1),
+        api.getSettings(),
+        api.getCrops(),
+        api.getActiveCrop()
       ]);
 
       const updates: Partial<AppState> = { apiConnected: true };
@@ -218,8 +249,27 @@ export const actions = {
         updates.weatherWindSpeed = weatherRes.value.wind_speed_kmh;
         updates.weatherCondition = weatherRes.value.condition;
       }
+      
+      if (historyRes.status === 'fulfilled') {
+        updates.history = historyRes.value.reverse();
+      }
+      
+      if (settingsRes.status === 'fulfilled') {
+        updates.settings = settingsRes.value;
+      }
+      
+      if (cropsRes.status === 'fulfilled') {
+        updates.crops = cropsRes.value;
+      }
+      
+      if (activeCropRes.status === 'fulfilled') {
+        updates.activeCrop = activeCropRes.value;
+      }
 
       useAppStore.setState(updates);
+      if (sensorsRes.status === 'fulfilled') {
+        actions.checkSafetyOverrides(sensorsRes.value.soil_moisture);
+      }
     } catch (e) {
       console.error('Mobile Store Error fetching data', e);
       useAppStore.setState({ apiConnected: false });
@@ -240,7 +290,7 @@ export const actions = {
       await api.toggleMode(targetMode);
       
       // Also publish via MQTT for instantaneous multi-device updates
-      mqttClient.publish('pwos/system/mode', { mode: targetMode });
+      mqttClient.publish('pwos/system/mode', targetMode);
       
       await actions.fetchDashboardData(true);
     } catch (e) {
@@ -261,7 +311,7 @@ export const actions = {
 
     try {
       await api.controlPump('ON', seconds);
-      mqttClient.publish('pwos/system/hardware', { pump_active: true, pump: 'ON', duration: seconds });
+      mqttClient.publish('pwos/control/pump', { action: 'ON', duration: seconds });
 
       // Start the local countdown timer
       const timer = setInterval(() => {
@@ -290,7 +340,7 @@ export const actions = {
 
     try {
       await api.controlPump('OFF', 0);
-      mqttClient.publish('pwos/system/hardware', { pump_active: false, pump: 'OFF' });
+      mqttClient.publish('pwos/control/pump', { action: 'OFF', duration: 0 });
       await actions.fetchDashboardData(true);
     } catch (e) {
       console.error('Failed to stop pump', e);
@@ -311,11 +361,61 @@ export const actions = {
     }, 500);
   },
 
+  setActiveCrop: async (cropId: number) => {
+    try {
+      const res = await api.setActiveCrop(cropId);
+      if (res.status === 'success') {
+        useAppStore.setState({ activeCrop: res.active_crop });
+        actions.addMqttLog(`System: Active crop updated to ${res.active_crop.name.toUpperCase()}`);
+        await actions.fetchDashboardData(true);
+        return true;
+      }
+    } catch (e) {
+      console.error('Failed to set active crop', e);
+    }
+    return false;
+  },
+
+  retrainModel: async () => {
+    try {
+      const res = await api.retrainModel();
+      if (res.status === 'success') {
+        actions.addMqttLog('System: Model retraining triggered successfully');
+        return true;
+      }
+    } catch (e) {
+      console.error('Failed to trigger model retraining', e);
+    }
+    return false;
+  },
+
   addMqttLog: (log: string) => {
     const timestamp = new Date().toLocaleTimeString();
     const formatted = `[${timestamp}] ${log}`;
     useAppStore.setState((s) => ({
       mqttLogs: [formatted, ...s.mqttLogs].slice(0, 100) // keep last 100 entries
     }));
+  },
+
+  checkSafetyOverrides: (moisture: number) => {
+    const state = store.getState();
+    const MOISTURE_CRITICAL_LOW = state.activeCrop?.wilting_point_threshold ?? 15;
+    const MOISTURE_SATURATION_HIGH = (state.activeCrop?.target_moisture ?? 60) + 15;
+
+    // Critical Dry Override: If in MANUAL mode and moisture drops below critical low, engage Autopilot
+    if (state.systemMode === 'MANUAL' && moisture >= 1.0 && moisture < MOISTURE_CRITICAL_LOW) {
+      actions.addMqttLog(`Safety Override: Soil too dry (${moisture.toFixed(1)}%). Automatically activating AUTO mode.`);
+      actions.toggleSystemMode();
+      return;
+    }
+
+    // Critical Saturation Override: If pump is running and moisture reaches saturation limit, turn off pump & activate AUTO mode
+    if (state.pumpActive && moisture >= MOISTURE_SATURATION_HIGH) {
+      actions.addMqttLog(`Safety Override: Soil saturated (${moisture.toFixed(1)}%). Automatically stopping pump & activating AUTO mode.`);
+      actions.stopPump();
+      if (state.systemMode === 'MANUAL') {
+        actions.toggleSystemMode();
+      }
+    }
   }
 };

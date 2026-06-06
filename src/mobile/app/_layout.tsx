@@ -23,7 +23,7 @@ export default function RootLayout() {
         <Stack
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: '#090d16' }, // Premium Deep Slate Black base
+            contentStyle: { backgroundColor: '#000000' }, // Premium Deep Slate Black base
           }}
         >
           <Stack.Screen name="(drawer)" options={{ headerShown: false }} />

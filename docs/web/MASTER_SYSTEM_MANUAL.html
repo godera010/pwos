@@ -172,10 +172,10 @@
 <hr />
 <h2>Part 1: Data Engineering &amp; Datasets</h2>
 <p>The foundation of P-WOS is a high-density, multi-featured dataset that captures the complex relationship between soil moisture, atmospheric demand (VPD), and crop physiology.</p>
-<h3>1.1 The Primary Training Dataset (<code>training_data.csv</code>)</h3>
+<h3>1.1 The Primary Training Dataset (<code>real_training_data.csv</code>)</h3>
 <ul>
-<li><strong>Size:</strong> 10,889 samples (rows)</li>
-<li><strong>Features:</strong> 11 input features + 1 target label</li>
+<li><strong>Size:</strong> 630,000 samples (rows) (replicated multi-crop &amp; multi-region)</li>
+<li><strong>Features:</strong> 17 input features + 1 target label</li>
 <li><strong>Sampling Frequency:</strong> 5-second control cycles (simulated and real-world aggregated)</li>
 </ul>
 <h4>Dataset Schema</h4>
@@ -208,52 +208,88 @@
 <td>VPD component</td>
 </tr>
 <tr>
-<td><code>forecast_minutes</code></td>
+<td><code>vpd</code></td>
+<td><code>float</code></td>
+<td>Vapor Pressure Deficit (kPa) calculated via Tetens formula</td>
+<td>Atmospheric thirst signal</td>
+</tr>
+<tr>
+<td><code>precipitation_chance</code></td>
 <td><code>int</code></td>
-<td>Minutes until the next predicted rain event</td>
-<td>Suppress unnecessary watering</td>
+<td>Percentage chance of rain in next forecast window</td>
+<td>Rain lookahead</td>
+</tr>
+<tr>
+<td><code>forecast_temp</code></td>
+<td><code>float</code></td>
+<td>Forecasted ambient temperature (°C)</td>
+<td>Predicted future stress</td>
+</tr>
+<tr>
+<td><code>wind_speed</code></td>
+<td><code>float</code></td>
+<td>Wind speed in km/h</td>
+<td>Evaporation multiplier &amp; false dry detector</td>
+</tr>
+<tr>
+<td><code>crop_type_id</code></td>
+<td><code>int</code></td>
+<td>Database ID of the active crop type</td>
+<td>Crop identification</td>
+</tr>
+<tr>
+<td><code>root_depth_cm</code></td>
+<td><code>float</code></td>
+<td>Active crop root depth in cm</td>
+<td>Agronomic safety profiling</td>
+</tr>
+<tr>
+<td><code>wilting_point_threshold</code></td>
+<td><code>float</code></td>
+<td>Soil moisture level below which wilting begins (%)</td>
+<td>Dynamic safety floor</td>
+</tr>
+<tr>
+<td><code>growth_stage</code></td>
+<td><code>int</code></td>
+<td>Current physiological crop growth stage (1–4)</td>
+<td>Stage-based threshold modifier</td>
+</tr>
+<tr>
+<td><code>optimal_vpd_min</code></td>
+<td><code>float</code></td>
+<td>Lower bound of crop optimal VPD range (kPa)</td>
+<td>VPD compliance tracking</td>
+</tr>
+<tr>
+<td><code>optimal_vpd_max</code></td>
+<td><code>float</code></td>
+<td>Upper bound of crop optimal VPD range (kPa)</td>
+<td>VPD compliance tracking</td>
 </tr>
 <tr>
 <td><code>hour</code></td>
 <td><code>int</code></td>
-<td>Current hour of the day (0–23)</td>
-<td>Encodes daily evapotranspiration cycle</td>
-</tr>
-<tr>
-<td><code>day_of_week</code></td>
-<td><code>int</code></td>
-<td>Day index (0=Monday, 6=Sunday)</td>
-<td>Captures weekly patterns</td>
+<td>Hour of the day (0–23)</td>
+<td>Encodes daily transpiration cycle</td>
 </tr>
 <tr>
 <td><code>is_daytime</code></td>
 <td><code>binary</code></td>
-<td>1 if 6:00 &lt; hour &lt; 18:00</td>
+<td>1 if 6:00 &lt;= hour &lt;= 18:00</td>
 <td>Broad solar radiation proxy</td>
-</tr>
-<tr>
-<td><code>is_hot_hours</code></td>
-<td><code>binary</code></td>
-<td>1 if 10:00 &lt; hour &lt; 16:00</td>
-<td>Peak VPD window / Stall window</td>
 </tr>
 <tr>
 <td><code>moisture_change_rate</code></td>
 <td><code>float</code></td>
-<td>Rate of moisture change per 5-second interval</td>
+<td>Rate of moisture change per hour</td>
 <td>Detects rapid drainage/drying trends</td>
 </tr>
 <tr>
 <td><code>moisture_rolling_6</code></td>
 <td><code>float</code></td>
-<td>30-second rolling average of soil moisture</td>
+<td>6-reading rolling average of soil moisture</td>
 <td>Smooths sensor noise &amp; confirms trends</td>
-</tr>
-<tr>
-<td><code>temp_rolling_6</code></td>
-<td><code>float</code></td>
-<td>30-second rolling average of temperature</td>
-<td>Tracks sustained thermal stress</td>
 </tr>
 <tr>
 <td><strong><code>needs_watering_soon</code></strong></td>
@@ -271,7 +307,7 @@ moisture_rolling_6 = sum(last_6_readings) / 6
 </code></pre>
 <hr />
 <h2>Part 2: The ML Training Pipeline</h2>
-<p>P-WOS utilizes a "Forest of Decision Trees" to map 11 atmospheric and soil features to a binary watering decision.</p>
+<p>P-WOS utilizes a "Forest of Decision Trees" to map 17 atmospheric, soil, crop, and temporal features to a binary watering decision.</p>
 <h3>2.1 Model Architecture: Random Forest</h3>
 <ul>
 <li><strong>Estimators (Trees):</strong> 100</li>
@@ -279,7 +315,7 @@ moisture_rolling_6 = sum(last_6_readings) / 6
 <li><strong>Engine:</strong> <code>RandomForestClassifier</code> (Scikit-Learn)</li>
 </ul>
 <h3>2.2 Performance Metrics (v3.0 Benchmark)</h3>
-<p>The model is evaluated using the F1-Score to ensure performance is maintained even with imbalanced datasets (more "Wait" than "Water" events).</p>
+<p>The model is evaluated using precision, recall, and F1-score metrics on a chronological time-series holdout test set to verify threshold mapping correctness.</p>
 <table>
 <thead>
 <tr>
@@ -291,31 +327,31 @@ moisture_rolling_6 = sum(last_6_readings) / 6
 <tbody>
 <tr>
 <td><strong>Accuracy</strong></td>
-<td>83.43%</td>
+<td>99.96%</td>
 <td>Overall correct predictions</td>
 </tr>
 <tr>
 <td><strong>Precision</strong></td>
-<td>96%</td>
-<td>When the model says "Water", it is almost always correct</td>
+<td>100.0%</td>
+<td>When the model says "Water", it is always correct</td>
 </tr>
 <tr>
 <td><strong>Recall</strong></td>
-<td>72%</td>
-<td>The model captures 72% of all actual watering needs</td>
+<td>100.0%</td>
+<td>The model captures all actual watering needs</td>
 </tr>
 <tr>
 <td><strong>F1-Score</strong></td>
-<td>82%</td>
-<td>Excellent balance for agricultural decision-making</td>
+<td>100.0%</td>
+<td>Perfect balance of precision and recall for agricultural decision-making</td>
 </tr>
 </tbody>
 </table>
 <h3>2.3 Training Workflow (<code>train_model.py</code>)</h3>
 <ol>
-<li><strong>Load Data:</strong> Imports <code>training_data.csv</code>.</li>
-<li><strong>Pre-processing:</strong> Feature scaling (StandardScaler) is applied to ensure temperature (°C) and moisture (%) are weighted fairly.</li>
-<li><strong>Train/Test Split:</strong> 80/20 random split.</li>
+<li><strong>Load Data:</strong> Imports <code>real_training_data.csv</code> and <code>synthetic_training_data.csv</code> and merges them.</li>
+<li><strong>Pre-processing:</strong> Handled automatically; features are checked for completeness, and the combined dataset is sorted chronologically by timestamp.</li>
+<li><strong>Train/Test Split:</strong> 80/20 chronological (temporal) split to preserve time-series context and prevent data leakage.</li>
 <li><strong>Serialization:</strong> Model saved as <code>rf_model.pkl</code>, metadata as <code>model_metadata.json</code>.</li>
 </ol>
 <hr />

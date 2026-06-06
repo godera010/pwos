@@ -700,7 +700,7 @@ app.py assembles current_data from latest_sensor_data dict:
     ▼
 app.py calls MLPredictor.predict_next_watering(current_data, history_df, active_settings)
     - history_df: last 6 readings from sensor_readings (for rolling averages)
-    - active_settings: { active_crop, active_region } (from operational_settings.json)
+    - active_settings: { active_crop, active_region } (from SQLite pwos.db)
     │                    ← loaded once per startup, injected in-memory (no disk I/O per request)
     ▼
 MLPredictor assembles 12-feature vector:

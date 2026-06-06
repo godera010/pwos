@@ -288,7 +288,7 @@ HIGH      &lt;─── upper safe bound; irrigation suppressed to prevent water
 </blockquote>
 <hr />
 <h2>3. Full Crop Profile Table</h2>
-<p>All values sourced directly from <code>CROP_PARAMS</code> in <code>ml_predictor.py</code> (lines 21–27) and agronomic metadata from <code>CropSettings.tsx</code>.</p>
+<p>All values are sourced dynamically from the SQLite <code>crops</code> table.</p>
 <table>
 <thead>
 <tr>
@@ -378,20 +378,18 @@ HIGH      &lt;─── upper safe bound; irrigation suppressed to prevent water
 <h2>4. Seasonal Adjustment</h2>
 <p>Zimbabwe's growing calendar means that the same crop faces very different evaporative demand depending on the month. P-WOS adjusts all five moisture thresholds dynamically via <code>get_seasonal_thresholds()</code>.</p>
 <h3>Source Code</h3>
-<pre><code class="language-python"># ml_predictor.py — lines 70–89
-def get_seasonal_thresholds(self, month, active_crop='maize'):
-    base = CROP_PARAMS.get(active_crop, CROP_PARAMS['maize']).copy()
+<pre><code class="language-python"># ml_predictor.py
+def get_seasonal_thresholds(self, month, active_crop_name='Maize'):
+    # Base thresholds are pulled dynamically from the database
+    base = self.db.get_crop_by_name(active_crop_name)
     shift = 0
     if month in [11, 12, 1, 2, 3]:  # Summer
         shift = 5
     elif month in [5, 6, 7, 8, 9]:  # Winter
         shift = -5
     return {
-        'critical': max(5, base['critical'] + shift),
-        'low':      max(10, base['low']      + shift),
-        'proactive':max(15, base['proactive']+ shift),
-        'high':     max(20, base['high']     + shift),
-        'target':   max(25, base['target']   + shift)
+        'critical': max(5, base['wilting_point_threshold'] + shift),
+        # ... logic adjusted for the dynamically loaded crop parameters
     }
 </code></pre>
 <h3>Season Definitions</h3>
@@ -637,10 +635,11 @@ region_mult = region_multipliers.get(active_region, 1.0)
 <h2>6. How Crop Settings Feed the ML Model</h2>
 <p>The gradient-boosted classifier at the core of P-WOS does not merely observe raw sensor data. At inference time, three crop- and region-derived features are injected directly into the feature vector, allowing the model to contextualise every prediction against the active configuration.</p>
 <h3>Feature Injection</h3>
-<pre><code class="language-python"># ml_predictor.py — lines 215–217
-features['crop_target_moisture']   = crop_info['target']
-features['crop_critical_moisture'] = crop_info['critical']
-features['region_evap_multiplier'] = region_mult
+<pre><code class="language-python"># ml_predictor.py
+features['crop_type_id'] = int(crop_info.get('id', 1))
+features['root_depth_cm'] = float(crop_info.get('root_depth_cm', 30.0))
+features['wilting_point_threshold'] = float(crop_info.get('wilting_point_threshold', 20.0))
+# Additional biological limits injected here...
 </code></pre>
 <h3>Feature Semantics</h3>
 <table>
@@ -653,34 +652,34 @@ features['region_evap_multiplier'] = region_mult
 </thead>
 <tbody>
 <tr>
-<td><code>crop_target_moisture</code></td>
-<td><code>CROP_PARAMS[crop]['target']</code></td>
-<td>The moisture level the system is trying to maintain. The model uses this to assess how far current moisture is from the operational goal.</td>
+<td><code>root_depth_cm</code></td>
+<td><code>crops</code> table</td>
+<td>Determines how deep water must penetrate the soil column.</td>
 </tr>
 <tr>
-<td><code>crop_critical_moisture</code></td>
-<td><code>CROP_PARAMS[crop]['critical']</code></td>
-<td>The crop's stress threshold. The model learns to predict urgency and decay rate relative to how close current moisture is to causing crop damage.</td>
+<td><code>wilting_point_threshold</code></td>
+<td><code>crops</code> table</td>
+<td>The crop's absolute stress limit. The model learns to predict urgency relative to this biological floor.</td>
 </tr>
 <tr>
-<td><code>region_evap_multiplier</code></td>
-<td><code>region_multipliers[region]</code></td>
-<td>The environmental evaporation rate modifier. The model uses this to calibrate how quickly the moisture level will decay between sensor readings, directly influencing next-irrigation timing predictions.</td>
+<td><code>optimal_vpd_max</code></td>
+<td><code>crops</code> table</td>
+<td>Upper bound before stomata close to prevent water loss, guiding the model on heatwave responses.</td>
 </tr>
 </tbody>
 </table>
 <h3>Feature Space Illustration</h3>
-<p>For a <strong>Potato</strong> crop in <strong>Matabeleland</strong>, the injected features would be:</p>
-<pre><code>crop_target_moisture   = 70.0   # potato's target
-crop_critical_moisture = 45.0   # potato's critical
-region_evap_multiplier = 1.5    # Matabeleland semi-arid
+<p>For a <strong>Potato</strong> crop in <strong>Matabeleland</strong>, the injected biological features would look like:</p>
+<pre><code>root_depth_cm = 30.0
+wilting_point_threshold = 45.0
+optimal_vpd_max = 1.2
 </code></pre>
 <p>For <strong>Sorghum</strong> in <strong>Manicaland</strong>:</p>
-<pre><code>crop_target_moisture   = 50.0   # sorghum's target
-crop_critical_moisture = 20.0   # sorghum's critical
-region_evap_multiplier = 0.6    # Manicaland humid-cool
+<pre><code>root_depth_cm = 100.0
+wilting_point_threshold = 20.0
+optimal_vpd_max = 3.0
 </code></pre>
-<p>The model was trained with these three features as continuous numeric inputs, so a single model handles all crop-region combinations without retraining — the features communicate the configuration context dynamically at inference time.</p>
+<p>The model was trained with these features as continuous numeric inputs, so a single model handles all crop-region combinations without retraining — the features communicate the biological context dynamically at inference time.</p>
 <hr />
 <h2>7. Pump Duration Per Crop</h2>
 <h3>The Deficit Formula</h3>
@@ -1053,24 +1052,18 @@ duration       = clamp(raw_minutes, min=5, max=60)
 <h2>9. How to Switch Crop / Region</h2>
 <h3>Via the Settings UI</h3>
 <ol>
-<li>Navigate to the <strong>Crop Settings</strong> page (accessible from the main navigation sidebar).</li>
-<li>Select the desired crop from the crop selector — each option displays the scientific name, root depth, transpiration rating, and a description of agronomic sensitivity.</li>
-<li>Select the applicable agro-ecological region from the region selector.</li>
-<li>Tap <strong>Save Settings</strong>.</li>
+<li>Navigate to the <strong>Dashboard</strong> or <strong>Crop Settings</strong> page.</li>
+<li>Select the desired crop from the "Field Configuration" crop selector dropdown. The data is pulled live from the REST API (<code>/api/crops</code>).</li>
+<li>The system instantly commits the active crop ID to the <code>system_settings</code> table in the SQLite database.</li>
 </ol>
-<h3>Via Configuration File</h3>
-<p>Settings are persisted in <code>operational_settings.json</code>. The relevant fields are:</p>
-<pre><code class="language-json">{
-  &quot;active_crop&quot;: &quot;maize&quot;,
-  &quot;active_region&quot;: &quot;mashonaland&quot;
-}
+<h3>Via Database Direct Update</h3>
+<p>Settings are persisted in the <code>pwos.db</code> SQLite database.</p>
+<pre><code class="language-sql">UPDATE system_settings SET setting_value = '2' WHERE setting_key = 'active_crop_id';
 </code></pre>
-<p>Valid values:
-- <code>active_crop</code>: <code>"maize"</code>, <code>"potato"</code>, <code>"tomato"</code>, <code>"onion"</code>, <code>"sorghum"</code>
-- <code>active_region</code>: <code>"matabeleland"</code>, <code>"mashonaland"</code>, <code>"manicaland"</code></p>
+<p>Valid values correspond to the primary keys in the <code>crops</code> table (e.g., 1 for Maize, 2 for Potato).</p>
 <h3>Propagation Timing</h3>
 <blockquote>
-<p><strong>Settings take effect within 5 seconds</strong> of saving. The P-WOS backend polls <code>operational_settings.json</code> on a 5-second cycle. On the next poll after a change:
+<p><strong>Settings take effect within 5 seconds</strong> of saving. The P-WOS backend queries the SQLite database on a 5-second cycle. On the next poll after a change:
 - <code>CROP_PARAMS</code> for the new crop is loaded
 - Seasonal thresholds are recomputed for the current month
 - <code>region_mult</code> is updated

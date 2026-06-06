@@ -78,7 +78,7 @@ HIGH      <─── upper safe bound; irrigation suppressed to prevent waterlog
 
 ## 3. Full Crop Profile Table
 
-All values sourced directly from `CROP_PARAMS` in `ml_predictor.py` (lines 21–27) and agronomic metadata from `CropSettings.tsx`.
+All values are sourced dynamically from the SQLite `crops` table.
 
 | Crop | Scientific Name | Root Depth | Transpiration | CRITICAL | LOW | PROACTIVE | TARGET | HIGH | Evap Multiplier |
 |---|---|---|---|---|---|---|---|---|---|
@@ -104,20 +104,18 @@ Zimbabwe's growing calendar means that the same crop faces very different evapor
 ### Source Code
 
 ```python
-# ml_predictor.py — lines 70–89
-def get_seasonal_thresholds(self, month, active_crop='maize'):
-    base = CROP_PARAMS.get(active_crop, CROP_PARAMS['maize']).copy()
+# ml_predictor.py
+def get_seasonal_thresholds(self, month, active_crop_name='Maize'):
+    # Base thresholds are pulled dynamically from the database
+    base = self.db.get_crop_by_name(active_crop_name)
     shift = 0
     if month in [11, 12, 1, 2, 3]:  # Summer
         shift = 5
     elif month in [5, 6, 7, 8, 9]:  # Winter
         shift = -5
     return {
-        'critical': max(5, base['critical'] + shift),
-        'low':      max(10, base['low']      + shift),
-        'proactive':max(15, base['proactive']+ shift),
-        'high':     max(20, base['high']     + shift),
-        'target':   max(25, base['target']   + shift)
+        'critical': max(5, base['wilting_point_threshold'] + shift),
+        # ... logic adjusted for the dynamically loaded crop parameters
     }
 ```
 
@@ -214,39 +212,40 @@ The gradient-boosted classifier at the core of P-WOS does not merely observe raw
 ### Feature Injection
 
 ```python
-# ml_predictor.py — lines 215–217
-features['crop_target_moisture']   = crop_info['target']
-features['crop_critical_moisture'] = crop_info['critical']
-features['region_evap_multiplier'] = region_mult
+# ml_predictor.py
+features['crop_type_id'] = int(crop_info.get('id', 1))
+features['root_depth_cm'] = float(crop_info.get('root_depth_cm', 30.0))
+features['wilting_point_threshold'] = float(crop_info.get('wilting_point_threshold', 20.0))
+# Additional biological limits injected here...
 ```
 
 ### Feature Semantics
 
 | Feature Name | Source | What It Tells the Model |
 |---|---|---|
-| `crop_target_moisture` | `CROP_PARAMS[crop]['target']` | The moisture level the system is trying to maintain. The model uses this to assess how far current moisture is from the operational goal. |
-| `crop_critical_moisture` | `CROP_PARAMS[crop]['critical']` | The crop's stress threshold. The model learns to predict urgency and decay rate relative to how close current moisture is to causing crop damage. |
-| `region_evap_multiplier` | `region_multipliers[region]` | The environmental evaporation rate modifier. The model uses this to calibrate how quickly the moisture level will decay between sensor readings, directly influencing next-irrigation timing predictions. |
+| `root_depth_cm` | `crops` table | Determines how deep water must penetrate the soil column. |
+| `wilting_point_threshold` | `crops` table | The crop's absolute stress limit. The model learns to predict urgency relative to this biological floor. |
+| `optimal_vpd_max` | `crops` table | Upper bound before stomata close to prevent water loss, guiding the model on heatwave responses. |
 
 ### Feature Space Illustration
 
-For a **Potato** crop in **Matabeleland**, the injected features would be:
+For a **Potato** crop in **Matabeleland**, the injected biological features would look like:
 
 ```
-crop_target_moisture   = 70.0   # potato's target
-crop_critical_moisture = 45.0   # potato's critical
-region_evap_multiplier = 1.5    # Matabeleland semi-arid
+root_depth_cm = 30.0
+wilting_point_threshold = 45.0
+optimal_vpd_max = 1.2
 ```
 
 For **Sorghum** in **Manicaland**:
 
 ```
-crop_target_moisture   = 50.0   # sorghum's target
-crop_critical_moisture = 20.0   # sorghum's critical
-region_evap_multiplier = 0.6    # Manicaland humid-cool
+root_depth_cm = 100.0
+wilting_point_threshold = 20.0
+optimal_vpd_max = 3.0
 ```
 
-The model was trained with these three features as continuous numeric inputs, so a single model handles all crop-region combinations without retraining — the features communicate the configuration context dynamically at inference time.
+The model was trained with these features as continuous numeric inputs, so a single model handles all crop-region combinations without retraining — the features communicate the biological context dynamically at inference time.
 
 ---
 
@@ -388,29 +387,23 @@ This scenario demonstrates that crop selection is the **primary driver of irriga
 
 ### Via the Settings UI
 
-1. Navigate to the **Crop Settings** page (accessible from the main navigation sidebar).
-2. Select the desired crop from the crop selector — each option displays the scientific name, root depth, transpiration rating, and a description of agronomic sensitivity.
-3. Select the applicable agro-ecological region from the region selector.
-4. Tap **Save Settings**.
+1. Navigate to the **Dashboard** or **Crop Settings** page.
+2. Select the desired crop from the "Field Configuration" crop selector dropdown. The data is pulled live from the REST API (`/api/crops`).
+3. The system instantly commits the active crop ID to the `system_settings` table in the SQLite database.
 
-### Via Configuration File
+### Via Database Direct Update
 
-Settings are persisted in `operational_settings.json`. The relevant fields are:
+Settings are persisted in the `pwos.db` SQLite database.
 
-```json
-{
-  "active_crop": "maize",
-  "active_region": "mashonaland"
-}
+```sql
+UPDATE system_settings SET setting_value = '2' WHERE setting_key = 'active_crop_id';
 ```
 
-Valid values:
-- `active_crop`: `"maize"`, `"potato"`, `"tomato"`, `"onion"`, `"sorghum"`
-- `active_region`: `"matabeleland"`, `"mashonaland"`, `"manicaland"`
+Valid values correspond to the primary keys in the `crops` table (e.g., 1 for Maize, 2 for Potato).
 
 ### Propagation Timing
 
-> **Settings take effect within 5 seconds** of saving. The P-WOS backend polls `operational_settings.json` on a 5-second cycle. On the next poll after a change:
+> **Settings take effect within 5 seconds** of saving. The P-WOS backend queries the SQLite database on a 5-second cycle. On the next poll after a change:
 > - `CROP_PARAMS` for the new crop is loaded
 > - Seasonal thresholds are recomputed for the current month
 > - `region_mult` is updated

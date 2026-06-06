@@ -429,7 +429,7 @@ export const Analytics: React.FC = () => {
                                 <ResponsiveContainer width="100%" height="100%">
                                     <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="rgba(128,128,128,0.1)" />
-                                        <XAxis dataKey="timestamp" type="number" scale="time" domain={['auto', 'auto']} padding={{ left: 0, right: 0 }} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} stroke="#a3a3a3" axisLine={false} tickLine={false} interval="preserveStartEnd" tickFormatter={formatXAxis} />
+                                        <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} padding={{ left: 0, right: 0 }} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} stroke="#a3a3a3" axisLine={false} tickLine={false} interval="preserveStartEnd" tickFormatter={formatXAxis} />
                                         <YAxis yAxisId="left" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} domain={[0, 'auto']} />
                                         <YAxis yAxisId="right" orientation="right" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} domain={[0, 100]} />
                                         <Tooltip content={<CustomTooltip />} />

@@ -1,7 +1,14 @@
 import { Platform } from 'react-native';
 
+const getDefaultIp = () => {
+  if (Platform.OS === 'android') {
+    return '10.0.2.2';
+  }
+  return 'localhost';
+};
+
 // Dynamic MQTT host resolver
-let cachedMqttUrl = `ws://${Platform.OS === 'android' ? '10.0.2.2' : 'localhost'}:9001`;
+let cachedMqttUrl = `ws://${getDefaultIp()}:9001`;
 
 export const getMqttBrokerUrl = () => {
   return cachedMqttUrl;
@@ -10,15 +17,16 @@ export const getMqttBrokerUrl = () => {
 export const updateMqttBrokerUrl = (customIp: string) => {
   if (customIp && customIp.trim() !== '') {
     cachedMqttUrl = `ws://${customIp}:9001`;
-    } else {
-      cachedMqttUrl = `ws://${Platform.OS === 'android' ? '10.0.2.2' : 'localhost'}:9001`;
-    }
+  } else {
+    cachedMqttUrl = `ws://${getDefaultIp()}:9001`;
+  }
 };
 
 class MqttMobileService {
   private socket: WebSocket | null = null;
   private listeners: { [topic: string]: ((message: any) => void)[] } = {};
   private connectionStatusListeners: ((status: boolean) => void)[] = [];
+  private lastMessages: { [topic: string]: any } = {};
   private connected: boolean = false;
   private reconnectTimeout: NodeJS.Timeout | null = null;
 
@@ -82,7 +90,7 @@ class MqttMobileService {
     // Since we are using standard WebSocket, Mosquitto expects standard binary payloads.
     // Standard MQTT CONNECT packet (Protocol: MQTT, ClientID: pwos_mobile_client, CleanSession: true)
     const packet = new Uint8Array([
-      0x10, 31, // CONNECT, remaining length 31
+      0x10, 27, // CONNECT, remaining length 27
       0x00, 0x04, 0x4d, 0x51, 0x54, 0x54, // "MQTT"
       0x04, // Version 4 (MQTT 3.1.1)
       0x02, // Connect flags: Clean Session
@@ -143,6 +151,8 @@ class MqttMobileService {
         // Not JSON
       }
 
+      this.lastMessages[topic] = parsedMessage;
+
       if (this.listeners[topic]) {
         this.listeners[topic].forEach(cb => cb(parsedMessage));
       }
@@ -174,6 +184,10 @@ class MqttMobileService {
       this.subscribeToTopic(topic);
     }
     this.listeners[topic].push(callback);
+
+    if (topic in this.lastMessages) {
+      callback(this.lastMessages[topic]);
+    }
   }
 
   unsubscribe(topic: string, callback: (message: any) => void) {

@@ -395,7 +395,8 @@ void handlePumpCommand(const char* message) {
     }
 
     const char* action = doc["action"] | "OFF";
-    int duration = doc["duration"] | 30;
+    float raw_duration = doc["duration"] | 2.0f;
+    int duration = (int)raw_duration;
 
     if (strcmp(action, "ON") == 0) {
         if (duration <= 0) {
@@ -410,10 +411,10 @@ void handlePumpCommand(const char* message) {
 
 void startPump(int durationSeconds) {
     if (pumpActive) {
-        // Extend current run
-        pumpDurationMs += (unsigned long)durationSeconds * 1000;
-        Serial.printf("[PUMP] Extended by %ds (total: %lus)\n",
-                      durationSeconds, pumpDurationMs / 1000);
+        // Reset timer instead of compounding to prevent MQTT retry bugs
+        pumpDurationMs = (unsigned long)durationSeconds * 1000;
+        pumpStartMs = millis();
+        Serial.printf("[PUMP] Timer reset to %ds\n", durationSeconds);
     } else {
         pumpActive    = true;
         pumpStartMs   = millis();
@@ -450,7 +451,7 @@ float readSoilMoisture() {
     if (avgRaw > SOIL_WET) return 100.0;
     if (avgRaw <= SOIL_DRY) return 0.0;
     
-    float moisture = map(avgRaw, SOIL_DRY, SOIL_WET, 0, 100);
+    float moisture = (float)(avgRaw - SOIL_DRY) * 100.0f / (float)(SOIL_WET - SOIL_DRY);
     if (moisture > 100.0) return 100.0;
     if (moisture < 0.0) return 0.0;
 

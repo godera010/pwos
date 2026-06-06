@@ -266,7 +266,7 @@ Returns the active configuration parameters and computed crop thresholds.
   ```
 
 ### Update Operational Settings
-Updates configuration variables and saves them persistently to `src/backend/operational_settings.json`.
+Updates configuration variables and saves them persistently to the SQLite database `pwos.db` (`system_settings` table).
 
 * **Endpoint:** `POST /api/settings`
 * **HTTP Method:** `POST`

@@ -60,7 +60,7 @@ export const Control: React.FC = () => {
                     description: 'Predictive intelligence and settings databases are unavailable. Operating in local telemetry mode.',
                     duration: 8000
                 });
-            } else {
+            } else if (!isBackendOffline && prevBackendOffline.current === true) {
                 toast.success('Backend API Connected', {
                     description: 'Predictive models and live settings databases are fully synchronized.',
                     duration: 4000
