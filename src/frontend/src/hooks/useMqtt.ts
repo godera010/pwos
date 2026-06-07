@@ -83,7 +83,7 @@ export function useMqtt() {
         mqttClient.onConnectionChange(handleConnectionChange);
 
         // Handle incoming sensor data
-        const handleSensorData = (data: any) => {
+        const handleSensorData = (data: unknown) => {
             setSensorData(data as MqttSensorData);
             // Self-healing: If we receive data, we MUST be connected and hardware is online
             setConnected(true);
@@ -92,7 +92,7 @@ export function useMqtt() {
         mqttClient.subscribe('pwos/sensor/data', handleSensorData);
 
         // Handle hardware LWT / Status
-        const handleHardwareStatus = (status: any) => {
+        const handleHardwareStatus = (status: unknown) => {
             // e.g. payload "ONLINE" or "OFFLINE"
             if (status === 'OFFLINE' || status === 'ONLINE') {
                 setHardwareStatus(status);
@@ -101,7 +101,7 @@ export function useMqtt() {
         mqttClient.subscribe('pwos/system/hardware', handleHardwareStatus);
 
         // Handle system mode updates
-        const handleSystemMode = (mode: any) => {
+        const handleSystemMode = (mode: unknown) => {
             if (mode === 'AUTO' || mode === 'MANUAL') {
                 setSystemMode(mode);
             }

@@ -56,15 +56,15 @@ def run_autopilot():
     _post_log(logger, "Automation Controller v2 started.", "SYSTEM")
 
     # ── State ─────────────────────────────────────────────────────
-    last_action      = None
-    last_reason      = None
-    last_now_time    = datetime.min     # when we last triggered a pump cycle
-    consecutive_errs = 0
-    settings_cache   = {}
-    settings_ts      = datetime.min
+    last_action        = None
+    last_system_status = None
+    last_now_time      = datetime.min     # when we last triggered a pump cycle
+    consecutive_errs   = 0
+    settings_cache     = {}
+    settings_ts        = datetime.min
 
     # Seed last known state from recent logs (avoids duplicate logs on restart)
-    last_action, last_reason = _seed_state(logger)
+    last_action, last_system_status = _seed_state(logger)
 
     # ── Main loop ─────────────────────────────────────────────────
     try:
@@ -117,12 +117,13 @@ def run_autopilot():
                     continue
 
                 consecutive_errs = 0
-                action   = decision.get('recommended_action', 'MONITOR')
-                duration = float(decision.get('recommended_duration', 0))
-                reason   = decision.get('ml_analysis', {}).get('reason', '')
-                moisture = float(decision.get('current_moisture', 50))
+                action        = decision.get('recommended_action', 'MONITOR')
+                system_status = decision.get('system_status', 'OPTIMAL')
+                duration      = float(decision.get('recommended_duration', 0))
+                reason        = decision.get('ml_analysis', {}).get('reason', '')
+                moisture      = float(decision.get('current_moisture', 50))
 
-                state_changed = (action != last_action) or (reason != last_reason)
+                state_changed = (action != last_action) or (system_status != last_system_status)
                 logger.info(f"M:{moisture:.1f}%  Action:{action}  |  {reason[:80]}")
 
                 # ── Execute ───────────────────────────────────────
@@ -152,10 +153,10 @@ def run_autopilot():
                     _post_log(logger, f"STALL: {reason}", "INFO")
 
                 elif action == 'MONITOR' and state_changed:
-                    _post_log(logger, f"Monitoring: Moisture {moisture:.1f}% — {reason[:120]}", "INFO")
+                    _post_log(logger, f"Monitoring [{system_status}]: Moisture {moisture:.1f}% — {reason[:120]}", "INFO")
 
                 last_action = action
-                last_reason = reason
+                last_system_status = system_status
 
                 # Adaptive sleep: faster when something is happening
                 poll = POLL_IDLE_S if action == 'MONITOR' else POLL_ACTIVE_S
@@ -239,15 +240,19 @@ def _wait_for_backend(logger, max_retries=30, delay=2):
 
 
 def _seed_state(logger):
-    """Read last action/reason from log endpoint to prevent duplicate logs on restart."""
+    """Read last action/status from log endpoint to prevent duplicate logs on restart."""
     try:
-        r = requests.get(f"{API_URL}/logs?limit=10", timeout=5)
+        r = requests.get(f"{API_URL}/logs?limit=20", timeout=5)
         if r.status_code == 200:
             for entry in r.json():
                 msg = entry.get('message', '')
-                if 'STOP:' in msg:    return 'STOP',    msg.split('STOP:')[1].strip()
-                if 'STALL:' in msg:   return 'STALL',   msg.split('STALL:')[1].strip()
-                if 'Monitoring' in msg: return 'MONITOR', msg
+                if 'STOP:' in msg:      return 'STOP',    'STOP'
+                if 'STALL:' in msg:     return 'STALL',   'STALL'
+                if 'Monitoring' in msg:
+                    if '[' in msg and ']' in msg:
+                        status = msg.split('[')[1].split(']')[0]
+                        return 'MONITOR', status
+                    return 'MONITOR', 'OPTIMAL'
     except Exception as e:
         logger.warning(f"Could not seed state: {e}")
     return None, None

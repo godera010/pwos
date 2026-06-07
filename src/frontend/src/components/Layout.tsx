@@ -119,11 +119,14 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
 
     useEffect(() => {
         const timer = setInterval(() => setTime(new Date()), 1000);
-        checkServices();
+        const initTimeout = setTimeout(() => {
+            checkServices();
+        }, 0);
         const servicePoller = setInterval(checkServices, 15000);
 
         return () => {
             clearInterval(timer);
+            clearTimeout(initTimeout);
             clearInterval(servicePoller);
         };
     }, [checkServices]);

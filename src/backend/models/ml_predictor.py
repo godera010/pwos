@@ -51,6 +51,7 @@ class MLPredictor:
     def __init__(self):
         self.model    = None
         self.metadata = {}
+        self.db       = None
         self._load_model()
 
     # ─────────────────────────────────────────────────────────────
@@ -97,12 +98,12 @@ class MLPredictor:
     # SENSOR VALIDITY
     # ─────────────────────────────────────────────────────────────
     def _check_sensor(self, moisture, history_df=None):
-        """Return False if sensor appears disconnected (negative values only)."""
-        if moisture < 0.0:
+        """Return False if sensor appears disconnected (below 1.0% or negative values)."""
+        if moisture < 1.0:
             return False
         if history_df is not None and not history_df.empty:
             vals = list(history_df['soil_moisture'].tail(5)) + [moisture]
-            if sum(vals) / len(vals) < 0.0:
+            if len(vals) >= 3 and (sum(vals) / len(vals)) < 1.0:
                 return False
         return True
 
@@ -194,13 +195,20 @@ class MLPredictor:
         now      = datetime.now()
         settings = active_settings or self._get_settings()
 
-        # ── Fetch crop and region from DB ────────────────────────
-        db        = PWOSDatabase()
-        crop_info = db.get_active_crop() or {
-            'id': 1, 'name': 'Maize', 'target_moisture': 60.0,
-            'wilting_point_threshold': 30.0, 'root_depth_cm': 80.0,
-            'growth_stage': 2, 'optimal_vpd_min': 0.8, 'optimal_vpd_max': 2.0,
-        }
+        # ── Fetch crop and region from DB (with TTL cache) ─────────
+        if self.db is None:
+            self.db = PWOSDatabase()
+            
+        # 60 second TTL cache for crop info
+        if not hasattr(self, '_crop_cache_time') or (now - self._crop_cache_time).total_seconds() > 60:
+            self._crop_info_cache = self.db.get_active_crop() or {
+                'id': 1, 'name': 'Maize', 'target_moisture': 60.0,
+                'wilting_point_threshold': 30.0, 'root_depth_cm': 80.0,
+                'growth_stage': 2, 'optimal_vpd_min': 0.8, 'optimal_vpd_max': 2.0,
+            }
+            self._crop_cache_time = now
+            
+        crop_info = self._crop_info_cache
         region_name = settings.get('active_region', 'matabeleland')
         r_mult      = REGION_MULT.get(region_name, 1.0)
 

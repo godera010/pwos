@@ -31,7 +31,15 @@ const getDynamicColor = (value: number | undefined, defaultColor: string) => {
     return '#10b981'; // Emerald for Optimal/Good
 };
 
-const CustomTooltip = ({ active, payload }: any) => {
+interface CustomTooltipProps {
+    active?: boolean;
+    payload?: Array<{
+        payload: DataPoint;
+        value: number;
+    }>;
+}
+
+const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
         const dataPoint = payload[0].payload;
         if (!dataPoint) return null;
@@ -239,7 +247,7 @@ export const LoadChart: React.FC<LoadChartProps> = ({
                             stroke="none"
                             fill="none"
                             isAnimationActive={false}
-                            dot={(props: any) => {
+                            dot={(props: { cx?: number; cy?: number; index?: number }) => {
                                 const { cx, cy, index } = props;
                                 // Only show dot for the last point
                                 if (index === data.length - 1) {

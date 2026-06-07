@@ -147,7 +147,7 @@ export const CropSettings: React.FC = () => {
             setActiveDbCrop(cActive);
             setLat(data.latitude);
             setLon(data.longitude);
-        } catch (error) {
+        } catch {
             toast.error("Failed to load settings from server");
         } finally {
             setLoading(false);
@@ -172,7 +172,7 @@ export const CropSettings: React.FC = () => {
             } else {
                 toast.error("Crop not found in database");
             }
-        } catch (e) {
+        } catch {
             toast.error("Failed to update active crop");
         } finally {
             setSaving(null);
@@ -195,7 +195,7 @@ export const CropSettings: React.FC = () => {
                     description: `Climate bound resolved to: ${res.settings.active_region.toUpperCase()}`
                 });
             }
-        } catch (e) {
+        } catch {
             toast.error("Failed to update coordinates");
         } finally {
             setSaving(null);

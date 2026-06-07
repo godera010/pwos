@@ -65,11 +65,26 @@ echo.
 pause
 
 REM === 1. MQTT Broker ===
-if "%DEBUG%"=="1" (
-    start "MQTT Broker" cmd /k "echo Starting MQTT Broker... && mosquitto -v"
+echo Checking MQTT Broker...
+sc query mosquitto | findstr "RUNNING" >nul 2>&1
+if errorlevel 1 (
+    echo [WARN] Mosquitto service is not running!
+    echo [INFO] Attempting to start it...
+    net start mosquitto >nul 2>&1
+    if errorlevel 1 (
+        echo [WARN] Could not start Mosquitto service.
+        echo [INFO] Attempting manual startup with WebSocket configuration...
+        if "%DEBUG%"=="1" (
+            start "MQTT Broker" cmd /k "echo Starting MQTT Broker... && mosquitto -c \"C:\Program Files\mosquitto\mosquitto.conf\" -v"
+        ) else (
+            echo [1/9] Starting MQTT Broker manually...
+            start /B "" mosquitto -c "C:\Program Files\mosquitto\mosquitto.conf" -v >nul 2>&1
+        )
+    ) else (
+        echo [OK] Mosquitto service started successfully.
+    )
 ) else (
-    echo [1/9] Starting MQTT Broker...
-    start /B "" mosquitto -v >nul 2>&1
+    echo [OK] Mosquitto MQTT Broker is already running as a Windows service.
 )
 timeout /t 3 >nul
 

@@ -4,9 +4,9 @@ const MQTT_BROKER = `ws://${window.location.hostname}:9001`;
 
 class MqttService {
     client: mqtt.MqttClient | null = null;
-    listeners: { [topic: string]: ((message: any) => void)[] } = {};
+    listeners: { [topic: string]: ((message: unknown) => void)[] } = {};
     connectionStatusListeners: ((status: boolean) => void)[] = [];
-    lastMessages: { [topic: string]: any } = {};
+    lastMessages: { [topic: string]: unknown } = {};
 
     connect() {
         if (this.client) return;
@@ -35,10 +35,10 @@ class MqttService {
         });
 
         this.client.on('message', (topic, message) => {
-            let parsedMessage = message.toString();
+            let parsedMessage: unknown = message.toString();
             try {
-                parsedMessage = JSON.parse(parsedMessage);
-            } catch (e) {
+                parsedMessage = JSON.parse(message.toString());
+            } catch {
                 // Not JSON
             }
             
@@ -80,7 +80,7 @@ class MqttService {
         return this.client ? this.client.connected : false;
     }
 
-    subscribe(topic: string, callback: (message: any) => void) {
+    subscribe(topic: string, callback: (message: unknown) => void) {
         if (!this.listeners[topic]) {
             this.listeners[topic] = [];
         }
@@ -91,12 +91,12 @@ class MqttService {
         }
     }
 
-    unsubscribe(topic: string, callback: (message: any) => void) {
+    unsubscribe(topic: string, callback: (message: unknown) => void) {
         if (!this.listeners[topic]) return;
         this.listeners[topic] = this.listeners[topic].filter(cb => cb !== callback);
     }
 
-    publish(topic: string, message: any, options: mqtt.IClientPublishOptions = {}) {
+    publish(topic: string, message: unknown, options: mqtt.IClientPublishOptions = {}) {
         if (!this.client || !this.client.connected) {
             console.error('Cannot publish, MQTT client disconnected');
             return;

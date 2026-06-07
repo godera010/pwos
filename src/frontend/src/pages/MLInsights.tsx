@@ -147,7 +147,7 @@ export const MLInsights: React.FC = () => {
                                             });
                                             fetchData();
                                         }
-                                    } catch (ex) {
+                                    } catch {
                                         toast.error("Failed to switch crop settings");
                                     } finally {
                                         setSwitchingCrop(null);

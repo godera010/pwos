@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, ChevronRight, Droplets, Power, WifiOff } from 'lucide-react';
+import { Settings, Droplets, Power, WifiOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from "@/components/ui/badge";
 
@@ -27,8 +27,8 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
     const isSystemDown = !connected || !isHardwareOnline;
 
     return (
-        <div className={`w-full rounded-2xl shadow-lg overflow-hidden border-2 transition-all duration-500 flex flex-col h-full bg-card text-card-foreground ${
-            isSystemDown ? 'border-red-500/50' : 'border-slate-100 dark:border-slate-800'
+        <div className={`w-full rounded-2xl shadow-lg overflow-hidden border-2 transition-all duration-500 flex flex-col h-full bg-card text-card-foreground card-hover-effect animate-fade-in-up stagger-5 ${
+            isSystemDown ? 'border-red-500/55' : 'border-slate-100 dark:border-slate-800'
         }`}>
             {/* Header Section */}
             <div className={`px-4 py-3 shrink-0 flex items-center justify-between ${

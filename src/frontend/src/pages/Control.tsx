@@ -96,14 +96,14 @@ export const Control: React.FC = () => {
                 }));
             }
             setIsBackendOffline(false);
-        } catch (error) {
+        } catch {
             setIsBackendOffline(true);
         }
     }, []);
 
     useEffect(() => {
         fetchState();
-        const interval = setInterval(fetchState, 10000);
+        const interval = setInterval(fetchState, 60000);
         return () => clearInterval(interval);
     }, [fetchState]);
 

@@ -53,10 +53,9 @@ export default {
 				}
 			},
 			fontFamily: {
-				'display': [
-					'Inter',
-					'sans-serif'
-				]
+				sans: ['Inter', 'sans-serif'],
+				display: ['Outfit', 'sans-serif'],
+				mono: ['JetBrains Mono', 'monospace'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

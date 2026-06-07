@@ -16,6 +16,7 @@ import random
 # Add project root to Python path so we can import 'src'
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import pandas as pd
 from src.config import CORS_ORIGINS, FLASK_DEBUG
 from src.backend.models.ml_predictor import MLPredictor
 from src.backend.utils.vpd_calculator import calculate_vpd
@@ -23,6 +24,8 @@ from src.backend.utils.vpd_calculator import calculate_vpd
 import logging
 from logging.handlers import RotatingFileHandler
 import time
+import threading
+from collections import deque
 
 app = Flask(__name__)
 if FLASK_DEBUG:
@@ -74,6 +77,9 @@ predictor = MLPredictor()
 
 # Global state for latest sensor data (thread-safe ideally, but simple dict for now)
 latest_sensor_data = {'weather_source': 'initializing'}
+
+# In-memory history cache to avoid database latency on ML predictions
+sensor_history_cache = deque(maxlen=5)
 
 system_state = {
     'mode': 'AUTO',
@@ -505,44 +511,44 @@ def predict_next_watering():
         
 
 
-        # Fetch sensor history (last 5 readings)
+        # Fetch sensor history (last 5 readings) from memory instead of DB
         try:
-            readings = db.get_recent_readings(limit=5)
-            if readings:
-                readings.reverse()
-                import pandas as pd
-                columns = ['id', 'timestamp', 'soil_moisture', 'temperature', 'humidity', 'device_id', 
-                           'forecast_minutes', 'wind_speed', 'precipitation_chance', 'vpd']
-                history_df = pd.DataFrame(readings, columns=columns)
+            if sensor_history_cache:
+                # Convert deque to list of dicts, then to DataFrame
+                history_df = pd.DataFrame(list(sensor_history_cache))
             else:
                 history_df = None
         except Exception as e:
-            app.logger.warning(f"Failed to query recent readings for ML prediction history: {e}")
+            app.logger.warning(f"Failed to load recent readings for ML prediction history: {e}")
             history_df = None
 
         # Run ML Prediction (Includes Rules & Safety Checks - bypasses disk reads with cached settings)
         ml_result = predictor.predict_next_watering(sensor_data, history_df=history_df, active_settings=operational_settings)
 
-        # Log ML decision to database
-        try:
-            db.insert_ml_decision({
-                'soil_moisture': current_moisture,
-                'temperature': sensor_data.get('temperature', 25),
-                'humidity': sensor_data.get('humidity', 60),
-                'vpd': ml_result.get('vpd', 0.0),
-                'forecast_minutes': forecast_minutes,
-                'precipitation_chance': precipitation_chance,
-                'wind_speed': sensor_data.get('wind_speed', 0.0),
-                'rain_intensity': sensor_data.get('rain_intensity', 0.0),
-                'decay_rate': ml_result.get('decay_rate'),
-                'decision': ml_result['recommended_action'],
-                'confidence': ml_result.get('confidence', 0),
-                'reason': ml_result.get('reason', ''),
-                'recommended_duration': ml_result['recommended_duration'],
-                'features': ml_result.get('features_used', {})
-            })
-        except Exception as e:
-            app.logger.error(f"[ML LOG] Failed to log decision: {e}")
+        # Log ML decision to database asynchronously to eliminate ~20ms write latency
+        def async_log_decision(decision_data):
+            try:
+                db.insert_ml_decision(decision_data)
+            except Exception as e:
+                app.logger.error(f"[ML LOG] Failed to log decision: {e}")
+                
+        decision_record = {
+            'soil_moisture': current_moisture,
+            'temperature': sensor_data.get('temperature', 25),
+            'humidity': sensor_data.get('humidity', 60),
+            'vpd': ml_result.get('vpd', 0.0),
+            'forecast_minutes': forecast_minutes,
+            'precipitation_chance': precipitation_chance,
+            'wind_speed': sensor_data.get('wind_speed', 0.0),
+            'rain_intensity': sensor_data.get('rain_intensity', 0.0),
+            'decay_rate': ml_result.get('decay_rate'),
+            'decision': ml_result['recommended_action'],
+            'confidence': ml_result.get('confidence', 0),
+            'reason': ml_result.get('reason', ''),
+            'recommended_duration': ml_result['recommended_duration'],
+            'features': ml_result.get('features_used', {})
+        }
+        threading.Thread(target=async_log_decision, args=(decision_record,)).start()
         
         return jsonify({
             'timestamp': datetime.now().isoformat(),
@@ -602,7 +608,7 @@ def log_sensor_data():
                 pass
 
         try:
-            db.insert_sensor_reading({
+            reading = {
                 'timestamp': datetime.now().isoformat(),
                 'soil_moisture': latest_sensor_data.get('soil_moisture'),
                 'temperature': latest_sensor_data.get('temperature'),
@@ -618,7 +624,9 @@ def log_sensor_data():
                 'forecast_humidity': latest_sensor_data.get('forecast_humidity', 0.0),
                 'weather_condition': latest_sensor_data.get('weather_condition', 'unknown'),
                 'weather_source': weather_source
-            })
+            }
+            db.insert_sensor_reading(reading)
+            sensor_history_cache.append(reading)
         except Exception as e:
             app.logger.error(f"Failed to log sensor data: {e}")
         

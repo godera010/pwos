@@ -21,7 +21,7 @@ import {
     Thermometer,
     Droplet
 } from 'lucide-react';
-import { api } from '../services/api';
+import { api, type RawAggregatedData } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ─── Local helpers ───────────────────────────────────────────────────────────
@@ -32,7 +32,22 @@ function calcVPD(temp: number, humidity: number): number {
     return Math.max(0, es - ea);
 }
 
-function fillMissingBuckets(data: any[], intervalStr: string): any[] {
+interface AnalyticsDataPoint {
+    timestamp: number;
+    fullDate: string;
+    _isGap?: boolean;
+    _original_moisture: number | null;
+    soil_moisture: number;
+    temperature: number;
+    humidity: number;
+    vpd: number;
+    water_usage_ai: number;
+    water_usage_standard: number;
+    total_duration_raw: number;
+    ai_decisions_raw: number;
+}
+
+function fillMissingBuckets(data: AnalyticsDataPoint[], intervalStr: string): AnalyticsDataPoint[] {
     if (!data || data.length === 0) return [];
 
     const intervalMsMap: Record<string, number> = {
@@ -55,15 +70,16 @@ function fillMissingBuckets(data: any[], intervalStr: string): any[] {
     const startMs = snappedData[0].timestamp;
     const endMs = snappedData[snappedData.length - 1].timestamp;
 
-    const dataMap = new Map<number, any>();
+    const dataMap = new Map<number, AnalyticsDataPoint>();
     for (const item of snappedData) {
         dataMap.set(item.timestamp, item);
     }
 
-    const filledData = [];
+    const filledData: AnalyticsDataPoint[] = [];
     for (let currentMs = startMs; currentMs <= endMs; currentMs += intervalMs) {
         if (dataMap.has(currentMs)) {
-            filledData.push(dataMap.get(currentMs));
+            const val = dataMap.get(currentMs);
+            if (val) filledData.push(val);
         } else {
             const dateObj = new Date(currentMs);
             filledData.push({
@@ -71,10 +87,10 @@ function fillMissingBuckets(data: any[], intervalStr: string): any[] {
                 fullDate: dateObj.toLocaleString(),
                 _isGap: true,
                 _original_moisture: null,
-                soil_moisture: null,
-                temperature: null,
-                humidity: null,
-                vpd: null,
+                soil_moisture: 0,
+                temperature: 0,
+                humidity: 0,
+                vpd: 0,
                 water_usage_ai: 0,
                 water_usage_standard: 0,
                 total_duration_raw: 0,
@@ -101,11 +117,69 @@ const DIST_COLORS: Record<string, string> = {
     'High': '#3b82f6'
 };
 
+interface CustomTooltipProps {
+    active?: boolean;
+    payload?: Array<{
+        color: string;
+        name: string;
+        value: number | string;
+        dataKey: string;
+    }>;
+    label?: string | number;
+}
+
+const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        const validEntries = payload.filter((entry) => entry.value !== null && entry.value !== undefined);
+        if (validEntries.length === 0) return null;
+        return (
+            <div className="bg-slate-950 border border-border p-3 rounded-xl shadow-xl text-white text-xs">
+                <p className="font-bold text-slate-400 mb-2 border-b border-border pb-1">{label ? new Date(label).toLocaleString() : ''}</p>
+                {validEntries.map((entry, index) => (
+                    <p key={`item-${index}`} style={{ color: entry.color }} className="flex justify-between gap-4 py-0.5">
+                        <span className="font-medium">{entry.name}:</span>
+                        <span className="font-black">
+                            {Number(entry.value).toFixed(2)} {entry.dataKey === 'soil_moisture' ? '%' : entry.dataKey.includes('usage') || entry.dataKey.includes('duration') || entry.dataKey.includes('cumulative') ? 's' : ''}
+                        </span>
+                    </p>
+                ))}
+            </div>
+        );
+    }
+    return null;
+};
+
+interface DistTooltipProps {
+    active?: boolean;
+    payload?: Array<{
+        value: number;
+        payload: {
+            range: string;
+            label: string;
+        };
+    }>;
+    distributionData?: Array<{ range: string; label: string; count: number; fill: string }>;
+}
+
+const DistTooltip: React.FC<DistTooltipProps> = ({ active, payload, distributionData = [] }) => {
+    if (active && payload && payload.length) {
+        const total = distributionData.reduce((s, d) => s + d.count, 0);
+        const pct = total > 0 ? ((payload[0].value / total) * 100).toFixed(1) : '0';
+        return (
+            <div className="bg-slate-950 border border-border p-3 rounded-xl shadow-xl text-white text-xs">
+                <p className="font-bold">{payload[0].payload.range} ({payload[0].payload.label})</p>
+                <p className="text-slate-400 mt-1">{payload[0].value} readings ({pct}%)</p>
+            </div>
+        );
+    }
+    return null;
+};
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export const Analytics: React.FC = () => {
     const [timeRange, setTimeRange] = useState<'1h' | '6h' | '12h' | '24h' | '7d' | '30d'>('24h');
-    const [data, setData] = useState<any[]>([]);
+    const [data, setData] = useState<AnalyticsDataPoint[]>([]);
     const [stats, setStats] = useState({
         total_waterings: 0,
         avg_moisture: 0,
@@ -136,7 +210,7 @@ export const Analytics: React.FC = () => {
                 const aggregatedResp = await api.getAggregatedAnalytics(hours, interval);
 
                 if (aggregatedResp && Array.isArray(aggregatedResp)) {
-                    const mergedData = aggregatedResp.map(item => {
+                    const mergedData: AnalyticsDataPoint[] = aggregatedResp.map((item: RawAggregatedData) => {
                         const dateObj = new Date(item.timestamp);
                         const temp = item.temperature ?? 0;
                         const hum = item.humidity ?? 0;
@@ -158,16 +232,16 @@ export const Analytics: React.FC = () => {
                     });
 
                     // ─── Compute Stats ────────────────────────────────────────
-                    const totalWaterings = mergedData.filter((d: any) => d.total_duration_raw > 0).length;
-                    const totalAIDecisions = mergedData.reduce((sum: number, d: any) => sum + d.ai_decisions_raw, 0);
+                    const totalWaterings = mergedData.filter((d: AnalyticsDataPoint) => d.total_duration_raw > 0).length;
+                    const totalAIDecisions = mergedData.reduce((sum: number, d: AnalyticsDataPoint) => sum + d.ai_decisions_raw, 0);
 
-                    const validMoistures = mergedData.filter((d: any) => d._original_moisture !== null && d._original_moisture !== undefined);
+                    const validMoistures = mergedData.filter((d: AnalyticsDataPoint) => d._original_moisture !== null && d._original_moisture !== undefined);
                     const avgMoisture = validMoistures.length > 0
-                        ? validMoistures.reduce((sum: number, d: any) => sum + d._original_moisture, 0) / validMoistures.length
+                        ? validMoistures.reduce((sum: number, d: AnalyticsDataPoint) => sum + (d._original_moisture ?? 0), 0) / validMoistures.length
                         : 0;
 
-                    const totalWaterSec = mergedData.reduce((s: number, d: any) => s + d.total_duration_raw, 0);
-                    const aiWaterSec = mergedData.reduce((s: number, d: any) => s + d.water_usage_ai, 0);
+                    const totalWaterSec = mergedData.reduce((s: number, d: AnalyticsDataPoint) => s + d.total_duration_raw, 0);
+                    const aiWaterSec = mergedData.reduce((s: number, d: AnalyticsDataPoint) => s + d.water_usage_ai, 0);
                     const manualWaterSec = totalWaterSec - aiWaterSec;
                     const manualEvents = totalWaterings - totalAIDecisions;
 
@@ -253,43 +327,6 @@ export const Analytics: React.FC = () => {
             return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
         }
         return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    };
-
-    // ─── Shared Tooltip ──────────────────────────────────────────────────────
-
-    const CustomTooltip = ({ active, payload, label }: any) => {
-        if (active && payload && payload.length) {
-            const validEntries = payload.filter((entry: any) => entry.value !== null && entry.value !== undefined);
-            if (validEntries.length === 0) return null;
-            return (
-                <div className="bg-slate-950 border border-border p-3 rounded-xl shadow-xl text-white text-xs">
-                    <p className="font-bold text-slate-400 mb-2 border-b border-border pb-1">{new Date(label).toLocaleString()}</p>
-                    {validEntries.map((entry: any, index: number) => (
-                        <p key={`item-${index}`} style={{ color: entry.color }} className="flex justify-between gap-4 py-0.5">
-                            <span className="font-medium">{entry.name}:</span>
-                            <span className="font-black">
-                                {Number(entry.value).toFixed(2)} {entry.dataKey === 'soil_moisture' ? '%' : entry.dataKey.includes('usage') || entry.dataKey.includes('duration') || entry.dataKey.includes('cumulative') ? 's' : ''}
-                            </span>
-                        </p>
-                    ))}
-                </div>
-            );
-        }
-        return null;
-    };
-
-    const DistTooltip = ({ active, payload }: any) => {
-        if (active && payload && payload.length) {
-            const total = distributionData.reduce((s, d) => s + d.count, 0);
-            const pct = total > 0 ? ((payload[0].value / total) * 100).toFixed(1) : '0';
-            return (
-                <div className="bg-slate-950 border border-border p-3 rounded-xl shadow-xl text-white text-xs">
-                    <p className="font-bold">{payload[0].payload.range} ({payload[0].payload.label})</p>
-                    <p className="text-slate-400 mt-1">{payload[0].value} readings ({pct}%)</p>
-                </div>
-            );
-        }
-        return null;
     };
 
     // ─── Render ──────────────────────────────────────────────────────────────

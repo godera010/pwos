@@ -178,22 +178,25 @@ function getVisuals(condition: string | undefined): WeatherVisuals {
 // ANIMATED EFFECTS
 // ============================================================================
 
-const RainDrops = () => (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(12)].map((_, i) => (
-            <div
-                key={i}
-                className="absolute w-0.5 bg-gradient-to-b from-transparent via-blue-300/50 to-blue-200/70 rounded-full animate-rain"
-                style={{
-                    left: `${8 + (i * 8)}%`,
-                    animationDelay: `${i * 0.15}s`,
-                    animationDuration: `${0.6 + Math.random() * 0.4}s`,
-                    height: '20px',
-                }}
-            />
-        ))}
-    </div>
-);
+const RainDrops = () => {
+    const rainDurations = [0.7, 0.9, 0.6, 0.8, 0.95, 0.65, 0.75, 0.85, 0.7, 0.9, 0.8, 0.6];
+    return (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {[...Array(12)].map((_, i) => (
+                <div
+                    key={i}
+                    className="absolute w-0.5 bg-gradient-to-b from-transparent via-blue-300/50 to-blue-200/70 rounded-full animate-rain"
+                    style={{
+                        left: `${8 + (i * 8)}%`,
+                        animationDelay: `${i * 0.15}s`,
+                        animationDuration: `${rainDurations[i % rainDurations.length]}s`,
+                        height: '20px',
+                    }}
+                />
+            ))}
+        </div>
+    );
+};
 
 const LightningFlash = () => {
     const [flash, setFlash] = useState(false);
@@ -207,22 +210,26 @@ const LightningFlash = () => {
     return flash ? <div className="absolute inset-0 bg-white/30 animate-flash" /> : null;
 };
 
-const SnowFlakes = () => (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(15)].map((_, i) => (
-            <div
-                key={i}
-                className="absolute w-1.5 h-1.5 bg-white rounded-full animate-snow"
-                style={{
-                    left: `${5 + (i * 6.5)}%`,
-                    animationDelay: `${i * 0.3}s`,
-                    animationDuration: `${3 + Math.random() * 2}s`,
-                    opacity: 0.6 + Math.random() * 0.4,
-                }}
-            />
-        ))}
-    </div>
-);
+const SnowFlakes = () => {
+    const snowDurations = [4.2, 3.5, 4.8, 3.1, 4.5, 3.8, 4.9, 3.2, 4.0, 3.6, 4.7, 3.3, 4.4, 3.9, 4.6];
+    const snowOpacities = [0.8, 0.65, 0.9, 0.7, 0.85, 0.6, 0.95, 0.75, 0.8, 0.65, 0.9, 0.7, 0.85, 0.6, 0.95];
+    return (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {[...Array(15)].map((_, i) => (
+                <div
+                    key={i}
+                    className="absolute w-1.5 h-1.5 bg-white rounded-full animate-snow"
+                    style={{
+                        left: `${5 + (i * 6.5)}%`,
+                        animationDelay: `${i * 0.3}s`,
+                        animationDuration: `${snowDurations[i % snowDurations.length]}s`,
+                        opacity: snowOpacities[i % snowOpacities.length],
+                    }}
+                />
+            ))}
+        </div>
+    );
+};
 
 // ============================================================================
 // COMPONENT
@@ -249,7 +256,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weather }) => {
     const isStormy = condition === 'thunderstorm';
 
     return (
-        <Card className={`shadow-none border-0 overflow-hidden bg-gradient-to-br ${visuals.gradient} relative h-full`}>
+        <Card className={`shadow-none border-0 overflow-hidden bg-gradient-to-br ${visuals.gradient} relative h-full card-hover-effect animate-fade-in-up stagger-5`}>
             {/* Animated Weather Effects */}
             {isRainy && <RainDrops />}
             {isSnowy && <SnowFlakes />}

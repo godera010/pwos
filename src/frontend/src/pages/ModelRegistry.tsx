@@ -124,9 +124,10 @@ export const ModelRegistry: React.FC = () => {
             const data = await api.getModelVersions();
             setVersions(data);
             setError(null);
-        } catch (err: any) {
+        } catch (err) {
             console.error('Failed to fetch model versions:', err);
-            setError(err.message || 'Failed to load model registry. Make sure the backend server is running.');
+            const msg = err instanceof Error ? err.message : 'Failed to load model registry. Make sure the backend server is running.';
+            setError(msg);
         } finally {
             setLoading(false);
             setRefreshing(false);

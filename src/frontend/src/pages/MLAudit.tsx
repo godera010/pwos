@@ -85,7 +85,7 @@ function DecisionDistributionChart({ decisions }: { decisions: MLDecision[] }) {
                 <YAxis tick={{ fontSize: 10, fill: 'currentColor' }} axisLine={false} tickLine={false} />
                 <Tooltip
                     contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 10, fontSize: 11 }}
-                    formatter={(value: any) => [value, 'Decisions']}
+                    formatter={(value: number | string | undefined) => [value ?? '', 'Decisions']}
                 />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                     {data.map((entry) => (

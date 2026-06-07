@@ -85,7 +85,9 @@ export const MLDecisionLog: React.FC<{ limit?: number }> = ({ limit = 10 }) => {
                                         else if (f.is_daytime === 1) period = "Daytime";
                                         else if (f.is_daytime === 0) period = "Night";
                                     }
-                                } catch (e) {}
+                                } catch {
+                                    // Ignore parsing errors for malformed features_json
+                                }
 
                                 return (
                                 <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">

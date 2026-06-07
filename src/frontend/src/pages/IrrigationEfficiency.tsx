@@ -51,8 +51,18 @@ function formatTimestamp(ts: string): string {
 
 // ─── Custom Pie Label ─────────────────────────────────────────────────────────
 
-const renderPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-    if (percent < 0.05) return null;
+interface PieLabelProps {
+    cx?: number;
+    cy?: number;
+    midAngle?: number;
+    innerRadius?: number;
+    outerRadius?: number;
+    percent?: number;
+}
+
+const renderPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: PieLabelProps) => {
+    if (percent === undefined || percent < 0.05) return null;
+    if (cx === undefined || cy === undefined || midAngle === undefined || innerRadius === undefined || outerRadius === undefined) return null;
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -79,9 +89,10 @@ export const IrrigationEfficiency: React.FC = () => {
             const data = await api.getEfficiencySummary(hours);
             setSummary(data);
             setError(null);
-        } catch (err: any) {
+        } catch (err) {
             console.error('Failed to fetch efficiency summary:', err);
-            setError(err.message || 'Failed to load efficiency data. Make sure the backend server is running.');
+            const msg = err instanceof Error ? err.message : 'Failed to load efficiency data. Make sure the backend server is running.';
+            setError(msg);
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -271,7 +282,7 @@ export const IrrigationEfficiency: React.FC = () => {
                                         </Pie>
                                         <Tooltip
                                             contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 10, fontSize: 11 }}
-                                            formatter={(v: any) => [v, 'Events']}
+                                            formatter={(v: number | string | undefined) => [v ?? '', 'Events']}
                                         />
                                     </PieChart>
                                 </ResponsiveContainer>
@@ -325,7 +336,10 @@ export const IrrigationEfficiency: React.FC = () => {
                                     />
                                     <Tooltip
                                         contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 10, fontSize: 11 }}
-                                        formatter={(value: any, name: any) => [`${value?.toFixed(2)}%`, name === 'delta' ? 'Moisture Δ' : name]}
+                                        formatter={(value: number | string | undefined, name: string | number | undefined) => [
+                                            typeof value === 'number' ? `${value.toFixed(2)}%` : `${value ?? ''}%`,
+                                            (name === 'delta' ? 'Moisture Δ' : name) ?? ''
+                                        ]}
                                         labelFormatter={(label, payload) => payload?.[0]?.payload?.date ?? label}
                                     />
                                     <Bar dataKey="delta" name="delta" radius={[4, 4, 0, 0]}>

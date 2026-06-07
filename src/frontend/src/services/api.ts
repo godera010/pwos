@@ -200,6 +200,20 @@ export interface EfficiencySummary {
 }
 
 
+export interface RawAggregatedData {
+    timestamp: string;
+    temperature: number | null;
+    humidity: number | null;
+    vpd: number | null;
+    soil_moisture: number | null;
+    watering?: {
+        ai_duration?: number;
+        total_duration?: number;
+        ai_event_count?: number;
+    };
+}
+
+
 const handleResponse = async (res: Response) => {
     if (!res.ok) {
         let errMessage = `Request failed with status ${res.status}`;
@@ -233,7 +247,7 @@ export const api = {
         const res = await fetch(`${API_BASE_URL}/sensor-data/history?hours=${hours}`);
         return handleResponse(res);
     },
-    getAggregatedAnalytics: async (hours = 24, interval = '15 minutes'): Promise<any[]> => {
+    getAggregatedAnalytics: async (hours = 24, interval = '15 minutes'): Promise<RawAggregatedData[]> => {
         const res = await fetch(`${API_BASE_URL}/analytics/aggregated?hours=${hours}&interval=${encodeURIComponent(interval)}`);
         return handleResponse(res);
     },

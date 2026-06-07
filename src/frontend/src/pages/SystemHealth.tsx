@@ -135,9 +135,12 @@ export const SystemHealth: React.FC = () => {
     }, [serverStartTime]);
 
     useEffect(() => {
-        refreshStatus();
+        const timer = setTimeout(refreshStatus, 0);
         const interval = setInterval(refreshStatus, 15000);
-        return () => clearInterval(interval);
+        return () => {
+            clearTimeout(timer);
+            clearInterval(interval);
+        };
     }, [refreshStatus]);
 
     const allOnline = services.every(s => s.status === 'online');
