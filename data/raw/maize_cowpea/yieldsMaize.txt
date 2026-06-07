@@ -1,0 +1,31 @@
+Date,PlotCode,WholePlantWeight,earsNumber,kernelsWeight,hundredKernelsWeight1,hundredKernelsWeight2,hundredKernelsWeight3,finalYield,dryGrainYield,cropTreatment,seedbed,plantPopulation
+03.08.2019,IC1,1220,NaN,430,24,NaN,NaN,472,NaN,Maize/Cowpea plots,FLAT,113
+01.02.2020,IC1,3376,10,1864,23.7,23.9,23.9,7553,1293,Maize/Cowpea plots,FLAT,113
+01.07.2020,IC1,1452,10,693.39,19.657,19.751,19.797,508,507.91,Maize/Cowpea plots,FLAT,62
+01.02.2021,IC1,2.457,0,0,0,0,0,0,0,Maize/Cowpea plots,FLAT,0
+19.07.2021,IC1,0,0,0,0,0,0,0,NaN,Maize/Cowpea plots,FLAT,96
+03.08.2019,SC1,3050,NaN,1350,39,NaN,NaN,3142,NaN,Maize pure stand plots,FLAT,76
+01.02.2020,SC1,3940,10,2305,46,45.4,45.2,7890,1921,Maize pure stand plots,FLAT,76
+01.07.2020,SC1,2198,11,1122.14,21.95,21.843,21.783,3150,842.8,Maize pure stand plots,FLAT,78
+01.02.2021,SC1,2.029,0,0,0,0,0,0,0,Maize pure stand plots,FLAT,0
+19.07.2021,SC1,0,0,0,0,0,0,0,NaN,Maize pure stand plots,FLAT,77
+03.08.2019,SC2,2340,NaN,1190,29,NaN,NaN,6000,NaN,Maize pure stand plots,FLAT,106
+01.02.2020,SC2,3106,11,2254,35.6,36.8,38.2,6116,2041,Maize pure stand plots,FLAT,106
+01.07.2020,SC2,2872,13,1542.12,34.122,34.818,34.106,5100,1199.7,Maize pure stand plots,FLAT,63
+01.02.2021,SC2,2.219,0,0,0,0,0,0,0,Maize pure stand plots,FLAT,0
+19.07.2021,SC2,299,1,112,30,30,30,1650,NaN,Maize pure stand plots,FLAT,92
+03.08.2019,IC2,930,NaN,450,22,NaN,NaN,3000,NaN,Maize/Cowpea plots,FLAT,98
+01.02.2020,IC2,2308,12,1730,26.9,26.4,27.4,6246,1412,Maize/Cowpea plots,FLAT,98
+01.07.2020,IC2,2804,11,1474.77,33.219,33.669,33.26,3462,1103.47,Maize/Cowpea plots,FLAT,60
+01.02.2021,IC2,1.998,0,0,0,0,0,0,0,Maize/Cowpea plots,FLAT,0
+19.07.2021,IC2,173,1,16,30,25,26,355,NaN,Maize/Cowpea plots,FLAT,85
+03.08.2019,SC3,2190,NaN,850,26,NaN,NaN,5816,NaN,Maize pure stand plots,FLAT,94
+01.02.2020,SC3,3945,13,2510,31.5,33.4,32.6,6014,2072,Maize pure stand plots,FLAT,54
+01.07.2020,SC3,4176,11,1962.89,37.724,38.253,38.012,5994,1438.41,Maize pure stand plots,FLAT,62
+01.02.2021,SC3,2.345,0,0,0,0,0,0,0,Maize pure stand plots,FLAT,0
+19.07.2021,SC3,0,0,0,0,0,0,0,NaN,Maize pure stand plots,FLAT,70
+03.08.2019,IC3,2180,NaN,860,28,NaN,NaN,2624,NaN,Maize/Cowpea plots,FLAT,117
+01.02.2020,IC3,2968.6,12,2081,38.7,39.6,39.1,8478,1749,Maize/Cowpea plots,FLAT,117
+01.07.2020,IC3,3726,13,1737.4,34.119,34.464,34.348,5392,1295.73,Maize/Cowpea plots,FLAT,52
+01.02.2021,IC3,1.901,0,0,0,0,0,0,0,Maize/Cowpea plots,FLAT,0
+19.07.2021,IC3,186,1,68,22,23,24,851,NaN,Maize/Cowpea plots,FLAT,95

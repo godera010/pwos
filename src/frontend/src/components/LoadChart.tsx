@@ -31,7 +31,7 @@ const getDynamicColor = (value: number | undefined, defaultColor: string) => {
     return '#10b981'; // Emerald for Optimal/Good
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
         const dataPoint = payload[0].payload;
         if (!dataPoint) return null;

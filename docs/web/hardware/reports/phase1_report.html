@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-WOS Phase 1 Report: ESP32 Setup & First Upload - P-WOS Documentation Portal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#16a34a', 600: '#15803d', 700: '#166534' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css" id="hljs-dark-theme" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../../search_index.js"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .theme-light ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+        .theme-dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .prose table { width: 100%; margin: 1.5rem 0; border-collapse: collapse; font-size: 0.875rem; }
+        .prose th { background-color: rgba(0,0,0,0.02); font-weight: 600; padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); text-align: left; }
+        .dark .prose th { background-color: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); }
+        .prose td { padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); }
+        .dark .prose td { border-color: rgba(255,255,255,0.08); }
+        .prose blockquote { border-left: 3px solid #16a34a; padding-left: 1rem; font-style: italic; color: #4b5563; }
+        .dark .prose blockquote { color: #9ca3af; }
+        .prose img { border-radius: 8px; margin: 1.5rem auto; max-width: 100%; }
+        .prose pre { border-radius: 10px; background: #f8fafc !important; border: 1px solid #e2e8f0; }
+        .dark .prose pre { background: #0f171a !important; border-color: #1e2a2e; }
+
+        .theme-dark { background-color: #0b0f11; color: #f1f5f9; }
+        .theme-dark .sidebar-bg { background-color: #101618; border-color: #1a2225; }
+        .theme-dark .content-card { background-color: #12191b; border-color: #1c272a; }
+
+        .sidebar-group-enter { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-in-out; }
+        .sidebar-group-enter.active { max-height: 500px; }
+    </style>
+</head>
+<body class="theme-light bg-slate-50 text-slate-800 transition-colors duration-200 antialiased font-sans h-screen overflow-hidden flex flex-col">
+
+    <div class="fixed top-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-900/50 z-50">
+        <div id="readingProgress" class="h-full bg-brand-500 w-0 transition-all duration-75"></div>
+    </div>
+
+    <header class="h-14 md:h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/85 dark:bg-[#101618]/85 backdrop-blur-md flex items-center justify-between px-4 md:px-6 z-40 shrink-0">
+        <div class="flex items-center space-x-3">
+            <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-500">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                <div class="p-1.5 bg-gradient-to-tr from-emerald-500 to-green-600 rounded-lg text-white">
+                    <i data-lucide="droplet" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <span class="font-bold text-sm md:text-base tracking-tight text-slate-900 dark:text-white">P-WOS Docs</span>
+                    <span class="hidden md:inline-block ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 font-medium">Predictive Water Optimization</span>
+                </div>
+            </div>
+        </div>
+        <div class="hidden md:block flex-1 max-w-md mx-4">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                </span>
+                <input type="text" id="docSearch" placeholder="Search documentation..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300" title="Toggle Light/Dark Mode">
+                <i data-lucide="sun" id="themeIcon" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Theme</span>
+            </button>
+            <button onclick="window.print()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Print to PDF">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Export PDF</span>
+            </button>
+            <a href="../../getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Home</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="navSidebar" class="w-64 border-r border-slate-200 dark:border-slate-800/80 overflow-y-auto shrink-0 bg-white dark:bg-[#101618] hidden lg:block z-30">
+            <div class="p-3 space-y-1" id="sidebarGroups"></div>
+        </aside>
+
+        <aside id="mobileSidebar" class="fixed inset-0 z-40 lg:hidden hidden">
+            <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" id="navOverlay"></div>
+            <div class="relative w-72 max-w-[85vw] h-full bg-white dark:bg-[#101618] shadow-2xl overflow-y-auto transform transition-transform duration-300 -translate-x-full">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">Navigation</span>
+                    <button id="closeMobileNav" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-400">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="mobileDocSearch" placeholder="Search..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                    </div>
+                </div>
+                <div class="p-3 space-y-1" id="mobileSidebarGroups"></div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto min-w-0">
+            <div class="px-4 md:px-8 py-6 md:py-10">
+                <div class="flex gap-6 lg:gap-10">
+                    <div class="flex-1 min-w-0 max-w-4xl">
+                        <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                            <span id="breadcrumbCategory">Documentation</span>
+                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">phase1_report.md</span>
+                        </div>
+
+                        <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
+                            <div class="absolute top-6 right-6 flex items-center space-x-2 print:hidden">
+                                <button id="copyDocBtn" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Copy content">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <div id="markdownOutput" class="prose max-w-none dark:prose-invert
+                                prose-headings:font-bold prose-headings:tracking-tight
+                                prose-h1:text-3xl prose-h1:mb-6 prose-h1:text-slate-900 dark:prose-h1:text-white
+                                prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:text-slate-900 dark:prose-h2:text-white
+                                prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-slate-800 dark:prose-h3:text-slate-200
+                                prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
+                                prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                                prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
+<h1>P-WOS Phase 1 Report: ESP32 Setup &amp; First Upload</h1>
+<p><strong>Project:</strong> Plant Water Optimization System (P-WOS)<br />
+<strong>Phase:</strong> 1 — ESP32 Hardware Setup &amp; Verification<br />
+<strong>Date:</strong> 2026-03-30<br />
+<strong>Status:</strong> ✅ COMPLETED  </p>
+<hr />
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#objective">Objective</a></li>
+<li><a href="#hardware-used">Hardware Used</a></li>
+<li><a href="#step-1-physical-placement-on-breadboard">Step 1: Physical Placement on Breadboard</a></li>
+<li><a href="#step-2-usb-connection--initial-power-test">Step 2: USB Connection &amp; Initial Power Test</a></li>
+<li><a href="#step-3-driver-installation-cp2102">Step 3: Driver Installation (CP2102)</a></li>
+<li><a href="#step-4-arduino-ide-setup">Step 4: Arduino IDE Setup</a></li>
+<li><a href="#step-5-first-code-upload--blink-test">Step 5: First Code Upload — Blink Test</a></li>
+<li><a href="#step-6-serial-monitor-verification">Step 6: Serial Monitor Verification</a></li>
+<li><a href="#difficulties-encountered--solutions">Difficulties Encountered &amp; Solutions</a></li>
+<li><a href="#esp32-chip-specifications">ESP32 Chip Specifications</a></li>
+<li><a href="#phase-1-conclusion">Phase 1 Conclusion</a></li>
+</ol>
+<hr />
+<h2>Objective</h2>
+<p>Set up the ESP32-WROOM-32 microcontroller on the GL No.12 breadboard, establish a data connection with the PC, install all necessary drivers and software, and verify the board is fully functional by uploading and running our first C/C++ program.</p>
+<hr />
+<h2>Hardware Used</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Component</th>
+<th>Specification</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>ESP32 DevKit</td>
+<td>WROOM-32, 38-pin (19 per side), D0WD-V3 rev3.1</td>
+<td>Main microcontroller</td>
+</tr>
+<tr>
+<td>2</td>
+<td>GL No.12 Breadboard</td>
+<td>840 holes, 64 columns, rows A–J, split bus strips</td>
+<td>Prototyping board</td>
+</tr>
+<tr>
+<td>3</td>
+<td>USB Cable</td>
+<td>Micro-USB, data-capable</td>
+<td>PC ↔ ESP32 communication</td>
+</tr>
+<tr>
+<td>4</td>
+<td>PC</td>
+<td>Windows OS</td>
+<td>Development machine</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Step 1: Physical Placement on Breadboard</h2>
+<h3>What We Did</h3>
+<p>Placed the 38-pin ESP32 on the GL No.12 breadboard, straddling the center gap.</p>
+<h3>Key Discovery: The 4 vs 5 (or 5 vs 4) Row Split</h3>
+<p>When placing the ESP32 on the breadboard, we discovered that the ESP32 board body is <strong>wider than the breadboard's center gap</strong>. This causes an asymmetric placement:</p>
+<ul>
+<li><strong>One side of the center gap is completely covered</strong> — all 5 rows (A–E or F–J) are occupied by the ESP32 pins and body</li>
+<li><strong>The other side has 4 rows covered</strong>, leaving <strong>only 1 free row</strong> accessible</li>
+</ul>
+<p>This is <strong>completely normal</strong> for wide ESP32 DevKit boards and does not indicate a problem.</p>
+<h3>Placement Details</h3>
+<pre><code>  CROSS-SECTION (through columns 1–19):
+
+  (+) bus  ═══════════     ← Red power rail
+  (-) bus  ───────────     ← Blue ground rail
+
+  Row A  ○ ○ ○ ○ ○ ○ ○    ← FREE ✅ (the ONLY accessible row)
+  Row B  ■ ■ ■ ■ ■ ■ ■    ← ESP32 LEFT PINS
+  Row C  ████████████████  ← BLOCKED by body
+  Row D  ████████████████  ← BLOCKED by body
+  Row E  ████████████████  ← BLOCKED by body
+         ═══ center gap ═══
+  Row F  ████████████████  ← BLOCKED by body
+  Row G  ████████████████  ← BLOCKED by body
+  Row H  ████████████████  ← BLOCKED by body
+  Row I  ████████████████  ← BLOCKED by body
+  Row J  ■ ■ ■ ■ ■ ■ ■    ← ESP32 RIGHT PINS (no free row below)
+
+  (-) bus  ───────────
+  (+) bus  ═══════════
+</code></pre>
+<p><strong>Implication for wiring:</strong>
+- Left-side pins (3V3, GPIO 25, GPIO 34, GPIO 26, etc.) → accessible via <strong>Row A</strong>
+- Right-side pins (GND, GPIO 23, etc.) → must use <strong>M-F jumper wires</strong> clipped onto header pins (no free row available)</p>
+<h3>ESP32 Pinout (as placed on breadboard)</h3>
+<pre><code>  Col: 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19
+
+  B: ╔═══════════════════════════════════════════════════════════════════════════╗
+     ║ 3V3 EN  VP  VN  34  35  32  25  26  27  14  12 GND SD2 SD2 SD3 CMD  5V  ║ ← LEFT
+     ║                   [USB►]              ESP32                              ║
+     ║ GND  23  22  TX  RX  21 GND  19  18   5  17  16   4   0   2  15 SD1 SD0 ║ ← RIGHT
+  J: ╚═══════════════════════════════════════════════════════════════════════════╝
+</code></pre>
+<hr />
+<h2>Step 2: USB Connection &amp; Initial Power Test</h2>
+<h3>What We Did</h3>
+<p>Connected the ESP32 to the PC using a micro-USB cable.</p>
+<h3>Observation</h3>
+<p>When plugged in:
+- The <strong>blue LED</strong> (GPIO 2) flashed <strong>twice</strong> and then turned off
+- This indicates the ESP32 received power and executed its factory boot sequence — <strong>completely normal behavior</strong>
+- Windows played the USB connection "ba-dum" sound — confirming the data cable is working (not a charge-only cable)</p>
+<h3>Concern Addressed</h3>
+<blockquote>
+<p><em>"It turned on, flashing, and then off"</em></p>
+</blockquote>
+<p><strong>Resolution:</strong> The blue LED flashing twice and turning off is the ESP32's factory firmware booting. The board was receiving power correctly with no short circuits. A steady red power LED (if present on the board) confirms constant power delivery.</p>
+<hr />
+<h2>Step 3: Driver Installation (CP2102)</h2>
+<h3>The Problem</h3>
+<p>After plugging in the ESP32:
+- Arduino IDE's <strong>Tools → Port</strong> menu was <strong>greyed out</strong> (could not be clicked)
+- The ESP32 was not recognized as a serial device</p>
+<h3>Diagnosis</h3>
+<p>Opened <strong>Windows Device Manager</strong> and found:</p>
+<pre><code>Other devices
+  └── ⚠️ CP2102 USB to UART Bridge Controller    ← Yellow warning triangle!
+</code></pre>
+<p>The ESP32's onboard USB-to-Serial chip (Silicon Labs <strong>CP2102</strong>) was detected by Windows, but the required driver was not installed.</p>
+<h3>Solution</h3>
+<ol>
+<li><strong>Right-clicked</strong> on <code>CP2102 USB to UART Bridge Controller</code> in Device Manager</li>
+<li>Selected <strong>"Update driver"</strong></li>
+<li>Selected <strong>"Search automatically for drivers"</strong></li>
+<li><em>Alternative: Download the official driver from <a href="https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers">Silicon Labs CP210x VCP Drivers</a>, unzip, and point "Browse my computer" to the unzipped folder</em></li>
+<li>Driver installed successfully</li>
+</ol>
+<h3>Result</h3>
+<p>After installation:
+- The yellow triangle <strong>disappeared</strong>
+- Device moved from "Other devices" to:</p>
+<pre><code>Ports (COM &amp; LPT)
+  └── ✅ Silicon Labs CP210x USB to UART Bridge (COM6)
+</code></pre>
+<ul>
+<li>Arduino IDE's <strong>Tools → Port</strong> now showed <strong>COM6</strong> and was clickable</li>
+</ul>
+<hr />
+<h2>Step 4: Arduino IDE Setup</h2>
+<h3>4.1: Install ESP32 Board Package</h3>
+<ol>
+<li>Opened <strong>Arduino IDE</strong></li>
+<li>Went to <strong>Tools → Board → Boards Manager</strong></li>
+<li>Searched for <strong>"esp32"</strong></li>
+<li>Found <strong>"esp32 by Espressif Systems"</strong> — clicked <strong>Install</strong></li>
+<li>Package version: <strong>3.3.7</strong></li>
+<li>Download size: ~200MB</li>
+<li>Includes toolchains, libraries, and all ESP32 board definitions</li>
+</ol>
+<h3>4.2: Configure Board Settings</h3>
+<p>Navigated to <strong>Tools</strong> menu and set the following:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+<th>How to Set</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Board</strong></td>
+<td><code>ESP32 Dev Module</code></td>
+<td>Tools → Board → esp32 → ESP32 Dev Module</td>
+</tr>
+<tr>
+<td><strong>Port</strong></td>
+<td><code>COM6</code></td>
+<td>Tools → Port → COM6</td>
+</tr>
+<tr>
+<td><strong>Upload Speed</strong></td>
+<td><code>921600</code></td>
+<td>Default — left unchanged</td>
+</tr>
+<tr>
+<td><strong>CPU Frequency</strong></td>
+<td><code>240MHz (WiFi/BT)</code></td>
+<td>Default — left unchanged</td>
+</tr>
+<tr>
+<td><strong>Flash Frequency</strong></td>
+<td><code>80MHz</code></td>
+<td>Default — left unchanged</td>
+</tr>
+<tr>
+<td><strong>Flash Mode</strong></td>
+<td><code>QIO</code></td>
+<td>Default — left unchanged</td>
+</tr>
+<tr>
+<td><strong>Flash Size</strong></td>
+<td><code>4MB (32Mb)</code></td>
+<td>Default — left unchanged</td>
+</tr>
+<tr>
+<td><strong>Partition Scheme</strong></td>
+<td><code>Default 4MB with spiffs</code></td>
+<td>Default — left unchanged</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Only Board and Port needed to be changed.</strong> All other settings were left at their defaults.</p>
+</blockquote>
+<hr />
+<h2>Step 5: First Code Upload — Blink Test</h2>
+<h3>The Code (C/C++)</h3>
+<p>This was our first program uploaded to the ESP32. It blinks the onboard blue LED (connected to GPIO 2) and prints a message to the serial monitor:</p>
+<pre><code class="language-cpp">void setup() {
+  pinMode(2, OUTPUT);        // Set GPIO 2 (blue LED) as output
+  Serial.begin(115200);      // Start serial communication at 115200 baud
+  Serial.println(&quot;ESP32 is alive on COM6!&quot;);
+}
+
+void loop() {
+  digitalWrite(2, HIGH);     // Turn blue LED ON
+  delay(500);                // Wait 500 milliseconds
+  digitalWrite(2, LOW);      // Turn blue LED OFF
+  delay(500);                // Wait 500 milliseconds
+  Serial.println(&quot;Blink!&quot;);  // Print to serial monitor
+}
+</code></pre>
+<h3>Compile Output (Verify)</h3>
+<pre><code>In file included from ...esp_bt.h:16,
+  from ...esp32-hal-bt.c:30:
+...esp_bredr_cfg.h:18:9: note: '#pragma message: BT: forcing BR/EDR max sync conn eff
+  to 1 (Bluedroid HFP requires SCO/eSCO)'
+
+Sketch uses 283472 bytes (21%) of program storage space. Maximum is 1310720 bytes.
+Global variables use 22068 bytes (6%) of dynamic memory, leaving 305612 bytes for
+  local variables. Maximum is 327680 bytes.
+</code></pre>
+<blockquote>
+<p>The <code>#pragma message</code> lines are <strong>informational notes</strong> from the Bluetooth library — NOT errors. The compile was successful.</p>
+</blockquote>
+<h3>Upload Output</h3>
+<pre><code>esptool v5.1.0
+Serial port COM6:
+Connecting.....
+Connected to ESP32 on COM6:
+Chip type:          ESP32-D0WD-V3 (revision v3.1)
+Features:           Wi-Fi, BT, Dual Core + LP Core, 240MHz, Vref calibration in eFuse,
+                    Coding Scheme None
+Crystal frequency:  40MHz
+MAC:                f8:b3:b7:20:30:c0
+
+Uploading stub flasher...
+Running stub flasher...
+Stub flasher running.
+Changing baud rate to 921600...
+Changed.
+
+Configuring flash size...
+Flash will be erased from 0x00001000 to 0x00007fff...
+Flash will be erased from 0x00008000 to 0x00008fff...
+Flash will be erased from 0x0000e000 to 0x0000ffff...
+Flash will be erased from 0x00010000 to 0x00055fff...
+
+Compressed 25024 bytes to 16034...
+Writing at 0x00001000 [==============================] 100.0% 16034/16034 bytes...
+Wrote 25024 bytes (16034 compressed) at 0x00001000 in 0.5 seconds (441.9 kbit/s).
+Hash of data verified.
+
+Compressed 3072 bytes to 146...
+Writing at 0x00008000 [==============================] 100.0% 146/146 bytes...
+Wrote 3072 bytes (146 compressed) at 0x00008000 in 0.0 seconds (574.7 kbit/s).
+Hash of data verified.
+
+Compressed 8192 bytes to 47...
+Writing at 0x0000e000 [==============================] 100.0% 47/47 bytes...
+Wrote 8192 bytes (47 compressed) at 0x0000e000 in 0.1 seconds (1046.9 kbit/s).
+Hash of data verified.
+
+Compressed 283616 bytes to 155797...
+Writing at 0x00010000 [==&gt;                           ]  10.5% 16384/155797 bytes...
+Writing at 0x0001bcf8 [=====&gt;                        ]  21.0% 32768/155797 bytes...
+Writing at 0x00028f25 [========&gt;                     ]  31.5% 49152/155797 bytes...
+Writing at 0x0002e4c0 [===========&gt;                  ]  42.1% 65536/155797 bytes...
+Writing at 0x000340f9 [==============&gt;               ]  52.6% 81920/155797 bytes...
+Writing at 0x00039475 [=================&gt;            ]  63.1% 98304/155797 bytes...
+Writing at 0x0003e974 [=====================&gt;        ]  73.6% 114688/155797 bytes...
+Writing at 0x0004404c [========================&gt;     ]  84.1% 131072/155797 bytes...
+Writing at 0x0004c2cc [===========================&gt;  ]  94.6% 147456/155797 bytes...
+Writing at 0x00052434 [==============================] 100.0% 155797/155797 bytes...
+Wrote 283616 bytes (155797 compressed) at 0x00010000 in 2.6 seconds (857.6 kbit/s).
+Hash of data verified.
+
+Hard resetting via RTS pin...
+</code></pre>
+<h3>Result</h3>
+<p>✅ <strong>Blue LED started blinking every 500ms immediately after upload completed.</strong></p>
+<hr />
+<h2>Step 6: Serial Monitor Verification</h2>
+<h3>How to Open</h3>
+<ol>
+<li>In Arduino IDE: <strong>Tools → Serial Monitor</strong> (or click the 🔍 magnifying glass icon)</li>
+<li>Set baud rate to <strong>115200</strong> (dropdown at bottom-right of the Serial Monitor window)</li>
+</ol>
+<blockquote>
+<p>⚠️ <strong>The baud rate must match the value set in the code:</strong> <code>Serial.begin(115200)</code>. If set to a different value (e.g., 9600), the output will appear as garbled/unreadable characters.</p>
+</blockquote>
+<h3>Expected Serial Output</h3>
+<pre><code>ESP32 is alive on COM6!
+Blink!
+Blink!
+Blink!
+Blink!
+...  (repeats every 1 second)
+</code></pre>
+<p>Each <code>Blink!</code> line appears every 1 second (500ms ON + 500ms OFF = 1 second per cycle).</p>
+<hr />
+<h2>Difficulties Encountered &amp; Solutions</h2>
+<h3>Issue 1: Breadboard Row Split Confusion</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Problem</strong></td>
+<td>ESP32 body is wider than the breadboard center gap, causing an asymmetric 4 vs 5 (or 5 vs 4) row split instead of the expected symmetric placement</td>
+</tr>
+<tr>
+<td><strong>Symptom</strong></td>
+<td>One side of the breadboard under the ESP32 had no accessible free rows</td>
+</tr>
+<tr>
+<td><strong>Concern</strong></td>
+<td>Was the breadboard defective? Was the ESP32 too big?</td>
+</tr>
+<tr>
+<td><strong>Solution</strong></td>
+<td>This is <strong>completely normal</strong> for wide ESP32 DevKit boards. The board spans 9 of 10 rows, leaving only 1 free row. Sensors are placed in columns 20–64 where all 10 rows are fully open</td>
+</tr>
+</tbody>
+</table>
+<h3>Issue 2: Arduino IDE Port Greyed Out</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Problem</strong></td>
+<td>After plugging in the ESP32, the <code>Tools → Port</code> menu was greyed out and unclickable</td>
+</tr>
+<tr>
+<td><strong>Symptom</strong></td>
+<td>Could not select COM port to upload code</td>
+</tr>
+<tr>
+<td><strong>Root Cause</strong></td>
+<td>The CP2102 USB-to-UART Bridge chip on the ESP32 was missing its Windows driver</td>
+</tr>
+<tr>
+<td><strong>Diagnosis</strong></td>
+<td>Device Manager showed <code>CP2102 USB to UART Bridge Controller</code> under "Other devices" with a yellow ⚠️ warning triangle</td>
+</tr>
+<tr>
+<td><strong>Solution</strong></td>
+<td>Right-click → Update driver → Search automatically (or download from <a href="https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers">Silicon Labs</a>)</td>
+</tr>
+<tr>
+<td><strong>Result</strong></td>
+<td>Driver installed, device moved to <code>Ports (COM &amp; LPT)</code> as <strong>COM6</strong>, port became selectable in Arduino IDE</td>
+</tr>
+</tbody>
+</table>
+<h3>Issue 3: Compile Warnings (Not Errors)</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Problem</strong></td>
+<td>Compilation output showed <code>#pragma message</code> notes about Bluetooth</td>
+</tr>
+<tr>
+<td><strong>Symptom</strong></td>
+<td>Appeared like error messages in the console</td>
+</tr>
+<tr>
+<td><strong>Solution</strong></td>
+<td>These are <strong>informational notes</strong>, not errors. The key indicator of success is the final line: <code>Sketch uses X bytes (Y%) of program storage space</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>ESP32 Chip Specifications</h2>
+<p>These details were automatically reported by <code>esptool</code> during the upload process:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Chip Type</strong></td>
+<td>ESP32-D0WD-V3</td>
+</tr>
+<tr>
+<td><strong>Revision</strong></td>
+<td>v3.1</td>
+</tr>
+<tr>
+<td><strong>Features</strong></td>
+<td>Wi-Fi, Bluetooth, Dual Core + LP Core</td>
+</tr>
+<tr>
+<td><strong>CPU Speed</strong></td>
+<td>240MHz</td>
+</tr>
+<tr>
+<td><strong>Crystal Frequency</strong></td>
+<td>40MHz</td>
+</tr>
+<tr>
+<td><strong>MAC Address</strong></td>
+<td><code>f8:b3:b7:20:30:c0</code></td>
+</tr>
+<tr>
+<td><strong>Flash Size</strong></td>
+<td>4MB</td>
+</tr>
+<tr>
+<td><strong>Calibration</strong></td>
+<td>Vref calibration in eFuse</td>
+</tr>
+<tr>
+<td><strong>Coding Scheme</strong></td>
+<td>None</td>
+</tr>
+<tr>
+<td><strong>esptool Version</strong></td>
+<td>v5.1.0</td>
+</tr>
+<tr>
+<td><strong>Upload Speed</strong></td>
+<td>921600 baud (857.6 kbit/s actual throughput)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Phase 1 Conclusion</h2>
+<h3>What Was Achieved</h3>
+<ol>
+<li>✅ ESP32-WROOM-32 (38-pin) physically placed on GL No.12 breadboard</li>
+<li>✅ Breadboard row split (4 vs 5) understood and documented</li>
+<li>✅ USB data cable confirmed working</li>
+<li>✅ CP2102 driver installed — COM6 recognized</li>
+<li>✅ Arduino IDE configured with ESP32 Dev Module board package v3.3.7</li>
+<li>✅ First C/C++ program (blink test) compiled, uploaded, and running</li>
+<li>✅ Blue LED (GPIO 2) blinking as programmed</li>
+<li>✅ Serial communication verified at 115200 baud</li>
+</ol>
+<h3>What Comes Next — Phase 2: Sensor Wiring</h3>
+<p>With the ESP32 proven to be fully functional, the next step is to:</p>
+<ol>
+<li>Wire the <strong>power rails</strong> (3.3V and GND from ESP32 to breadboard bus strips)</li>
+<li>Connect the <strong>DHT22</strong> temperature &amp; humidity sensor (columns 25–27)</li>
+<li>Connect the <strong>Water Sensor</strong> (via M-F jumper wires to GPIO 34)</li>
+<li>Upload the full <strong>P-WOS firmware</strong> (<code>pwos_wokwi.ino</code>)</li>
+<li>Verify live sensor readings via Serial Monitor</li>
+</ol>
+<blockquote>
+<p>See <a href="../guides/breadboard_assembly.html">breadboard_assembly.md</a> for the complete wiring guide.<br />
+See <a href="hardware_progress.html">hardware_progress.md</a> for the phase tracking checklist.</p>
+</blockquote>
+                            </div>
+                        </article>
+
+                        <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
+                            <a href="../../getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Back to Index</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <aside class="hidden lg:block w-56 shrink-0 border-l border-slate-200 dark:border-slate-800/80 pl-6">
+                        <div class="sticky top-0">
+                            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5 mb-4">
+                                <i data-lucide="list-ordered" class="w-3.5 h-3.5 text-emerald-500"></i> On This Page
+                            </h4>
+                            <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                            <a href="../../getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                                <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                                <span>Back to Home</span>
+                            </a>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const docs = [{"category": "Getting Started", "icon": "rocket", "pages": [{"title": "P-WOS Documentation Index", "file": "getting_started/README.html"}, {"title": "Project Overview", "file": "getting_started/01_project_overview.html"}, {"title": "About P-WOS", "file": "getting_started/02_about.html"}, {"title": "Core Features", "file": "getting_started/03_features.html"}, {"title": "Project Roadmap", "file": "getting_started/04_roadmap.html"}, {"title": "System Structure", "file": "getting_started/05_structure.html"}, {"title": "Core Logic Summary", "file": "getting_started/06_summary.html"}, {"title": "System Overview & Autopilot", "file": "getting_started/07_architecture.html"}]}, {"category": "Core Guides", "icon": "book-open", "pages": [{"title": "guides", "file": "core_guides/README.html"}, {"title": "P-WOS Cloud-Based ML API Implementation", "file": "core_guides/deployment/cloud_ml_deployment.html"}, {"title": "P-WOS LOCAL IMPLEMENTATION GUIDE", "file": "core_guides/deployment/local_implementation.html"}, {"title": "P-WOS ML Implementation Roadmap", "file": "core_guides/deployment/ml_implementation_roadmap.html"}, {"title": "P-WOS Performance & Architecture Guide (v3.0)", "file": "core_guides/operations/performance_guide.html"}, {"title": "P-WOS Test Suite Documentation", "file": "core_guides/operations/tests.html"}, {"title": "P-WOS Troubleshooting Guide", "file": "core_guides/operations/troubleshooting.html"}, {"title": "P-WOS Documentation Portal - Home Page Guide", "file": "core_guides/setup/HOME_PAGE_GUIDE.html"}, {"title": "P-WOS Installation Guide", "file": "core_guides/setup/installation_guide.html"}, {"title": "P-WOS Quick Start Guide", "file": "core_guides/setup/QUICKSTART.html"}, {"title": "P-WOS Documentation Portal - Restructured", "file": "core_guides/setup/README_RESTRUCTURE.html"}, {"title": "Table of Contents Sidebar - Toggle Feature", "file": "core_guides/setup/SIDEBAR_TOGGLE_GUIDE.html"}, {"title": "Backend Architecture & Guide", "file": "core_guides/technical/backend_guide.html"}, {"title": "P-WOS Database Guide", "file": "core_guides/technical/database_guide.html"}, {"title": "ESP32 Firmware Guide", "file": "core_guides/technical/firmware_guide.html"}, {"title": "Analytics Dashboard Guide", "file": "core_guides/ui/analytics_dashboard.html"}, {"title": "Main Dashboard Guide", "file": "core_guides/ui/main_dashboard.html"}, {"title": "P-WOS React Native Mobile Application Guide", "file": "core_guides/ui/mobile_guide.html"}]}, {"category": "System Architecture", "icon": "cpu", "pages": [{"title": "07 — System Behaviour", "file": "system_architecture/README.html"}, {"title": "Analytics & Dashboard Reference", "file": "system_architecture/analytics_reference.html"}, {"title": "Crop Profiles & Regional Adaptation", "file": "system_architecture/crop_profiles.html"}, {"title": "Dataflow", "file": "system_architecture/dataflow.html"}, {"title": "Edge Cases & Scenario Handbook", "file": "system_architecture/edge_cases_and_scenarios.html"}, {"title": "System Architectures & Development Process", "file": "system_architecture/system_architectures.html"}, {"title": "System Overview Specifications", "file": "system_architecture/system_overview.html"}, {"title": "VPD & Weather Engine", "file": "system_architecture/vpd_and_weather_engine.html"}]}, {"category": "Machine Learning", "icon": "brain", "pages": [{"title": "P-WOS Machine Learning", "file": "ml/README.html"}, {"title": "Feature Engineering & Physics Calculations", "file": "ml/feature_engineering.html"}, {"title": "ML Model Deep Dive", "file": "ml/ml_model_deep_dive.html"}, {"title": "ML Model Guide & Architecture", "file": "ml/ml_model_guide.html"}]}, {"category": "Hardware", "icon": "circuit-board", "pages": [{"title": "P-WOS Hardware Documentation", "file": "hardware/README.html"}, {"title": "P-WOS Hardware & Cloud Architecture", "file": "hardware/architecture/hardware_architecture.html"}, {"title": "GL No.12 Solderless Breadboard", "file": "hardware/guides/breadboard.html"}, {"title": "P-WOS Breadboard Assembly Guide", "file": "hardware/guides/breadboard_assembly.html"}, {"title": "Hardware Setup Guide", "file": "hardware/guides/hardware_setup.html"}, {"title": "P-WOS Hardware Migration Plan", "file": "hardware/planning/hardware_migration_plan.html"}, {"title": "P-WOS Hardware Components Shopping List", "file": "hardware/planning/hardware_shopping_list.html"}, {"title": "reports", "file": "hardware/reports/README.html"}, {"title": "P-WOS Hardware Progress Log", "file": "hardware/reports/hardware_progress.html"}, {"title": "P-WOS Phase 1 Report: ESP32 Setup & First Upload", "file": "hardware/reports/phase1_report.html"}, {"title": "P-WOS Hardware Testing Report", "file": "hardware/reports/testing_report.html"}]}, {"category": "Simulation", "icon": "monitor", "pages": [{"title": "P-WOS Simulation (Digital Twin)", "file": "simulation/README.html"}, {"title": "Data Generation & Database Testing", "file": "simulation/data_generation.html"}, {"title": "Simulation Physics & Environmental Modeling", "file": "simulation/physics_model.html"}, {"title": "Simulation Scenarios Reference", "file": "simulation/scenarios.html"}, {"title": "Simulation Guide", "file": "simulation/simulation_guide.html"}]}, {"category": "Scientific Research", "icon": "flask-conical", "pages": [{"title": "Codebase Analysis: P-WOS (Predictive Watering Optimization System)", "file": "scientific_research/analysis/codebase_analysis.html"}, {"title": "P-WOS Complete Codebase Audit", "file": "scientific_research/analysis/codebase_audit.html"}, {"title": "P-WOS Crop & Region Integration Plan", "file": "scientific_research/planning/crop_integration_plan.html"}]}, {"category": "Reports and Validation", "icon": "bar-chart", "pages": [{"title": "reports", "file": "reports_and_validation/README.html"}, {"title": "P-WOS Final Report", "file": "reports_and_validation/analysis/final_report.html"}, {"title": "Moisture Fluctuation Analysis Report", "file": "reports_and_validation/analysis/moisture_analysis.html"}, {"title": "P-WOS Simulation Analysis Report", "file": "reports_and_validation/analysis/simulation_analysis.html"}, {"title": "P-WOS Validation Report", "file": "reports_and_validation/analysis/validation_report.html"}, {"title": "P-WOS Simulation Phase Report", "file": "reports_and_validation/phases/phase_01_setup_report.html"}, {"title": "P-WOS Data Intelligence Report (Phase 5)", "file": "reports_and_validation/phases/phase_05_ml_report.html"}, {"title": "P-WOS Modernization Report (Phase 3)", "file": "reports_and_validation/phases/phase_06_frontend_report.html"}]}, {"category": "Technical Reference", "icon": "book", "pages": [{"title": "reference", "file": "technical_reference/README.html"}, {"title": "P-WOS Technical Development Roadmap", "file": "technical_reference/development_roadmap.html"}, {"title": "DEVELOPMENT GUIDELINES", "file": "technical_reference/guidelines/coding_guidelines.html"}, {"title": "Project Structure Guide", "file": "technical_reference/guidelines/project_structure.html"}, {"title": "P-WOS API Reference", "file": "technical_reference/specs/api_reference.html"}, {"title": "MQTT Topics Reference", "file": "technical_reference/specs/mqtt_topics.html"}, {"title": "VPD & Weather Scenarios Reference", "file": "technical_reference/specs/vpd_scenarios.html"}]}];
+
+        let expandedGroups = {};
+
+        function initTheme() {
+            const saved = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(saved);
+        }
+
+        function setTheme(theme) {
+            document.body.classList.remove('theme-light', 'theme-dark');
+            document.documentElement.classList.remove('dark');
+            const hljsLight = document.getElementById('hljs-light-theme');
+            const hljsDark = document.getElementById('hljs-dark-theme');
+            if (theme === 'dark') {
+                document.body.classList.add('theme-dark');
+                document.documentElement.classList.add('dark');
+                if (hljsLight) hljsLight.disabled = true;
+                if (hljsDark) hljsDark.disabled = false;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'moon');
+            } else {
+                document.body.classList.add('theme-light');
+                if (hljsLight) hljsLight.disabled = false;
+                if (hljsDark) hljsDark.disabled = true;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'sun');
+            }
+            localStorage.setItem('pwos-theme', theme);
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            const current = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(current === 'light' ? 'dark' : 'light');
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        function renderSidebar(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = docs.map(function(group, gi) {
+                const isOpen = expandedGroups[gi] || false;
+                return '<div class="sidebar-group">' +
+                    '<button onclick="toggleGroup(' + gi + ')" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' +
+                        '<span class="flex items-center gap-2"><i data-lucide="' + group.icon + '" class="w-4 h-4"></i><span>' + group.category + '</span></span>' +
+                        '<i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ' + (isOpen ? 'rotate-0' : '-rotate-90') + '"></i>' +
+                    '</button>' +
+                    '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
+                        '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
+                            group.pages.map(function(page) {
+                                return '<li><a href="../../' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                            }).join('') +
+                        '</ul>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function toggleGroup(idx) {
+            expandedGroups[idx] = !expandedGroups[idx];
+            renderSidebar('sidebarGroups');
+            renderSidebar('mobileSidebarGroups');
+        }
+
+        function setupSearch(inputId, containerId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('input', function(e) {
+                const q = e.target.value.toLowerCase().trim();
+                
+                let matchingFiles = new Set();
+                if (q !== '' && typeof searchIndex !== 'undefined') {
+                    for (let i = 0; i < searchIndex.length; i++) {
+                        if (searchIndex[i].title.toLowerCase().includes(q) || searchIndex[i].content.includes(q)) {
+                            matchingFiles.add(searchIndex[i].file);
+                        }
+                    }
+                }
+
+                document.querySelectorAll('#' + containerId + ' .sidebar-group').forEach(function(groupEl) {
+                    let hasVisibleChild = false;
+                    groupEl.querySelectorAll('li a').forEach(function(linkEl) {
+                        const dataFile = linkEl.getAttribute('data-file');
+                        const isMatch = q === '' || (matchingFiles.has(dataFile) || linkEl.textContent.toLowerCase().includes(q));
+                        linkEl.parentElement.style.display = isMatch ? '' : 'none';
+                        if (isMatch) hasVisibleChild = true;
+                    });
+                    groupEl.style.display = hasVisibleChild ? '' : 'none';
+                    
+                    const btnIcon = groupEl.querySelector('button i.lucide-chevron-down');
+                    const groupEnter = groupEl.querySelector('.sidebar-group-enter');
+                    if (q !== '' && hasVisibleChild) {
+                        groupEnter.classList.add('active');
+                        if (btnIcon) btnIcon.classList.remove('-rotate-90');
+                    }
+                });
+            });
+        }
+
+        setupSearch('docSearch', 'sidebarGroups');
+        setupSearch('mobileDocSearch', 'mobileSidebarGroups');
+
+        function openMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            sidebar.classList.remove('hidden');
+            setTimeout(function() { panel.classList.remove('-translate-x-full'); }, 10);
+        }
+
+        function closeMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            panel.classList.add('-translate-x-full');
+            setTimeout(function() { sidebar.classList.add('hidden'); }, 300);
+        }
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', openMobileNav);
+        document.getElementById('closeMobileNav').addEventListener('click', closeMobileNav);
+        document.getElementById('navOverlay').addEventListener('click', closeMobileNav);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const output = document.getElementById('markdownOutput');
+            if (!output) return;
+
+            output.querySelectorAll('pre code').forEach(function(block) { hljs.highlightElement(block); });
+
+            try {
+                renderMathInElement(output, {
+                    delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}],
+                    throwOnError: false
+                });
+            } catch(e) {}
+
+            try {
+                mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+                mermaid.run({ nodes: output.querySelectorAll('.mermaid') });
+            } catch(e) {}
+
+            buildTOC(output);
+        });
+
+        function buildTOC(container) {
+            const list = document.getElementById('tocList');
+            if (!list) return;
+            list.innerHTML = '';
+            const headings = container.querySelectorAll('h2, h3');
+            if (headings.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'text-slate-400 italic';
+                li.textContent = 'No sub-headers on page';
+                list.appendChild(li);
+                return;
+            }
+            headings.forEach(function(heading, idx) {
+                const anchorId = 'toc-anchor-' + idx;
+                heading.setAttribute('id', anchorId);
+                const li = document.createElement('li');
+                const isSub = heading.tagName.toLowerCase() === 'h3';
+                li.className = 'transition-colors duration-150 ' + (isSub ? 'pl-3 border-l border-slate-100 dark:border-slate-800 ml-1 py-0.5' : 'font-medium py-1');
+                const link = document.createElement('a');
+                link.href = '#' + anchorId;
+                link.className = 'hover:text-emerald-500 block truncate transition-colors';
+                link.textContent = heading.textContent;
+                link.onclick = function(e) { e.preventDefault(); heading.scrollIntoView({ behavior: 'smooth' }); };
+                li.appendChild(link);
+                list.appendChild(li);
+            });
+        }
+
+        const mainEl = document.querySelector('main');
+        if (mainEl) {
+            mainEl.addEventListener('scroll', function() {
+                const scrollTop = mainEl.scrollTop;
+                const scrollHeight = mainEl.scrollHeight - mainEl.clientHeight;
+                document.getElementById('readingProgress').style.width = (scrollTop / Math.max(scrollHeight, 1)) * 100 + '%';
+            });
+        }
+
+        const copyBtn = document.getElementById('copyDocBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                const content = document.getElementById('markdownOutput')?.innerText;
+                if (!content) return;
+                navigator.clipboard.writeText(content).then(function() {
+                    copyBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>';
+                    lucide.createIcons();
+                    setTimeout(function() {
+                        copyBtn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
+                        lucide.createIcons();
+                    }, 1500);
+                });
+            });
+        }
+
+        initTheme();
+        renderSidebar('sidebarGroups');
+        renderSidebar('mobileSidebarGroups');
+    </script>
+</body>
+</html>

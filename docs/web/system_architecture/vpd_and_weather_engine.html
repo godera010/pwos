@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPD & Weather Engine - P-WOS Documentation Portal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#16a34a', 600: '#15803d', 700: '#166534' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css" id="hljs-dark-theme" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../search_index.js"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .theme-light ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+        .theme-dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .prose table { width: 100%; margin: 1.5rem 0; border-collapse: collapse; font-size: 0.875rem; }
+        .prose th { background-color: rgba(0,0,0,0.02); font-weight: 600; padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); text-align: left; }
+        .dark .prose th { background-color: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); }
+        .prose td { padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); }
+        .dark .prose td { border-color: rgba(255,255,255,0.08); }
+        .prose blockquote { border-left: 3px solid #16a34a; padding-left: 1rem; font-style: italic; color: #4b5563; }
+        .dark .prose blockquote { color: #9ca3af; }
+        .prose img { border-radius: 8px; margin: 1.5rem auto; max-width: 100%; }
+        .prose pre { border-radius: 10px; background: #f8fafc !important; border: 1px solid #e2e8f0; }
+        .dark .prose pre { background: #0f171a !important; border-color: #1e2a2e; }
+
+        .theme-dark { background-color: #0b0f11; color: #f1f5f9; }
+        .theme-dark .sidebar-bg { background-color: #101618; border-color: #1a2225; }
+        .theme-dark .content-card { background-color: #12191b; border-color: #1c272a; }
+
+        .sidebar-group-enter { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-in-out; }
+        .sidebar-group-enter.active { max-height: 500px; }
+    </style>
+</head>
+<body class="theme-light bg-slate-50 text-slate-800 transition-colors duration-200 antialiased font-sans h-screen overflow-hidden flex flex-col">
+
+    <div class="fixed top-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-900/50 z-50">
+        <div id="readingProgress" class="h-full bg-brand-500 w-0 transition-all duration-75"></div>
+    </div>
+
+    <header class="h-14 md:h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/85 dark:bg-[#101618]/85 backdrop-blur-md flex items-center justify-between px-4 md:px-6 z-40 shrink-0">
+        <div class="flex items-center space-x-3">
+            <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-500">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                <div class="p-1.5 bg-gradient-to-tr from-emerald-500 to-green-600 rounded-lg text-white">
+                    <i data-lucide="droplet" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <span class="font-bold text-sm md:text-base tracking-tight text-slate-900 dark:text-white">P-WOS Docs</span>
+                    <span class="hidden md:inline-block ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 font-medium">Predictive Water Optimization</span>
+                </div>
+            </div>
+        </div>
+        <div class="hidden md:block flex-1 max-w-md mx-4">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                </span>
+                <input type="text" id="docSearch" placeholder="Search documentation..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300" title="Toggle Light/Dark Mode">
+                <i data-lucide="sun" id="themeIcon" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Theme</span>
+            </button>
+            <button onclick="window.print()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Print to PDF">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Export PDF</span>
+            </button>
+            <a href="../getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Home</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="navSidebar" class="w-64 border-r border-slate-200 dark:border-slate-800/80 overflow-y-auto shrink-0 bg-white dark:bg-[#101618] hidden lg:block z-30">
+            <div class="p-3 space-y-1" id="sidebarGroups"></div>
+        </aside>
+
+        <aside id="mobileSidebar" class="fixed inset-0 z-40 lg:hidden hidden">
+            <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" id="navOverlay"></div>
+            <div class="relative w-72 max-w-[85vw] h-full bg-white dark:bg-[#101618] shadow-2xl overflow-y-auto transform transition-transform duration-300 -translate-x-full">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">Navigation</span>
+                    <button id="closeMobileNav" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-400">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="mobileDocSearch" placeholder="Search..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                    </div>
+                </div>
+                <div class="p-3 space-y-1" id="mobileSidebarGroups"></div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto min-w-0">
+            <div class="px-4 md:px-8 py-6 md:py-10">
+                <div class="flex gap-6 lg:gap-10">
+                    <div class="flex-1 min-w-0 max-w-4xl">
+                        <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                            <span id="breadcrumbCategory">System Architecture</span>
+                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">vpd_and_weather_engine.md</span>
+                        </div>
+
+                        <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
+                            <div class="absolute top-6 right-6 flex items-center space-x-2 print:hidden">
+                                <button id="copyDocBtn" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Copy content">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <div id="markdownOutput" class="prose max-w-none dark:prose-invert
+                                prose-headings:font-bold prose-headings:tracking-tight
+                                prose-h1:text-3xl prose-h1:mb-6 prose-h1:text-slate-900 dark:prose-h1:text-white
+                                prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:text-slate-900 dark:prose-h2:text-white
+                                prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-slate-800 dark:prose-h3:text-slate-200
+                                prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
+                                prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                                prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
+<h1>VPD &amp; Weather Engine</h1>
+<p><strong>The Definitive Technical Reference for Atmospheric Decision-Making in P-WOS</strong></p>
+<blockquote>
+<p><em>This document describes how P-WOS translates raw atmospheric data — temperature, humidity, wind, and rain forecasts — into irrigation decisions. Every number, threshold, and formula is sourced directly from <code>ml_predictor.py</code> and <code>utils/vpd_calculator.py</code>.</em></p>
+</blockquote>
+<hr />
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#1-what-is-vpd">What Is VPD?</a></li>
+<li><a href="#2-the-6-vpd-zones">The 6 VPD Zones</a></li>
+<li><a href="#3-moisture-decay-rate-engine">Moisture Decay Rate Engine</a></li>
+<li><a href="#4-the-is_extreme_vpd-flag">The <code>is_extreme_vpd</code> Flag</a></li>
+<li><a href="#5-the-false-dry-detector">The False Dry Detector</a></li>
+<li><a href="#6-rain-confidence-system">Rain Confidence System</a></li>
+<li><a href="#7-weather-staleness-guard">Weather Staleness Guard</a></li>
+<li><a href="#8-optimal-watering-windows">Optimal Watering Windows</a></li>
+<li><a href="#9-11-real-weather-scenario-walkthroughs">11 Real Weather Scenario Walkthroughs</a></li>
+<li><a href="#10-zimbabwe-seasonal-context">Zimbabwe Seasonal Context</a></li>
+</ol>
+<hr />
+<h2>1. What Is VPD?</h2>
+<h3>Plain English</h3>
+<p>The air around your plants is constantly trying to pull moisture out of the soil. How hard it pulls depends on how "thirsty" the air is — and VPD (<strong>Vapor Pressure Deficit</strong>) is the precise scientific measure of that thirst.</p>
+<p>Think of it this way:
+- <strong>Saturated air</strong> (100% relative humidity) is air that can't hold any more water. It has zero pulling power — VPD = 0.
+- <strong>Dry hot air</strong> (e.g., 40 °C, 15% RH) is desperately hungry for moisture. It will strip water from soil, leaves, and roots with enormous force — VPD &gt; 6.0 kPa.</p>
+<p><strong>VPD is the difference between what the air <em>could</em> hold and what it <em>actually</em> holds</strong>, expressed in kilopascals (kPa).</p>
+<pre><code>VPD = es (saturation vapor pressure) − ea (actual vapor pressure)
+</code></pre>
+<p>Higher VPD → faster evaporation → faster soil moisture loss → more urgent irrigation need.</p>
+<hr />
+<h3>The Tetens Formula (Annotated)</h3>
+<p>P-WOS calculates VPD using the <strong>Tetens approximation</strong>, a meteorological standard accurate to within ±0.1% for agricultural temperature ranges. The implementation lives in <code>utils/vpd_calculator.py</code> and is called from <code>ml_predictor.py</code> line 232.</p>
+<pre><code class="language-python"># utils/vpd_calculator.py  (also ml_predictor.py line 232)
+
+es = 0.6108 * exp((17.27 * T) / (T + 237.3))  # Saturation vapor pressure (kPa)
+#    ^^^^^^                                         Magnus constant (kPa)
+#             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^       Tetens exponent — nonlinear with temperature
+#                         ^    ^^^^^^^              T = temperature in °C
+#                                       ^^^^^^^     237.3 = Tetens empirical constant
+
+ea = es * (RH / 100)                           # Actual vapor pressure (kPa)
+#          ^^^^^^^^                               Relative humidity as a fraction [0–1]
+
+VPD = max(0, es - ea)                          # Vapor Pressure Deficit (kPa)
+#     ^^^^^^                                      Clamped: VPD can never be negative
+</code></pre>
+<p><strong>Why <code>max(0, ...)</code>?</strong> In practice, sensors can report RH slightly above 100% during fog or rain, which would produce a negative VPD. The clamp ensures the system never interprets condensation conditions as negative evaporation.</p>
+<hr />
+<h3>Worked VPD Calculations</h3>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>T (°C)</th>
+<th>RH (%)</th>
+<th>es (kPa)</th>
+<th>ea (kPa)</th>
+<th><strong>VPD (kPa)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bulawayo Summer midday</td>
+<td>36</td>
+<td>20</td>
+<td>5.94</td>
+<td>1.19</td>
+<td><strong>4.75</strong></td>
+</tr>
+<tr>
+<td>Bulawayo Summer storm</td>
+<td>25</td>
+<td>95</td>
+<td>3.17</td>
+<td>3.01</td>
+<td><strong>0.16</strong></td>
+</tr>
+<tr>
+<td>Bulawayo Winter sunny</td>
+<td>22</td>
+<td>35</td>
+<td>2.65</td>
+<td>0.93</td>
+<td><strong>1.72</strong></td>
+</tr>
+<tr>
+<td>Bulawayo Winter night</td>
+<td>4</td>
+<td>55</td>
+<td>0.81</td>
+<td>0.45</td>
+<td><strong>0.37</strong></td>
+</tr>
+<tr>
+<td>Spring windy</td>
+<td>30</td>
+<td>25</td>
+<td>4.24</td>
+<td>1.06</td>
+<td><strong>3.18</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Verification tip:</strong> At 36 °C, <code>es = 0.6108 × exp((17.27 × 36)/(36 + 237.3)) = 0.6108 × exp(2.275) = 0.6108 × 9.727 ≈ 5.94 kPa</code>. At 20% RH: <code>ea = 5.94 × 0.20 = 1.19 kPa</code>. <code>VPD = 5.94 − 1.19 = 4.75 kPa</code>. ✓</p>
+</blockquote>
+<hr />
+<h2>2. The 6 VPD Zones</h2>
+<p>P-WOS classifies every atmospheric reading into one of six zones. The zone determines default strategy, expected decay rate, and which additional guards apply.</p>
+<table>
+<thead>
+<tr>
+<th>Zone</th>
+<th>VPD Range</th>
+<th>Drying Power Label</th>
+<th>Decay Rate</th>
+<th>Time 60%→30%</th>
+<th>System Strategy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>SATURATED</strong></td>
+<td>&lt; 0.2 kPa</td>
+<td>Near-zero evaporation</td>
+<td>&lt; 0.5%/hr</td>
+<td>&gt; 60 hrs</td>
+<td>🌧️ SKIP — soil is not drying</td>
+</tr>
+<tr>
+<td><strong>HUMID</strong></td>
+<td>0.2 – 0.5 kPa</td>
+<td>Negligible pull</td>
+<td>0.5 – 2%/hr</td>
+<td>15 – 60 hrs</td>
+<td>✅ OPTIMAL — water absorbs slowly</td>
+</tr>
+<tr>
+<td><strong>LOW</strong></td>
+<td>0.5 – 1.0 kPa</td>
+<td>Gentle pull</td>
+<td>2 – 5%/hr</td>
+<td>6 – 15 hrs</td>
+<td>✅ GOOD — normal scheduling</td>
+</tr>
+<tr>
+<td><strong>MODERATE</strong></td>
+<td>1.0 – 2.0 kPa</td>
+<td>Noticeable evaporation</td>
+<td>5 – 10%/hr</td>
+<td>3 – 6 hrs</td>
+<td>⏳ OK — monitor closely</td>
+</tr>
+<tr>
+<td><strong>HIGH DRY</strong></td>
+<td>2.0 – 3.0 kPa</td>
+<td>Strong drying force</td>
+<td>10 – 20%/hr</td>
+<td>1.5 – 3 hrs</td>
+<td>⚠️ WAIT COOL — prefer evening/night</td>
+</tr>
+<tr>
+<td><strong>EXTREME DRY</strong></td>
+<td>&gt; 3.0 kPa</td>
+<td>Severe desiccation risk</td>
+<td>20 – 50%/hr</td>
+<td>0.5 – 1.5 hrs</td>
+<td>⛔ NIGHT ONLY — <code>is_extreme_vpd</code> flag triggers</td>
+</tr>
+</tbody>
+</table>
+<h3>Zone Transition Diagram</h3>
+<pre><code class="language-mermaid">graph LR
+    A[&quot;&lt; 0.2 kPa&lt;br/&gt;SATURATED&lt;br/&gt;🌧️ SKIP&quot;] --&gt; B[&quot;0.2–0.5 kPa&lt;br/&gt;HUMID&lt;br/&gt;✅ OPTIMAL&quot;]
+    B --&gt; C[&quot;0.5–1.0 kPa&lt;br/&gt;LOW&lt;br/&gt;✅ GOOD&quot;]
+    C --&gt; D[&quot;1.0–2.0 kPa&lt;br/&gt;MODERATE&lt;br/&gt;⏳ OK&quot;]
+    D --&gt; E[&quot;2.0–3.0 kPa&lt;br/&gt;HIGH DRY&lt;br/&gt;⚠️ WAIT COOL&quot;]
+    E --&gt; F[&quot;&gt; 3.0 kPa&lt;br/&gt;EXTREME DRY&lt;br/&gt;⛔ NIGHT ONLY&quot;]
+
+    style A fill:#1a5276,color:#fff
+    style B fill:#1e8449,color:#fff
+    style C fill:#27ae60,color:#fff
+    style D fill:#f39c12,color:#fff
+    style E fill:#e67e22,color:#fff
+    style F fill:#c0392b,color:#fff
+</code></pre>
+<blockquote>
+<p><strong>Key insight from vpd_scenarios.md:</strong> Temperature alone does not determine the zone. At 35 °C / 70% RH, VPD = 1.69 kPa (MODERATE). At 28 °C / 25% RH, VPD = 2.83 kPa (HIGH DRY). <strong>The warm-dry case dries soil nearly twice as fast as the hotter-but-humid case.</strong></p>
+</blockquote>
+<hr />
+<h2>3. Moisture Decay Rate Engine</h2>
+<h3>The Formula</h3>
+<p>The decay rate engine in <code>ml_predictor.py</code> (lines 91–101) computes how fast soil moisture is falling at a given moment, expressed as a multiplier on a base rate:</p>
+<pre><code class="language-python"># ml_predictor.py lines 91–101
+
+def predict_decay_rate(self, temp, humidity, vpd, hour):
+    base_decay = 0.5           # Base moisture loss rate (units/hour) at reference conditions
+
+    # ── Temperature factor ───────────────────────────────────────────────────
+    temp_factor = 1 + (temp - 25) * 0.08 if temp &gt; 25 else 0.7
+    #             ^                         Linear scaling above 25°C: +8% per degree
+    #                                                  ^^^^^  Below 25°C: flat 0.7 (cold suppression)
+
+    # ── VPD factor ───────────────────────────────────────────────────────────
+    vpd_factor = 1 + (vpd * 0.4)
+    #                 ^^^^^^^^^^^  Linear: every 1 kPa of VPD adds 40% to decay rate
+
+    # ── Time-of-day factor ───────────────────────────────────────────────────
+    time_factor = 1.0                           # Default: morning/afternoon shoulder
+    if 10 &lt;= hour &lt;= 16: time_factor = 1.5      # Peak solar hours: 50% boost
+    elif 22 &lt;= hour or hour &lt;= 4: time_factor = 0.3  # Deep night: 70% suppression
+
+    return base_decay * temp_factor * vpd_factor * time_factor
+</code></pre>
+<h3>Component Breakdown</h3>
+<table>
+<thead>
+<tr>
+<th>Factor</th>
+<th>Variable</th>
+<th>Logic</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Base rate</strong></td>
+<td><code>base_decay = 0.5</code></td>
+<td>Fixed constant</td>
+<td>Anchor for all multiplications</td>
+</tr>
+<tr>
+<td><strong>Temperature</strong></td>
+<td><code>temp_factor</code></td>
+<td><code>1 + (T−25)×0.08</code> if T &gt; 25; else <code>0.7</code></td>
+<td>Cold days are capped at 0.7×</td>
+</tr>
+<tr>
+<td><strong>VPD</strong></td>
+<td><code>vpd_factor</code></td>
+<td><code>1 + vpd × 0.4</code></td>
+<td>Linearises VPD's drying power</td>
+</tr>
+<tr>
+<td><strong>Time of day</strong></td>
+<td><code>time_factor</code></td>
+<td>1.5 (10–16h), 0.3 (22h–04h), 1.0 (otherwise)</td>
+<td>Solar radiation proxy</td>
+</tr>
+</tbody>
+</table>
+<h3>Regional Multiplier (line 338)</h3>
+<p>After <code>predict_decay_rate</code> returns, the result is scaled by a <strong>regional multiplier</strong> that captures soil type and climate zone:</p>
+<pre><code class="language-python"># ml_predictor.py line 338
+
+decay_rate = self.predict_decay_rate(temp, humidity, vpd, now.hour) * region_mult
+# region_mult values:
+#   matabeleland  = 1.5   (sandy soils, very high evaporation — e.g., Bulawayo)
+#   mashonaland   = 1.0   (reference — clay-loam, Harare)
+#   manicaland    = 0.6   (highland, moist — e.g., Mutare, Nyanga)
+</code></pre>
+<p><strong>Final formula expanded:</strong></p>
+<pre><code>decay_rate = base_decay × temp_factor × vpd_factor × time_factor × region_mult
+           = 0.5 × temp_factor × (1 + vpd × 0.4) × time_factor × region_mult
+</code></pre>
+<hr />
+<h3>Worked Examples</h3>
+<h4>Scenario A — Hot Midday in Bulawayo (Summer Hot Dry)</h4>
+<p><strong>Inputs:</strong> T = 36 °C, RH = 20%, VPD = 4.75 kPa, hour = 13, region = Matabeleland</p>
+<pre><code>temp_factor  = 1 + (36 - 25) × 0.08  = 1 + 0.88     = 1.88
+vpd_factor   = 1 + (4.75 × 0.4)      = 1 + 1.90     = 2.90
+time_factor  = 1.5                                    (peak solar: 10–16h)
+region_mult  = 1.5                                    (Matabeleland)
+
+decay_rate   = 0.5 × 1.88 × 2.90 × 1.5 × 1.5
+             = 0.5 × 1.88 × 2.90 × 2.25
+             = 0.5 × 12.26
+             ≈ 6.13 units/hour
+</code></pre>
+<blockquote>
+<p>At this rate, soil moisture drops ~6 units per hour. A zone starting at 60% could reach the 30% trigger level in under <strong>5 hours</strong>.</p>
+</blockquote>
+<hr />
+<h4>Scenario B — Warm Evening (Autumn Warm)</h4>
+<p><strong>Inputs:</strong> T = 28 °C, RH = 45%, VPD = 2.08 kPa, hour = 19, region = Matabeleland</p>
+<pre><code>temp_factor  = 1 + (28 - 25) × 0.08  = 1 + 0.24     = 1.24
+vpd_factor   = 1 + (2.08 × 0.4)      = 1 + 0.832    = 1.832
+time_factor  = 1.0                                    (evening shoulder)
+region_mult  = 1.5                                    (Matabeleland)
+
+decay_rate   = 0.5 × 1.24 × 1.832 × 1.0 × 1.5
+             = 0.5 × 3.411
+             ≈ 1.71 units/hour
+</code></pre>
+<blockquote>
+<p>Much more moderate. The system will water in the evening — VPD &lt; 2.0 kPa means <code>is_extreme_vpd = 0</code> and no stalling applies.</p>
+</blockquote>
+<hr />
+<h4>Scenario C — Cool Night (Winter Night)</h4>
+<p><strong>Inputs:</strong> T = 4 °C, RH = 55%, VPD = 0.37 kPa, hour = 02, region = Matabeleland</p>
+<pre><code>temp_factor  = 0.7                                    (T &lt; 25: flat cold suppression)
+vpd_factor   = 1 + (0.37 × 0.4)      = 1 + 0.148    = 1.148
+time_factor  = 0.3                                    (deep night: 22h–04h)
+region_mult  = 1.5                                    (Matabeleland)
+
+decay_rate   = 0.5 × 0.7 × 1.148 × 0.3 × 1.5
+             = 0.5 × 0.362
+             ≈ 0.18 units/hour
+</code></pre>
+<blockquote>
+<p>Practically negligible. The system effectively pauses irrigation scheduling during cold winter nights — soil barely dries, so watering would only waterlog cold roots.</p>
+</blockquote>
+<hr />
+<h3>Decay Rate Summary Table</h3>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>hour</th>
+<th>temp_factor</th>
+<th>vpd_factor</th>
+<th>time_factor</th>
+<th>region_mult</th>
+<th><strong>decay_rate</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Summer Hot Dry (midday)</td>
+<td>13</td>
+<td>1.88</td>
+<td>2.90</td>
+<td>1.5</td>
+<td>1.5</td>
+<td><strong>6.13</strong></td>
+</tr>
+<tr>
+<td>Autumn Warm (evening)</td>
+<td>19</td>
+<td>1.24</td>
+<td>1.83</td>
+<td>1.0</td>
+<td>1.5</td>
+<td><strong>1.71</strong></td>
+</tr>
+<tr>
+<td>Winter Night</td>
+<td>02</td>
+<td>0.70</td>
+<td>1.15</td>
+<td>0.3</td>
+<td>1.5</td>
+<td><strong>0.18</strong></td>
+</tr>
+<tr>
+<td>Spring Windy (midday)</td>
+<td>12</td>
+<td>1.40</td>
+<td>2.27</td>
+<td>1.5</td>
+<td>1.5</td>
+<td><strong>3.57</strong></td>
+</tr>
+<tr>
+<td>Summer Storm (afternoon)</td>
+<td>14</td>
+<td>1.00</td>
+<td>1.06</td>
+<td>1.5</td>
+<td>1.5</td>
+<td><strong>1.19</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>4. The <code>is_extreme_vpd</code> Flag</h2>
+<h3>What Sets It</h3>
+<p>Two binary feature flags are computed during feature extraction (<code>ml_predictor.py</code> lines 236 and 248):</p>
+<pre><code class="language-python"># ml_predictor.py lines 236, 248
+
+features['is_extreme_vpd'] = 1 if vpd &gt; 2.0 else 0   # 1 = heatwave / severe drying risk
+features['is_high_wind']   = 1 if wind_speed &gt; 20 else 0  # 1 = wind-driven evaporation
+</code></pre>
+<p><strong><code>is_extreme_vpd</code></strong> fires at <code>VPD &gt; 2.0 kPa</code> — the boundary between MODERATE and HIGH DRY zones. Once set, it modifies the decision pipeline in two distinct ways depending on the moisture zone.</p>
+<hr />
+<h3>Behaviour A — VPD_DELAY (LOW Moisture Zone, Midday)</h3>
+<p>When moisture is low (system is already considering watering urgently) <em>and</em> it is the hottest part of the day, watering is <strong>deliberately stalled</strong> to prevent wasteful surface evaporation. From <code>ml_predictor.py</code> lines 413–420:</p>
+<pre><code class="language-python"># ml_predictor.py lines 413–420
+
+# In LOW moisture zone:
+is_high_evap  = 10 &lt;= now.hour &lt;= 16        # Peak solar window
+is_extreme_vpd = vpd &gt; 2.0
+
+if is_extreme_vpd and is_high_evap:
+    decision = &quot;STALL&quot;
+    status   = &quot;VPD_DELAY&quot;
+    reason   = f&quot;VPD extreme ({vpd:.2f}kPa) at midday. Stalling until evening.&quot;
+</code></pre>
+<p><strong>Effect:</strong> The pump does not run. The system logs <code>VPD_DELAY</code> and waits for VPD to fall below 2.0 kPa (typically after 17:00–18:00) before re-evaluating.</p>
+<p><strong>Why?</strong> At VPD = 4.75 kPa (Summer Hot Dry), watering at 13:00 would see the top 20–30% of applied water evaporate before reaching root depth. Deferring to evening allows full absorption.</p>
+<hr />
+<h3>Behaviour B — PREHEAT Watering (PROACTIVE Zone, Early Morning)</h3>
+<p>When moisture is in the PROACTIVE zone <em>and</em> the previous day or current forecast has flagged extreme VPD, the system waters aggressively in the pre-dawn window. From <code>ml_predictor.py</code> lines 429–433:</p>
+<pre><code class="language-python"># ml_predictor.py lines 429–433
+
+# In PROACTIVE moisture zone:
+is_morning = 4 &lt;= now.hour &lt;= 6
+
+if is_morning and features.get('is_extreme_vpd', 0) == 1:
+    decision = &quot;NOW&quot;
+    status   = &quot;PREHEAT&quot;
+    reason   = &quot;Water pump is turned ON (Proactive morning top-up for hot day).&quot;
+</code></pre>
+<p><strong>Effect:</strong> The pump runs unconditionally during the 04:00–06:00 window when a hot day is predicted. This "pre-loads" the soil so that even if no further irrigation occurs until evening (due to VPD_DELAY), the plants have adequate reserves through the hottest hours.</p>
+<hr />
+<h3><code>is_extreme_vpd</code> State Machine</h3>
+<pre><code class="language-mermaid">stateDiagram-v2
+    [*] --&gt; Evaluate: Every cycle
+
+    Evaluate --&gt; Normal : VPD ≤ 2.0 kPa
+    Evaluate --&gt; ExtremeVPD : VPD &gt; 2.0 kPa
+
+    Normal --&gt; Water : Moisture below threshold
+    Normal --&gt; Hold : Moisture adequate
+
+    ExtremeVPD --&gt; PREHEAT : hour 04–06 AND PROACTIVE zone
+    ExtremeVPD --&gt; VPD_DELAY : hour 10–16 AND LOW zone
+    ExtremeVPD --&gt; NightWater : hour 20–04 (VPD has fallen)
+    ExtremeVPD --&gt; Monitor : All other conditions
+
+    PREHEAT --&gt; [*] : Pump ON
+    VPD_DELAY --&gt; [*] : Pump OFF, re-evaluate at 17:00
+    NightWater --&gt; [*] : Pump ON
+</code></pre>
+<hr />
+<h3>VPD Threshold Summary</h3>
+<table>
+<thead>
+<tr>
+<th>Threshold</th>
+<th>Value</th>
+<th>Source</th>
+<th>Triggers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>is_extreme_vpd</code></td>
+<td>VPD &gt; 2.0 kPa</td>
+<td><code>ml_predictor.py:236</code></td>
+<td>VPD_DELAY, PREHEAT</td>
+</tr>
+<tr>
+<td>Extreme zone lower</td>
+<td>VPD &gt; 3.0 kPa</td>
+<td><code>vpd_scenarios.md</code></td>
+<td>NIGHT ONLY strategy</td>
+</tr>
+<tr>
+<td>Extreme zone upper (observed)</td>
+<td>VPD &gt; 4.75 kPa</td>
+<td>Bulawayo Summer Hot Dry</td>
+<td>Maximum regional value</td>
+</tr>
+<tr>
+<td><code>is_high_wind</code></td>
+<td>wind_speed &gt; 20</td>
+<td><code>ml_predictor.py:248</code></td>
+<td>False Dry Detector, features</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>5. The False Dry Detector</h2>
+<h3>The Problem</h3>
+<p>Wind dramatically accelerates soil moisture sensor readings without necessarily reflecting true root-zone moisture. On a windy, low-humidity day, the top millimetre of soil can desiccate very quickly, causing the moisture sensor to report a sharp downward trend — even though the root zone is still adequately wet. Watering in response to this "false dry" signal wastes water and may contribute to shallow root systems.</p>
+<hr />
+<h3>The Triple Condition</h3>
+<p>The false dry detector in <code>ml_predictor.py</code> (lines 127–131) fires when <strong>all three</strong> atmospheric conditions are simultaneously true:</p>
+<pre><code class="language-python"># ml_predictor.py lines 127–131
+
+def detect_false_dry(self, wind_speed, humidity, change_rate):
+    if wind_speed &gt; 20 and humidity &lt; 40 and change_rate &lt; -0.5:
+        #  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        #  Condition 1: High wind speed (km/h) — mechanically strips moisture
+        #  Condition 2: Low ambient humidity   — air is hungry for moisture
+        #  Condition 3: Rapid sensor drop      — sensor reading falling fast
+        return (True, &quot;False dry suspected (High Wind/Low Hum).&quot;)
+    return (False, &quot;&quot;)
+</code></pre>
+<h3>Condition Analysis</h3>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Threshold</th>
+<th>Physical Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>High wind</strong></td>
+<td><code>wind_speed &gt; 20</code> (km/h)</td>
+<td>Convective stripping at the soil-air boundary accelerates surface evaporation independently of VPD</td>
+</tr>
+<tr>
+<td><strong>Low humidity</strong></td>
+<td><code>humidity &lt; 40</code> (%)</td>
+<td>Air is in HIGH DRY or EXTREME DRY zone — corroborates aggressive drying</td>
+</tr>
+<tr>
+<td><strong>Rapid change</strong></td>
+<td><code>change_rate &lt; -0.5</code> (%/min or units/cycle)</td>
+<td>Sensor is dropping faster than any known root-zone depletion would cause</td>
+</tr>
+</tbody>
+</table>
+<p><strong>All three must fire simultaneously.</strong> A windy day with 60% humidity does not trigger (humidity condition fails). A dry day with still air does not trigger (wind condition fails). The AND logic ensures the detector only fires when sensor drift is the most plausible explanation.</p>
+<hr />
+<h3>System Response</h3>
+<p>When <code>detect_false_dry()</code> returns <code>(True, ...)</code>:</p>
+<ul>
+<li>Decision transitions to <strong><code>MONITOR</code></strong> or <strong><code>FALSE_DRY_CHECK</code></strong> status</li>
+<li>The pump is held off</li>
+<li>The system waits for a cross-validation against: (a) the wind subsiding, (b) humidity rising, or (c) an adjacent zone sensor confirming the reading</li>
+<li>The detection string <code>"False dry suspected (High Wind/Low Hum)."</code> is written to the decision log for operator review</li>
+</ul>
+<p><strong><code>FALSE_DRY_CHECK</code> vs <code>MONITOR</code>:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FALSE_DRY_CHECK</code></td>
+<td>Detector fired with high confidence (all 3 conditions clearly exceeded)</td>
+</tr>
+<tr>
+<td><code>MONITOR</code></td>
+<td>Borderline case — one or more conditions marginal; system watches but does not act</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>False Dry in Bulawayo Context</h3>
+<p>The Spring Windy scenario (T = 30 °C, RH = 25%, wind = assumed &gt; 20 km/h from <code>vpd_scenarios.md</code>) is the canonical false dry risk. VPD = 3.18 kPa means real drying is also occurring — the detector prevents over-reaction while the sensor sorts itself out.</p>
+<hr />
+<h2>6. Rain Confidence System</h2>
+<h3>Overview</h3>
+<p>Before issuing a WATER decision, P-WOS consults its rain confidence calculator. If rain is forecast, watering may be counterproductive — the system can defer and let natural rainfall do the work. The confidence calculation factors in both <strong>how soon rain arrives</strong> and <strong>current moisture level</strong> (deferring only makes sense if there's still enough soil moisture to bridge the gap).</p>
+<hr />
+<h3>The Three-Window Algorithm</h3>
+<pre><code class="language-python"># ml_predictor.py lines 103–119
+
+def calculate_rain_confidence(self, forecast_minutes, current_moisture):
+    if forecast_minutes == 0:
+        return (False, 0.0, &quot;&quot;)             # No rain in forecast — proceed normally
+
+    hours_until_rain = forecast_minutes / 60.0
+
+    # Window 1: IMMINENT RAIN (&lt; 2 hours)
+    if hours_until_rain &lt; 2:
+        return (True, 0.95, f&quot;Rain imminent ({hours_until_rain:.1f}h).&quot;)
+        # Confidence = 0.95 regardless of current moisture
+        # Rationale: rain is essentially certain within 2h — never water
+
+    # Window 2: NEAR-TERM RAIN (2–6 hours)
+    elif hours_until_rain &lt; 6:
+        if current_moisture &gt; 25:
+            return (True, 0.75, f&quot;Rain in {hours_until_rain:.1f}h. Waiting.&quot;)
+        # If moisture ≤ 25: fall through → (False, 0.0, &quot;&quot;) — water anyway (too dry to wait)
+
+    # Window 3: MEDIUM-TERM RAIN (6–12 hours)
+    elif hours_until_rain &lt; 12:
+        if current_moisture &gt; 40:
+            return (True, 0.5, f&quot;Rain in {hours_until_rain:.1f}h. Monitoring.&quot;)
+        # If moisture ≤ 40: fall through → (False, 0.0, &quot;&quot;) — water anyway (can't wait 12h)
+
+    return (False, 0.0, &quot;&quot;)                 # Rain too far away, or moisture too low to defer
+</code></pre>
+<hr />
+<h3>Three-Window Reference Table</h3>
+<table>
+<thead>
+<tr>
+<th>Window</th>
+<th>Hours Until Rain</th>
+<th>Moisture Cutoff</th>
+<th>Defer?</th>
+<th>Confidence</th>
+<th>Status Message</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>IMMINENT</strong></td>
+<td>&lt; 2h</td>
+<td>None (always defer)</td>
+<td>✅ YES</td>
+<td><strong>0.95</strong></td>
+<td><code>Rain imminent (Xh).</code></td>
+</tr>
+<tr>
+<td><strong>NEAR-TERM</strong></td>
+<td>2h – 6h</td>
+<td>&gt; 25%</td>
+<td>✅ YES</td>
+<td><strong>0.75</strong></td>
+<td><code>Rain in Xh. Waiting.</code></td>
+</tr>
+<tr>
+<td><strong>NEAR-TERM</strong></td>
+<td>2h – 6h</td>
+<td>≤ 25%</td>
+<td>❌ NO</td>
+<td>0.0</td>
+<td>— Water immediately</td>
+</tr>
+<tr>
+<td><strong>MEDIUM-TERM</strong></td>
+<td>6h – 12h</td>
+<td>&gt; 40%</td>
+<td>✅ YES</td>
+<td><strong>0.50</strong></td>
+<td><code>Rain in Xh. Monitoring.</code></td>
+</tr>
+<tr>
+<td><strong>MEDIUM-TERM</strong></td>
+<td>6h – 12h</td>
+<td>≤ 40%</td>
+<td>❌ NO</td>
+<td>0.0</td>
+<td>— Water immediately</td>
+</tr>
+<tr>
+<td><strong>DISTANT / NONE</strong></td>
+<td>≥ 12h or 0</td>
+<td>Any</td>
+<td>❌ NO</td>
+<td>0.0</td>
+<td>— Proceed normally</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Decision Logic Flowchart</h3>
+<pre><code class="language-mermaid">flowchart TD
+    A[forecast_minutes received] --&gt; B{forecast_minutes == 0?}
+    B -- Yes --&gt; Z[Return False, 0.0 — No rain]
+    B -- No --&gt; C[hours_until_rain = minutes / 60]
+
+    C --&gt; D{hours_until_rain &lt; 2?}
+    D -- Yes --&gt; E[&quot;Return True, 0.95&lt;br/&gt;Rain imminent&quot;]
+
+    D -- No --&gt; F{hours_until_rain &lt; 6?}
+    F -- Yes --&gt; G{current_moisture &gt; 25?}
+    G -- Yes --&gt; H[&quot;Return True, 0.75&lt;br/&gt;Waiting for rain&quot;]
+    G -- No --&gt; Z2[Return False, 0.0 — Too dry to wait]
+
+    F -- No --&gt; I{hours_until_rain &lt; 12?}
+    I -- Yes --&gt; J{current_moisture &gt; 40?}
+    J -- Yes --&gt; K[&quot;Return True, 0.5&lt;br/&gt;Monitoring&quot;]
+    J -- No --&gt; Z3[Return False, 0.0 — Moisture too low]
+
+    I -- No --&gt; Z4[Return False, 0.0 — Rain too distant]
+</code></pre>
+<hr />
+<h3>Design Rationale</h3>
+<p>The moisture cutoffs create asymmetric behaviour:</p>
+<ul>
+<li><strong>Near-term rain (2–6h):</strong> Plants need moisture <code>&gt; 25%</code> to safely wait 6 hours. Below that, stress risk is too high.</li>
+<li><strong>Medium-term rain (6–12h):</strong> A 12-hour wait requires <code>&gt; 40%</code> reserves. At 35% moisture, a plant in a VPD = 3.0 kPa environment could lose 10–15 units before rain arrives — risk is unacceptable.</li>
+</ul>
+<p>Confidence scores (0.95, 0.75, 0.50) are passed to the ML model as features, allowing it to weight rain deferral against other signals like soil moisture urgency.</p>
+<hr />
+<h2>7. Weather Staleness Guard</h2>
+<h3>The Problem</h3>
+<p>P-WOS relies on weather API data for VPD calculation, wind speed, rain forecasting, and intensity. If the API connection fails, returns cached data that's hours old, or falls back to a default, the weather inputs become unreliable. Acting on stale weather data can cause:</p>
+<ul>
+<li>Incorrect VPD → wrong decay rate → wrong irrigation timing</li>
+<li>False rain forecasts → unjustified watering deferrals</li>
+<li>Missing wind data → false dry detector blind</li>
+</ul>
+<hr />
+<h3>The Staleness Zero-Out</h3>
+<p><code>ml_predictor.py</code> lines 252–258 apply a <strong>defensive zero-out</strong> whenever the weather source is not fresh:</p>
+<pre><code class="language-python"># ml_predictor.py lines 252–258
+
+if weather_source in ('stale', 'fallback', 'none'):
+    features['forecast_minutes'] = 0      # No rain deferral — treat as no rain forecast
+    features['wind_speed']       = 0.0   # No wind data — false dry detector disabled
+    features['rain_intensity']   = 0.0   # No current rain info
+    features['is_raining']       = 0     # Assume not raining
+    features['is_high_wind']     = 0     # Assume calm — conservative
+</code></pre>
+<hr />
+<h3>What Each Zero-Out Means</h3>
+<table>
+<thead>
+<tr>
+<th>Feature Zeroed</th>
+<th>Effect on Decisions</th>
+<th>Conservative Bias</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>forecast_minutes = 0</code></td>
+<td>Rain confidence returns <code>(False, 0.0, "")</code> — system never defers for rain</td>
+<td>Safe (will water if needed)</td>
+</tr>
+<tr>
+<td><code>wind_speed = 0.0</code></td>
+<td>False dry detector cannot fire (<code>wind_speed &gt; 20</code> always fails)</td>
+<td>Safe (won't suppress valid readings)</td>
+</tr>
+<tr>
+<td><code>rain_intensity = 0.0</code></td>
+<td>System doesn't know if it's currently raining</td>
+<td>Slightly risky (may water during rain)</td>
+</tr>
+<tr>
+<td><code>is_raining = 0</code></td>
+<td>System assumes no current precipitation</td>
+<td>Slightly risky</td>
+</tr>
+<tr>
+<td><code>is_high_wind = 0</code></td>
+<td><code>is_high_wind</code> ML feature set to 0</td>
+<td>Conservative (model underestimates evaporation)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Weather Source Classification</h3>
+<table>
+<thead>
+<tr>
+<th><code>weather_source</code> Value</th>
+<th>Meaning</th>
+<th>Guard Applied?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>'live'</code></td>
+<td>Fresh API data &lt; threshold age</td>
+<td>❌ No — full data used</td>
+</tr>
+<tr>
+<td><code>'cached'</code></td>
+<td>Recent cache, within acceptable window</td>
+<td>❌ No — data still valid</td>
+</tr>
+<tr>
+<td><code>'stale'</code></td>
+<td>Cache too old (configurable, typically &gt; 1–2 hours)</td>
+<td>✅ <strong>Yes — zero-out applied</strong></td>
+</tr>
+<tr>
+<td><code>'fallback'</code></td>
+<td>Default values substituted (no API response)</td>
+<td>✅ <strong>Yes — zero-out applied</strong></td>
+</tr>
+<tr>
+<td><code>'none'</code></td>
+<td>No weather module configured</td>
+<td>✅ <strong>Yes — zero-out applied</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Impact on Decision Quality</h3>
+<p>With staleness guard active, the system operates in a <strong>moisture-first mode</strong>: it uses only the sensor readings and time-of-day to make decisions. VPD is still calculated from temperature/humidity (if those sensors are local), but:</p>
+<ul>
+<li>No rain deferral occurs</li>
+<li>No false dry suppression occurs</li>
+<li>Decay rate calculation continues (temp/humidity are usually local sensors)</li>
+<li><code>is_high_wind</code> is suppressed, slightly underestimating evaporation risk</li>
+</ul>
+<p>This is the correct tradeoff: <strong>the system may water slightly more than needed but will not fail to water when plants need it.</strong></p>
+<hr />
+<h2>8. Optimal Watering Windows</h2>
+<p>The interaction between time of day and VPD creates distinct watering windows. These align directly with the <code>time_factor</code> multipliers in the decay rate engine and the <code>is_extreme_vpd</code> guard.</p>
+<p><em>Source: vpd_scenarios.md — Optimal Watering Times table + ml_predictor.py time_factor logic.</em></p>
+<h3>For Hot Days (is_extreme_vpd = 1, VPD &gt; 2.0 kPa predicted)</h3>
+<table>
+<thead>
+<tr>
+<th>Time Window</th>
+<th>Typical VPD</th>
+<th><code>time_factor</code></th>
+<th>System Behaviour</th>
+<th>Rating</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>04:00 – 06:00</strong></td>
+<td>0.3 – 0.5 kPa</td>
+<td>0.3 (deep night)</td>
+<td>PREHEAT trigger active</td>
+<td>✅ <strong>BEST</strong></td>
+</tr>
+<tr>
+<td>06:00 – 08:00</td>
+<td>0.5 – 1.0 kPa</td>
+<td>1.0 (shoulder)</td>
+<td>Normal scheduling</td>
+<td>✅ GOOD</td>
+</tr>
+<tr>
+<td>08:00 – 10:00</td>
+<td>1.0 – 2.0 kPa</td>
+<td>1.0 (shoulder)</td>
+<td>VPD approaching threshold</td>
+<td>⚠️ OK</td>
+</tr>
+<tr>
+<td><strong>10:00 – 16:00</strong></td>
+<td>2.0 – 5.0+ kPa</td>
+<td><strong>1.5</strong> (peak solar)</td>
+<td>VPD_DELAY active if is_extreme_vpd</td>
+<td>⛔ <strong>AVOID</strong></td>
+</tr>
+<tr>
+<td>16:00 – 18:00</td>
+<td>2.0 – 3.0 kPa</td>
+<td>1.0 (shoulder)</td>
+<td>VPD still often &gt; 2.0</td>
+<td>⚠️ CAUTION</td>
+</tr>
+<tr>
+<td><strong>18:00 – 20:00</strong></td>
+<td>1.0 – 2.0 kPa</td>
+<td>1.0 (shoulder)</td>
+<td>VPD_DELAY lifted, water absorbs</td>
+<td>✅ GOOD</td>
+</tr>
+<tr>
+<td><strong>20:00 – 04:00</strong></td>
+<td>0.3 – 0.8 kPa</td>
+<td>0.3 (deep night)</td>
+<td>Optimal absorption all night</td>
+<td>✅ <strong>OPTIMAL</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>The PREHEAT–DELAY–NIGHT Cycle</h3>
+<p>On a Bulawayo summer day, a typical P-WOS run looks like this:</p>
+<pre><code class="language-mermaid">gantt
+    title Irrigation Decision Cycle — Summer Hot Dry Day (VPD &gt; 2.0 predicted)
+    dateFormat HH:mm
+    axisFormat %H:%M
+
+    section Pump Activity
+    PREHEAT run         : active,  04:00, 06:00
+    Hold - VPD rising   :          06:00, 10:00
+    VPD_DELAY stall     : crit,    10:00, 17:00
+    VPD_DELAY lifted    :          17:00, 18:00
+    Evening water run   : active,  18:00, 20:00
+    Optimal night runs  : active,  20:00, 04:00
+
+    section VPD Level
+    Low VPD 0.3-0.5 kPa    :       04:00, 06:00
+    Rising VPD              :       06:00, 10:00
+    Extreme VPD (&gt;2.0 kPa) : crit, 10:00, 17:00
+    Falling VPD             :       17:00, 20:00
+    Low VPD night           :       20:00, 04:00
+</code></pre>
+<hr />
+<h2>9. 11 Real Weather Scenario Walkthroughs</h2>
+<p>Each scenario traces the complete P-WOS decision pipeline from raw weather inputs through to the final status. All scenarios use Bulawayo, Zimbabwe data from <code>vpd_scenarios.md</code>.</p>
+<p><strong>Assumptions for all walkthroughs:</strong>
+- Region: Matabeleland (<code>region_mult = 1.5</code>)
+- Starting soil moisture unless stated: 35% (LOW zone, below field capacity)
+- Weather source: <code>'live'</code> (staleness guard inactive)
+- No rain forecast unless stated</p>
+<hr />
+<h3>Scenario 1 — SUMMER HOT DRY</h3>
+<p><strong>Inputs:</strong> T = 36 °C, RH = 20%, VPD = 4.75 kPa, hour = 13:00, wind = 8 km/h</p>
+<pre><code>VPD Calculation:
+  es = 0.6108 × exp(17.27×36/(36+237.3)) = 5.94 kPa
+  ea = 5.94 × 0.20 = 1.19 kPa
+  VPD = 4.75 kPa ✓
+
+Feature flags:
+  is_extreme_vpd = 1     (VPD 4.75 &gt; 2.0)
+  is_high_wind   = 0     (wind 8 &lt; 20)
+
+False Dry check:
+  wind_speed=8 → 8 &gt; 20? NO → detector does not fire
+
+Decay rate:
+  temp_factor  = 1 + (36-25)×0.08 = 1.88
+  vpd_factor   = 1 + 4.75×0.4     = 2.90
+  time_factor  = 1.5               (hour 13 in 10–16)
+  decay_rate   = 0.5 × 1.88 × 2.90 × 1.5 × 1.5 = 6.13
+
+Rain confidence: forecast_minutes=0 → (False, 0.0, &quot;&quot;)
+
+Decision path:
+  Moisture zone = LOW (35%)
+  is_extreme_vpd AND is_high_evap (10≤13≤16) → VPD_DELAY triggered
+</code></pre>
+<p><strong>Result:</strong> <code>decision=STALL, status=VPD_DELAY</code>
+<em>"VPD extreme (4.75kPa) at midday. Stalling until evening."</em></p>
+<hr />
+<h3>Scenario 2 — SUMMER HOT DRY (Pre-dawn)</h3>
+<p><strong>Same conditions but hour = 05:00, moisture zone = PROACTIVE (48%)</strong></p>
+<pre><code>is_extreme_vpd = 1     (forecast VPD for the coming day)
+is_morning     = True  (4 ≤ 5 ≤ 6)
+Zone = PROACTIVE
+
+→ PREHEAT condition fires
+</code></pre>
+<p><strong>Result:</strong> <code>decision=NOW, status=PREHEAT</code>
+<em>"Water pump is turned ON (Proactive morning top-up for hot day)."</em></p>
+<hr />
+<h3>Scenario 3 — SUMMER HOT HUMID</h3>
+<p><strong>Inputs:</strong> T = 32 °C, RH = 65%, VPD = 1.66 kPa, hour = 14:00, moisture = 35%</p>
+<pre><code>VPD Calculation:
+  es = 0.6108 × exp(17.27×32/(32+237.3)) = 4.76 kPa
+  ea = 4.76 × 0.65 = 3.09 kPa
+  VPD = 1.66 kPa ✓
+
+Feature flags:
+  is_extreme_vpd = 0     (VPD 1.66 ≤ 2.0)
+  is_high_wind   = 0
+
+False Dry check: wind ≤ 20 → no fire
+
+Decay rate:
+  temp_factor  = 1 + (32-25)×0.08 = 1.56
+  vpd_factor   = 1 + 1.66×0.4     = 1.664
+  time_factor  = 1.5
+  decay_rate   = 0.5 × 1.56 × 1.664 × 1.5 × 1.5 = 2.92
+
+Decision path:
+  is_extreme_vpd = 0 → VPD_DELAY does NOT fire
+  Moisture LOW (35%) → standard scheduling → evaluate urgency
+</code></pre>
+<p><strong>Result:</strong> <code>decision=WATER, status=OK</code> — System waters. VPD &lt; 2.0 means acceptable efficiency, though not ideal.
+<em>Strategy: ⚠️ WAIT COOL from vpd_scenarios.md — system may schedule a short run and prefer to finish by 16:00.</em></p>
+<hr />
+<h3>Scenario 4 — SUMMER STORM</h3>
+<p><strong>Inputs:</strong> T = 25 °C, RH = 95%, VPD = 0.16 kPa, hour = 15:00, forecast_minutes = 20</p>
+<pre><code>VPD Calculation:
+  es = 0.6108 × exp(17.27×25/(25+237.3)) = 3.17 kPa
+  ea = 3.17 × 0.95 = 3.01 kPa
+  VPD = 0.16 kPa → Zone: SATURATED
+
+Feature flags:
+  is_extreme_vpd = 0
+  is_raining likely = 1 (95% RH, storm conditions)
+
+Rain confidence:
+  hours_until_rain = 20/60 = 0.33h &lt; 2h
+  → (True, 0.95, &quot;Rain imminent (0.3h).&quot;)
+
+Decay rate:
+  temp_factor  = 0.7   (T=25, not &gt; 25)
+  vpd_factor   = 1 + 0.16×0.4 = 1.064
+  time_factor  = 1.5
+  decay_rate   = 0.5 × 0.7 × 1.064 × 1.5 × 1.5 = 0.84 (very low)
+</code></pre>
+<p><strong>Result:</strong> <code>decision=STALL, status=RAIN_WAIT</code>
+Rain confidence 0.95 — system skips entirely. Rain arrives within 20 minutes and replenishes freely.</p>
+<hr />
+<h3>Scenario 5 — SUMMER NIGHT</h3>
+<p><strong>Inputs:</strong> T = 22 °C, RH = 80%, VPD = 0.53 kPa, hour = 22:00, moisture = 38%</p>
+<pre><code>VPD = 0.53 kPa → Zone: LOW (near HUMID boundary)
+is_extreme_vpd = 0
+
+Decay rate:
+  temp_factor  = 0.7   (T=22, not &gt; 25)
+  vpd_factor   = 1 + 0.53×0.4 = 1.212
+  time_factor  = 0.3   (hour 22: deep night)
+  decay_rate   = 0.5 × 0.7 × 1.212 × 0.3 × 1.5 = 0.19
+
+Rain confidence: no forecast → (False, 0.0, &quot;&quot;)
+</code></pre>
+<p><strong>Result:</strong> <code>decision=NOW, status=OK</code>
+Cool, humid, night. VPD is low, decay is minimal — soil absorbs water efficiently with no evaporation loss. Optimal window per vpd_scenarios.md 20:00–04:00 table.</p>
+<hr />
+<h3>Scenario 6 — AUTUMN WARM</h3>
+<p><strong>Inputs:</strong> T = 28 °C, RH = 45%, VPD = 2.08 kPa, hour = 14:00, moisture = 35%</p>
+<pre><code>VPD = 2.08 kPa → is_extreme_vpd = 1 (just over 2.0)
+
+is_high_evap = True (10 ≤ 14 ≤ 16)
+→ VPD_DELAY fires
+
+Decay rate:
+  temp_factor  = 1 + (28-25)×0.08 = 1.24
+  vpd_factor   = 1 + 2.08×0.4     = 1.832
+  time_factor  = 1.5
+  decay_rate   = 0.5 × 1.24 × 1.832 × 1.5 × 1.5 = 2.57
+</code></pre>
+<p><strong>Result:</strong> <code>decision=STALL, status=VPD_DELAY</code>
+<em>"VPD extreme (2.08kPa) at midday. Stalling until evening."</em>
+VPD barely clears the 2.0 kPa threshold — the DELAY is still warranted. System re-evaluates at ~17:00 when VPD typically falls below 2.0 as temperature drops.</p>
+<hr />
+<h3>Scenario 7 — AUTUMN NIGHT</h3>
+<p><strong>Inputs:</strong> T = 14 °C, RH = 65%, VPD = 0.56 kPa, hour = 02:00, moisture = 32%</p>
+<pre><code>VPD = 0.56 kPa → Zone: LOW
+is_extreme_vpd = 0
+
+Decay rate:
+  temp_factor  = 0.7   (T &lt; 25)
+  vpd_factor   = 1 + 0.56×0.4 = 1.224
+  time_factor  = 0.3
+  decay_rate   = 0.5 × 0.7 × 1.224 × 0.3 × 1.5 = 0.19
+
+Moisture = 32% → LOW zone → watering justified
+</code></pre>
+<p><strong>Result:</strong> <code>decision=NOW, status=OK</code>
+Ideal night-time watering. Minimal decay (0.19 units/hr), soil absorbs all applied water before morning.</p>
+<hr />
+<h3>Scenario 8 — WINTER COLD DRY</h3>
+<p><strong>Inputs:</strong> T = 10 °C, RH = 30%, VPD = 0.86 kPa, hour = 10:00, moisture = 38%</p>
+<pre><code>VPD = 0.86 kPa → Zone: LOW
+is_extreme_vpd = 0
+
+Decay rate:
+  temp_factor  = 0.7   (T &lt; 25)
+  vpd_factor   = 1 + 0.86×0.4 = 1.344
+  time_factor  = 1.5   (hour 10 in peak solar window)
+  decay_rate   = 0.5 × 0.7 × 1.344 × 1.5 × 1.5 = 1.06
+</code></pre>
+<p><strong>Result:</strong> <code>decision=OK</code> — System may water during the day in winter. VPD &lt; 2.0 means no stalling; cold temperatures suppress decay even at midday. Strategy: ✅ OK per vpd_scenarios.md.</p>
+<hr />
+<h3>Scenario 9 — WINTER SUNNY</h3>
+<p><strong>Inputs:</strong> T = 22 °C, RH = 35%, VPD = 1.72 kPa, hour = 12:00, moisture = 35%</p>
+<pre><code>VPD = 1.72 kPa → Zone: MODERATE
+is_extreme_vpd = 0  (1.72 &lt; 2.0 — does NOT trigger delay)
+
+Decay rate:
+  temp_factor  = 0.7   (T=22, not &gt; 25)
+  vpd_factor   = 1 + 1.72×0.4 = 1.688
+  time_factor  = 1.5
+  decay_rate   = 0.5 × 0.7 × 1.688 × 1.5 × 1.5 = 1.33
+</code></pre>
+<p><strong>Result:</strong> <code>decision=OK / WATER</code>
+Winter sunny days are within safe irrigation range even at midday. VPD 1.72 stays just below the extreme flag. <em>vpd_scenarios.md: ⚠️ WAIT COOL — system may prefer afternoon or evening but will not hard-stall.</em></p>
+<hr />
+<h3>Scenario 10 — WINTER NIGHT</h3>
+<p><strong>Inputs:</strong> T = 4 °C, RH = 55%, VPD = 0.37 kPa, hour = 02:00, moisture = 36%</p>
+<pre><code>VPD = 0.37 kPa → Zone: HUMID
+is_extreme_vpd = 0
+
+Decay rate:
+  temp_factor  = 0.7
+  vpd_factor   = 1 + 0.37×0.4 = 1.148
+  time_factor  = 0.3
+  decay_rate   = 0.5 × 0.7 × 1.148 × 0.3 × 1.5 = 0.18
+</code></pre>
+<p><strong>Result:</strong> <code>decision=HOLD / LOW URGENCY</code>
+Decay rate of 0.18 means moisture barely moves overnight. Even at 36%, the system may defer to a more energy-efficient morning run rather than running the pump at 02:00 in winter. Strategy: ✅ GOOD per vpd_scenarios.md.</p>
+<hr />
+<h3>Scenario 11 — SPRING WINDY</h3>
+<p><strong>Inputs:</strong> T = 30 °C, RH = 25%, VPD = 3.18 kPa, hour = 12:00, wind = 28 km/h, moisture = 38%, change_rate = -0.8</p>
+<pre><code>VPD Calculation:
+  es = 0.6108 × exp(17.27×30/(30+237.3)) = 4.24 kPa
+  ea = 4.24 × 0.25 = 1.06 kPa
+  VPD = 3.18 kPa ✓
+
+Feature flags:
+  is_extreme_vpd = 1     (VPD 3.18 &gt; 2.0)
+  is_high_wind   = 1     (wind 28 &gt; 20)
+
+False Dry detection:
+  wind_speed=28 &gt; 20?        YES ✓
+  humidity=25 &lt; 40?          YES ✓
+  change_rate=-0.8 &lt; -0.5?   YES ✓
+  → ALL THREE conditions met → (True, &quot;False dry suspected (High Wind/Low Hum).&quot;)
+
+Decision conflict:
+  VPD_DELAY fires (is_extreme_vpd AND 10≤12≤16)
+  False Dry also fires (independent path)
+  → Both agree: do not water
+</code></pre>
+<p><strong>Result:</strong> <code>decision=STALL, status=FALSE_DRY_CHECK</code>
+Both VPD_DELAY and the False Dry detector fire simultaneously. The system is doubly confident: even if the moisture reading is accurate, VPD is too high to water efficiently. If the moisture is false-low, watering is also wrong. Pump stays off. Re-evaluation at ~17:00 when wind and temperature may subside.</p>
+<hr />
+<h3>Scenario Summary Matrix</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Scenario</th>
+<th>VPD</th>
+<th>is_extreme_vpd</th>
+<th>Hour</th>
+<th>Decision</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Summer Hot Dry (midday)</td>
+<td>4.75</td>
+<td>1</td>
+<td>13</td>
+<td>STALL</td>
+<td>VPD_DELAY</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Summer Hot Dry (pre-dawn)</td>
+<td>4.75 (forecast)</td>
+<td>1</td>
+<td>05</td>
+<td>NOW</td>
+<td>PREHEAT</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Summer Hot Humid</td>
+<td>1.66</td>
+<td>0</td>
+<td>14</td>
+<td>WATER</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Summer Storm</td>
+<td>0.16</td>
+<td>0</td>
+<td>15</td>
+<td>STALL</td>
+<td>RAIN_WAIT</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Summer Night</td>
+<td>0.53</td>
+<td>0</td>
+<td>22</td>
+<td>NOW</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Autumn Warm</td>
+<td>2.08</td>
+<td>1</td>
+<td>14</td>
+<td>STALL</td>
+<td>VPD_DELAY</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Autumn Night</td>
+<td>0.56</td>
+<td>0</td>
+<td>02</td>
+<td>NOW</td>
+<td>OK</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Winter Cold Dry</td>
+<td>0.86</td>
+<td>0</td>
+<td>10</td>
+<td>OK</td>
+<td>WATER</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Winter Sunny</td>
+<td>1.72</td>
+<td>0</td>
+<td>12</td>
+<td>OK</td>
+<td>WATER</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Winter Night</td>
+<td>0.37</td>
+<td>0</td>
+<td>02</td>
+<td>HOLD</td>
+<td>LOW URGENCY</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Spring Windy</td>
+<td>3.18</td>
+<td>1</td>
+<td>12</td>
+<td>STALL</td>
+<td>FALSE_DRY_CHECK</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>10. Zimbabwe Seasonal Context</h2>
+<h3>Why VPD Patterns Differ by Season</h3>
+<p>Zimbabwe's agricultural VPD cycle is driven by the <strong>Intertropical Convergence Zone (ITCZ)</strong>, which migrates south in summer bringing moisture from the Indian Ocean and Mozambique Channel, and retreats north in winter leaving the country under dry continental airflows.</p>
+<p>The two primary seasons that P-WOS must navigate are structurally opposite in their atmospheric behaviour:</p>
+<hr />
+<h3>Summer: November – March (Hot &amp; Wet Season)</h3>
+<table>
+<thead>
+<tr>
+<th>Characteristic</th>
+<th>Typical Range</th>
+<th>VPD Implication</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Daytime temperature</td>
+<td>28 – 38 °C</td>
+<td>High <code>es</code> (saturation pressure)</td>
+</tr>
+<tr>
+<td>Relative humidity (daytime)</td>
+<td>40 – 80%</td>
+<td>High <code>ea</code>, partially offsets <code>es</code></td>
+</tr>
+<tr>
+<td>Relative humidity (during storms)</td>
+<td>85 – 98%</td>
+<td>VPD collapses to &lt; 0.2 kPa</td>
+</tr>
+<tr>
+<td>Rainfall pattern</td>
+<td>Convective — afternoon thunderstorms</td>
+<td>forecast_minutes = 60–180 most afternoons</td>
+</tr>
+<tr>
+<td>Wind</td>
+<td>Variable, often calm before storms</td>
+<td>Low false dry risk except hot dry spells</td>
+</tr>
+<tr>
+<td>VPD range (daytime)</td>
+<td>0.16 – 4.75 kPa</td>
+<td><strong>Widest range of the year</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key summer challenge:</strong> The same day can move from <code>PREHEAT</code> at 05:00 (VPD 0.4 kPa) → <code>VPD_DELAY</code> at 13:00 (VPD 4.75 kPa) → <code>RAIN_WAIT</code> at 15:00 (VPD 0.16 kPa). The system must adapt within hours, not days.</p>
+<p><strong>Summer irrigation strategy:</strong>
+- PREHEAT runs (04:00–06:00) are the primary irrigation window
+- Afternoon storms provide free water 3–4 times per week (December–February)
+- Rain confidence system is exercised daily
+- <code>is_extreme_vpd</code> flag fires regularly — VPD_DELAY is the norm, not exception</p>
+<hr />
+<h3>Dry Season: May – September (Cool &amp; Dry Season)</h3>
+<table>
+<thead>
+<tr>
+<th>Characteristic</th>
+<th>Typical Range</th>
+<th>VPD Implication</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Daytime temperature</td>
+<td>15 – 28 °C</td>
+<td>Moderate <code>es</code></td>
+</tr>
+<tr>
+<td>Relative humidity (daytime)</td>
+<td>20 – 45%</td>
+<td>Low <code>ea</code> — significant VPD despite lower temp</td>
+</tr>
+<tr>
+<td>Relative humidity (night)</td>
+<td>40 – 65%</td>
+<td>VPD stays moderate even at night</td>
+</tr>
+<tr>
+<td>Rainfall pattern</td>
+<td>Essentially none</td>
+<td>forecast_minutes = 0 always</td>
+</tr>
+<tr>
+<td>Wind</td>
+<td>Dry southerly winds common</td>
+<td>False dry risk elevated (especially Sept)</td>
+</tr>
+<tr>
+<td>VPD range (daytime)</td>
+<td>0.86 – 3.18 kPa</td>
+<td>Elevated despite cooler temperatures</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key winter challenge:</strong> The <strong>HOT ≠ DRY</strong> principle from vpd_scenarios.md is critical here. At 22 °C / 35% RH (Winter Sunny), VPD = 1.72 kPa — higher than many summer storm conditions. The system must water more frequently than the mild temperatures alone suggest, because the dry air is continuously pulling moisture from soil.</p>
+<p><strong>Winter irrigation strategy:</strong>
+- No afternoon storms → rain confidence never defers → system waters on moisture triggers alone
+- <code>temp_factor = 0.7</code> for all T &lt; 25°C readings — reduces urgency calculation
+- <code>time_factor = 1.5</code> still applies at midday — winter sun still drives evaporation
+- September (Spring Windy) is the highest false dry risk month — hot winds, very low humidity
+- Night runs still preferred but less time-sensitive than summer (decay rate 0.18 vs 6.13)</p>
+<hr />
+<h3>Seasonal VPD Comparison Chart</h3>
+<pre><code class="language-mermaid">xychart-beta
+    title &quot;Typical Midday VPD by Month — Bulawayo&quot;
+    x-axis [&quot;Jan&quot;, &quot;Feb&quot;, &quot;Mar&quot;, &quot;Apr&quot;, &quot;May&quot;, &quot;Jun&quot;, &quot;Jul&quot;, &quot;Aug&quot;, &quot;Sep&quot;, &quot;Oct&quot;, &quot;Nov&quot;, &quot;Dec&quot;]
+    y-axis &quot;VPD (kPa)&quot; 0 --&gt; 5
+    bar  [2.1, 1.8, 2.4, 3.2, 2.8, 2.0, 1.9, 2.5, 3.5, 4.2, 3.8, 2.5]
+    line [2.1, 1.8, 2.4, 3.2, 2.8, 2.0, 1.9, 2.5, 3.5, 4.2, 3.8, 2.5]
+</code></pre>
+<p><em>Note: Values represent illustrative midday VPD estimates derived from the seasonal temperature and humidity patterns in vpd_scenarios.md. Jan–Mar: wet season variability. May–Aug: dry season with moderate VPD despite cool temps. Sep–Oct: spring peak — highest VPD of year. Nov–Dec: early rains lower VPD from October peak.</em></p>
+<hr />
+<h3>Seasonal Decision Frequency</h3>
+<table>
+<thead>
+<tr>
+<th>Season</th>
+<th>VPD_DELAY frequency</th>
+<th>PREHEAT frequency</th>
+<th>RAIN_WAIT frequency</th>
+<th>False Dry risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Nov – Mar (Summer)</strong></td>
+<td>High (daily)</td>
+<td>High (hot day forecasts)</td>
+<td>High (storms)</td>
+<td>Low–Medium</td>
+</tr>
+<tr>
+<td><strong>Apr (Autumn)</strong></td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Low</td>
+<td>Low</td>
+</tr>
+<tr>
+<td><strong>May – Aug (Winter)</strong></td>
+<td>Low</td>
+<td>None</td>
+<td>None</td>
+<td>Low</td>
+</tr>
+<tr>
+<td><strong>Sep – Oct (Spring)</strong></td>
+<td>Medium–High</td>
+<td>Medium</td>
+<td>None</td>
+<td><strong>HIGH</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Region × Season Interaction</h3>
+<p>The regional multiplier (<code>region_mult</code>) compounds seasonal effects:</p>
+<pre><code>Matabeleland (region_mult = 1.5) — Bulawayo
+  Summer Hot Dry midday:  decay = 6.13 units/hr  (CRITICAL)
+  Winter sunny midday:    decay = 1.00 units/hr  (MODERATE)
+
+Manicaland (region_mult = 0.6) — Mutare/Nyanga
+  Summer Hot Dry midday:  decay = 2.45 units/hr  (MANAGEABLE)
+  Winter sunny midday:    decay = 0.40 units/hr  (NEGLIGIBLE)
+</code></pre>
+<p>Manicaland's highland moisture retention effectively halves the irrigation urgency in all seasons. A Bulawayo PREHEAT trigger at 05:00 would not fire for the same zone in Nyanga — the PROACTIVE threshold may not even be reached overnight given the lower decay rate.</p>
+<hr />
+<h2>Quick Reference Thresholds</h2>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Threshold</th>
+<th>Source</th>
+<th>Triggered By</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Extreme VPD</td>
+<td>&gt; 2.0 kPa</td>
+<td><code>ml_predictor.py:236</code></td>
+<td><code>is_extreme_vpd = 1</code></td>
+</tr>
+<tr>
+<td>High wind</td>
+<td>&gt; 20 km/h</td>
+<td><code>ml_predictor.py:248</code></td>
+<td><code>is_high_wind = 1</code></td>
+</tr>
+<tr>
+<td>Peak solar</td>
+<td>10:00 – 16:00</td>
+<td><code>ml_predictor.py:95</code></td>
+<td><code>time_factor = 1.5</code></td>
+</tr>
+<tr>
+<td>Deep night</td>
+<td>22:00 – 04:00</td>
+<td><code>ml_predictor.py:96</code></td>
+<td><code>time_factor = 0.3</code></td>
+</tr>
+<tr>
+<td>PREHEAT window</td>
+<td>04:00 – 06:00</td>
+<td><code>ml_predictor.py:429</code></td>
+<td>PREHEAT status</td>
+</tr>
+<tr>
+<td>False dry: wind</td>
+<td>&gt; 20 km/h</td>
+<td><code>ml_predictor.py:127</code></td>
+<td>Condition 1 of 3</td>
+</tr>
+<tr>
+<td>False dry: humidity</td>
+<td>&lt; 40%</td>
+<td><code>ml_predictor.py:127</code></td>
+<td>Condition 2 of 3</td>
+</tr>
+<tr>
+<td>False dry: change</td>
+<td>&lt; −0.5</td>
+<td><code>ml_predictor.py:127</code></td>
+<td>Condition 3 of 3</td>
+</tr>
+<tr>
+<td>Rain imminent</td>
+<td>&lt; 2h</td>
+<td><code>ml_predictor.py:107</code></td>
+<td>Confidence 0.95</td>
+</tr>
+<tr>
+<td>Rain near-term</td>
+<td>2–6h, moisture &gt; 25%</td>
+<td><code>ml_predictor.py:109-111</code></td>
+<td>Confidence 0.75</td>
+</tr>
+<tr>
+<td>Rain medium-term</td>
+<td>6–12h, moisture &gt; 40%</td>
+<td><code>ml_predictor.py:113-115</code></td>
+<td>Confidence 0.50</td>
+</tr>
+<tr>
+<td>Matabeleland mult</td>
+<td>1.5×</td>
+<td><code>ml_predictor.py:338</code></td>
+<td>Bulawayo region</td>
+</tr>
+<tr>
+<td>Mashonaland mult</td>
+<td>1.0×</td>
+<td><code>ml_predictor.py:338</code></td>
+<td>Harare region</td>
+</tr>
+<tr>
+<td>Manicaland mult</td>
+<td>0.6×</td>
+<td><code>ml_predictor.py:338</code></td>
+<td>Mutare/Nyanga region</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>P-WOS v2.0 | System Behaviour — VPD &amp; Weather Engine</em></p>
+                            </div>
+                        </article>
+
+                        <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
+                            <a href="../getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Back to Index</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <aside class="hidden lg:block w-56 shrink-0 border-l border-slate-200 dark:border-slate-800/80 pl-6">
+                        <div class="sticky top-0">
+                            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5 mb-4">
+                                <i data-lucide="list-ordered" class="w-3.5 h-3.5 text-emerald-500"></i> On This Page
+                            </h4>
+                            <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                            <a href="../getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                                <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                                <span>Back to Home</span>
+                            </a>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const docs = [{"category": "Getting Started", "icon": "rocket", "pages": [{"title": "P-WOS Documentation Index", "file": "getting_started/README.html"}, {"title": "Project Overview", "file": "getting_started/01_project_overview.html"}, {"title": "About P-WOS", "file": "getting_started/02_about.html"}, {"title": "Core Features", "file": "getting_started/03_features.html"}, {"title": "Project Roadmap", "file": "getting_started/04_roadmap.html"}, {"title": "System Structure", "file": "getting_started/05_structure.html"}, {"title": "Core Logic Summary", "file": "getting_started/06_summary.html"}, {"title": "System Overview & Autopilot", "file": "getting_started/07_architecture.html"}]}, {"category": "Core Guides", "icon": "book-open", "pages": [{"title": "guides", "file": "core_guides/README.html"}, {"title": "P-WOS Cloud-Based ML API Implementation", "file": "core_guides/deployment/cloud_ml_deployment.html"}, {"title": "P-WOS LOCAL IMPLEMENTATION GUIDE", "file": "core_guides/deployment/local_implementation.html"}, {"title": "P-WOS ML Implementation Roadmap", "file": "core_guides/deployment/ml_implementation_roadmap.html"}, {"title": "P-WOS Performance & Architecture Guide (v3.0)", "file": "core_guides/operations/performance_guide.html"}, {"title": "P-WOS Test Suite Documentation", "file": "core_guides/operations/tests.html"}, {"title": "P-WOS Troubleshooting Guide", "file": "core_guides/operations/troubleshooting.html"}, {"title": "P-WOS Documentation Portal - Home Page Guide", "file": "core_guides/setup/HOME_PAGE_GUIDE.html"}, {"title": "P-WOS Installation Guide", "file": "core_guides/setup/installation_guide.html"}, {"title": "P-WOS Quick Start Guide", "file": "core_guides/setup/QUICKSTART.html"}, {"title": "P-WOS Documentation Portal - Restructured", "file": "core_guides/setup/README_RESTRUCTURE.html"}, {"title": "Table of Contents Sidebar - Toggle Feature", "file": "core_guides/setup/SIDEBAR_TOGGLE_GUIDE.html"}, {"title": "Backend Architecture & Guide", "file": "core_guides/technical/backend_guide.html"}, {"title": "P-WOS Database Guide", "file": "core_guides/technical/database_guide.html"}, {"title": "ESP32 Firmware Guide", "file": "core_guides/technical/firmware_guide.html"}, {"title": "Analytics Dashboard Guide", "file": "core_guides/ui/analytics_dashboard.html"}, {"title": "Main Dashboard Guide", "file": "core_guides/ui/main_dashboard.html"}, {"title": "P-WOS React Native Mobile Application Guide", "file": "core_guides/ui/mobile_guide.html"}]}, {"category": "System Architecture", "icon": "cpu", "pages": [{"title": "07 — System Behaviour", "file": "system_architecture/README.html"}, {"title": "Analytics & Dashboard Reference", "file": "system_architecture/analytics_reference.html"}, {"title": "Crop Profiles & Regional Adaptation", "file": "system_architecture/crop_profiles.html"}, {"title": "Dataflow", "file": "system_architecture/dataflow.html"}, {"title": "Edge Cases & Scenario Handbook", "file": "system_architecture/edge_cases_and_scenarios.html"}, {"title": "System Architectures & Development Process", "file": "system_architecture/system_architectures.html"}, {"title": "System Overview Specifications", "file": "system_architecture/system_overview.html"}, {"title": "VPD & Weather Engine", "file": "system_architecture/vpd_and_weather_engine.html"}]}, {"category": "Machine Learning", "icon": "brain", "pages": [{"title": "P-WOS Machine Learning", "file": "ml/README.html"}, {"title": "Feature Engineering & Physics Calculations", "file": "ml/feature_engineering.html"}, {"title": "ML Model Deep Dive", "file": "ml/ml_model_deep_dive.html"}, {"title": "ML Model Guide & Architecture", "file": "ml/ml_model_guide.html"}]}, {"category": "Hardware", "icon": "circuit-board", "pages": [{"title": "P-WOS Hardware Documentation", "file": "hardware/README.html"}, {"title": "P-WOS Hardware & Cloud Architecture", "file": "hardware/architecture/hardware_architecture.html"}, {"title": "GL No.12 Solderless Breadboard", "file": "hardware/guides/breadboard.html"}, {"title": "P-WOS Breadboard Assembly Guide", "file": "hardware/guides/breadboard_assembly.html"}, {"title": "Hardware Setup Guide", "file": "hardware/guides/hardware_setup.html"}, {"title": "P-WOS Hardware Migration Plan", "file": "hardware/planning/hardware_migration_plan.html"}, {"title": "P-WOS Hardware Components Shopping List", "file": "hardware/planning/hardware_shopping_list.html"}, {"title": "reports", "file": "hardware/reports/README.html"}, {"title": "P-WOS Hardware Progress Log", "file": "hardware/reports/hardware_progress.html"}, {"title": "P-WOS Phase 1 Report: ESP32 Setup & First Upload", "file": "hardware/reports/phase1_report.html"}, {"title": "P-WOS Hardware Testing Report", "file": "hardware/reports/testing_report.html"}]}, {"category": "Simulation", "icon": "monitor", "pages": [{"title": "P-WOS Simulation (Digital Twin)", "file": "simulation/README.html"}, {"title": "Data Generation & Database Testing", "file": "simulation/data_generation.html"}, {"title": "Simulation Physics & Environmental Modeling", "file": "simulation/physics_model.html"}, {"title": "Simulation Scenarios Reference", "file": "simulation/scenarios.html"}, {"title": "Simulation Guide", "file": "simulation/simulation_guide.html"}]}, {"category": "Scientific Research", "icon": "flask-conical", "pages": [{"title": "Codebase Analysis: P-WOS (Predictive Watering Optimization System)", "file": "scientific_research/analysis/codebase_analysis.html"}, {"title": "P-WOS Complete Codebase Audit", "file": "scientific_research/analysis/codebase_audit.html"}, {"title": "P-WOS Crop & Region Integration Plan", "file": "scientific_research/planning/crop_integration_plan.html"}]}, {"category": "Reports and Validation", "icon": "bar-chart", "pages": [{"title": "reports", "file": "reports_and_validation/README.html"}, {"title": "P-WOS Final Report", "file": "reports_and_validation/analysis/final_report.html"}, {"title": "Moisture Fluctuation Analysis Report", "file": "reports_and_validation/analysis/moisture_analysis.html"}, {"title": "P-WOS Simulation Analysis Report", "file": "reports_and_validation/analysis/simulation_analysis.html"}, {"title": "P-WOS Validation Report", "file": "reports_and_validation/analysis/validation_report.html"}, {"title": "P-WOS Simulation Phase Report", "file": "reports_and_validation/phases/phase_01_setup_report.html"}, {"title": "P-WOS Data Intelligence Report (Phase 5)", "file": "reports_and_validation/phases/phase_05_ml_report.html"}, {"title": "P-WOS Modernization Report (Phase 3)", "file": "reports_and_validation/phases/phase_06_frontend_report.html"}]}, {"category": "Technical Reference", "icon": "book", "pages": [{"title": "reference", "file": "technical_reference/README.html"}, {"title": "P-WOS Technical Development Roadmap", "file": "technical_reference/development_roadmap.html"}, {"title": "DEVELOPMENT GUIDELINES", "file": "technical_reference/guidelines/coding_guidelines.html"}, {"title": "Project Structure Guide", "file": "technical_reference/guidelines/project_structure.html"}, {"title": "P-WOS API Reference", "file": "technical_reference/specs/api_reference.html"}, {"title": "MQTT Topics Reference", "file": "technical_reference/specs/mqtt_topics.html"}, {"title": "VPD & Weather Scenarios Reference", "file": "technical_reference/specs/vpd_scenarios.html"}]}];
+
+        let expandedGroups = {};
+
+        function initTheme() {
+            const saved = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(saved);
+        }
+
+        function setTheme(theme) {
+            document.body.classList.remove('theme-light', 'theme-dark');
+            document.documentElement.classList.remove('dark');
+            const hljsLight = document.getElementById('hljs-light-theme');
+            const hljsDark = document.getElementById('hljs-dark-theme');
+            if (theme === 'dark') {
+                document.body.classList.add('theme-dark');
+                document.documentElement.classList.add('dark');
+                if (hljsLight) hljsLight.disabled = true;
+                if (hljsDark) hljsDark.disabled = false;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'moon');
+            } else {
+                document.body.classList.add('theme-light');
+                if (hljsLight) hljsLight.disabled = false;
+                if (hljsDark) hljsDark.disabled = true;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'sun');
+            }
+            localStorage.setItem('pwos-theme', theme);
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            const current = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(current === 'light' ? 'dark' : 'light');
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        function renderSidebar(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = docs.map(function(group, gi) {
+                const isOpen = expandedGroups[gi] || false;
+                return '<div class="sidebar-group">' +
+                    '<button onclick="toggleGroup(' + gi + ')" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' +
+                        '<span class="flex items-center gap-2"><i data-lucide="' + group.icon + '" class="w-4 h-4"></i><span>' + group.category + '</span></span>' +
+                        '<i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ' + (isOpen ? 'rotate-0' : '-rotate-90') + '"></i>' +
+                    '</button>' +
+                    '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
+                        '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
+                            group.pages.map(function(page) {
+                                return '<li><a href="../' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                            }).join('') +
+                        '</ul>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function toggleGroup(idx) {
+            expandedGroups[idx] = !expandedGroups[idx];
+            renderSidebar('sidebarGroups');
+            renderSidebar('mobileSidebarGroups');
+        }
+
+        function setupSearch(inputId, containerId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('input', function(e) {
+                const q = e.target.value.toLowerCase().trim();
+                
+                let matchingFiles = new Set();
+                if (q !== '' && typeof searchIndex !== 'undefined') {
+                    for (let i = 0; i < searchIndex.length; i++) {
+                        if (searchIndex[i].title.toLowerCase().includes(q) || searchIndex[i].content.includes(q)) {
+                            matchingFiles.add(searchIndex[i].file);
+                        }
+                    }
+                }
+
+                document.querySelectorAll('#' + containerId + ' .sidebar-group').forEach(function(groupEl) {
+                    let hasVisibleChild = false;
+                    groupEl.querySelectorAll('li a').forEach(function(linkEl) {
+                        const dataFile = linkEl.getAttribute('data-file');
+                        const isMatch = q === '' || (matchingFiles.has(dataFile) || linkEl.textContent.toLowerCase().includes(q));
+                        linkEl.parentElement.style.display = isMatch ? '' : 'none';
+                        if (isMatch) hasVisibleChild = true;
+                    });
+                    groupEl.style.display = hasVisibleChild ? '' : 'none';
+                    
+                    const btnIcon = groupEl.querySelector('button i.lucide-chevron-down');
+                    const groupEnter = groupEl.querySelector('.sidebar-group-enter');
+                    if (q !== '' && hasVisibleChild) {
+                        groupEnter.classList.add('active');
+                        if (btnIcon) btnIcon.classList.remove('-rotate-90');
+                    }
+                });
+            });
+        }
+
+        setupSearch('docSearch', 'sidebarGroups');
+        setupSearch('mobileDocSearch', 'mobileSidebarGroups');
+
+        function openMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            sidebar.classList.remove('hidden');
+            setTimeout(function() { panel.classList.remove('-translate-x-full'); }, 10);
+        }
+
+        function closeMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            panel.classList.add('-translate-x-full');
+            setTimeout(function() { sidebar.classList.add('hidden'); }, 300);
+        }
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', openMobileNav);
+        document.getElementById('closeMobileNav').addEventListener('click', closeMobileNav);
+        document.getElementById('navOverlay').addEventListener('click', closeMobileNav);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const output = document.getElementById('markdownOutput');
+            if (!output) return;
+
+            output.querySelectorAll('pre code').forEach(function(block) { hljs.highlightElement(block); });
+
+            try {
+                renderMathInElement(output, {
+                    delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}],
+                    throwOnError: false
+                });
+            } catch(e) {}
+
+            try {
+                mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+                mermaid.run({ nodes: output.querySelectorAll('.mermaid') });
+            } catch(e) {}
+
+            buildTOC(output);
+        });
+
+        function buildTOC(container) {
+            const list = document.getElementById('tocList');
+            if (!list) return;
+            list.innerHTML = '';
+            const headings = container.querySelectorAll('h2, h3');
+            if (headings.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'text-slate-400 italic';
+                li.textContent = 'No sub-headers on page';
+                list.appendChild(li);
+                return;
+            }
+            headings.forEach(function(heading, idx) {
+                const anchorId = 'toc-anchor-' + idx;
+                heading.setAttribute('id', anchorId);
+                const li = document.createElement('li');
+                const isSub = heading.tagName.toLowerCase() === 'h3';
+                li.className = 'transition-colors duration-150 ' + (isSub ? 'pl-3 border-l border-slate-100 dark:border-slate-800 ml-1 py-0.5' : 'font-medium py-1');
+                const link = document.createElement('a');
+                link.href = '#' + anchorId;
+                link.className = 'hover:text-emerald-500 block truncate transition-colors';
+                link.textContent = heading.textContent;
+                link.onclick = function(e) { e.preventDefault(); heading.scrollIntoView({ behavior: 'smooth' }); };
+                li.appendChild(link);
+                list.appendChild(li);
+            });
+        }
+
+        const mainEl = document.querySelector('main');
+        if (mainEl) {
+            mainEl.addEventListener('scroll', function() {
+                const scrollTop = mainEl.scrollTop;
+                const scrollHeight = mainEl.scrollHeight - mainEl.clientHeight;
+                document.getElementById('readingProgress').style.width = (scrollTop / Math.max(scrollHeight, 1)) * 100 + '%';
+            });
+        }
+
+        const copyBtn = document.getElementById('copyDocBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                const content = document.getElementById('markdownOutput')?.innerText;
+                if (!content) return;
+                navigator.clipboard.writeText(content).then(function() {
+                    copyBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>';
+                    lucide.createIcons();
+                    setTimeout(function() {
+                        copyBtn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
+                        lucide.createIcons();
+                    }, 1500);
+                });
+            });
+        }
+
+        initTheme();
+        renderSidebar('sidebarGroups');
+        renderSidebar('mobileSidebarGroups');
+    </script>
+</body>
+</html>

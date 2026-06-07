@@ -1,0 +1,16 @@
+Date,PlotCode,WholePlantWeight,podsNumber,podsWeight,grainsWeight,hundredgrainsWeight1,hundredgrainsWeight2,hundredgrainsWeight3,finalYield,dryGrainYield,cropTreatment,seedbed,plantPopulation
+03.08.2019,IC1,540,210,350,290,14,NaN,NaN,954,NaN,Maize/Cowpea plots,FLAT,109
+01.02.2020,IC1,1764,353,713,NaN,9.6,9.4,9.8,4602,492,Maize/Cowpea plots,FLAT,114
+01.07.2020,IC1,0,0,0,NaN,0,0,0,0,0,Maize/Cowpea plots,FLAT,54
+01.02.2021,IC1,108.31,21,1.204,0.759,0,0,0,0.008,0.759,Maize/Cowpea plots,FLAT,0
+12.06.2021,IC1,0,0,0,0,0,0,0,0,NaN,Maize/Cowpea plots,FLAT,92
+03.08.2019,IC2,540,170,340,260,16,NaN,NaN,2200,NaN,Maize/Cowpea plots,FLAT,98
+01.02.2020,IC2,2630,426,915,NaN,12.7,13,12.8,5670,604,Maize/Cowpea plots,FLAT,76
+01.07.2020,IC2,169.7,52,109.19,NaN,14.42,14.42,14.42,164,144.205,Maize/Cowpea plots,FLAT,65
+01.02.2021,IC2,190.15,42,67.4542,63.307,NaN,NaN,NaN,0.062,63.307,Maize/Cowpea plots,FLAT,0
+12.06.2021,IC2,3,13,22,16,15,13,14,982,NaN,Maize/Cowpea plots,FLAT,80
+03.08.2019,IC3,1170,150,360,230,14,NaN,NaN,1005,NaN,Maize/Cowpea plots,FLAT,148
+01.02.2020,IC3,6524,386,818,NaN,14.1,13.4,12.6,6064,539,Maize/Cowpea plots,FLAT,94
+01.07.2020,IC3,736.25,82,205.41,NaN,18.013,18.013,18.013,270,180.13,Maize/Cowpea plots,FLAT,86
+01.02.2021,IC3,281.34,40,5.549,2.258,NaN,NaN,NaN,0.022,2.258,Maize/Cowpea plots,FLAT,0
+12.06.2021,IC3,43,14,25,21,17,16,18,463,NaN,Maize/Cowpea plots,FLAT,117

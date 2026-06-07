@@ -67,6 +67,7 @@ yarn-error.log*
 ehthumbs.db
 Thumbs.db
 desktop.ini
+nul
 
 # ==============================================================================
 # Logs

@@ -70,6 +70,7 @@ class TestErrorHandling:
             'soil_moisture': 45.0, 'temperature': 25.0, 'humidity': 60.0,
             'weather_source': 'openweathermap'
         })
+        app_module.system_state['hardware_status'] = 'ONLINE'
         
         with patch('app.predictor.predict_next_watering') as mock_pred:
             mock_pred.side_effect = Exception("Critical ML Failure")

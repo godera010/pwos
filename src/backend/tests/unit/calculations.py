@@ -22,15 +22,15 @@ class TestCalculations:
         assert decay > 1.0 # High decay expected
         
     def test_rain_confidence_imminent(self, predictor):
-        """Test rain confidence for imminent rain (<2h)."""
-        wait, conf, reason = predictor.calculate_rain_confidence(90, 50) # 1.5 hours
+        """Test rain confidence for high precipitation chance (>=80%)."""
+        wait, conf, reason = predictor.calculate_rain_confidence(90, 50) # 90% chance
         assert wait is True
         assert conf >= 0.9
-        assert "immiment" in reason or "Imminent" in reason
+        assert "High chance" in reason or "rain" in reason
         
     def test_rain_confidence_distant_dry(self, predictor):
-        """Test rain confidence for distant rain (10h) but soil is dry (20%)."""
-        wait, conf, reason = predictor.calculate_rain_confidence(600, 20) # 10 hours
+        """Test rain confidence for moderate rain chance (50%) but soil is dry (20%)."""
+        wait, conf, reason = predictor.calculate_rain_confidence(50, 20) # 50% chance, 20% moisture
         assert wait is False # Should not wait, soil too dry
         assert conf == 0.0
         

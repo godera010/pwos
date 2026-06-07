@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
-    AreaChart,
-    Area,
     XAxis,
     YAxis,
     CartesianGrid,
@@ -20,7 +16,6 @@ import {
 } from 'recharts';
 import {
     Download,
-    Droplets,
     Leaf,
     BarChart3,
     Thermometer,
@@ -51,9 +46,6 @@ function fillMissingBuckets(data: any[], intervalStr: string): any[] {
 
     const intervalMs = intervalMsMap[intervalStr] || 15 * 60 * 1000;
 
-    // Snap each data point's timestamp to the nearest bucket boundary
-    // This ensures real data matches the generated grid even if there are
-    // millisecond-level differences from PostgreSQL's to_timestamp()
     const snappedData = data.map(item => ({
         ...item,
         timestamp: Math.round(item.timestamp / intervalMs) * intervalMs
@@ -63,7 +55,6 @@ function fillMissingBuckets(data: any[], intervalStr: string): any[] {
     const startMs = snappedData[0].timestamp;
     const endMs = snappedData[snappedData.length - 1].timestamp;
 
-    // Build lookup by snapped timestamp
     const dataMap = new Map<number, any>();
     for (const item of snappedData) {
         dataMap.set(item.timestamp, item);
@@ -74,8 +65,6 @@ function fillMissingBuckets(data: any[], intervalStr: string): any[] {
         if (dataMap.has(currentMs)) {
             filledData.push(dataMap.get(currentMs));
         } else {
-            // Gap entry: use null for sensor values so they are excluded
-            // from KPI averages and render as chart gaps instead of drops to 0
             const dateObj = new Date(currentMs);
             filledData.push({
                 timestamp: currentMs,
@@ -96,7 +85,6 @@ function fillMissingBuckets(data: any[], intervalStr: string): any[] {
     return filledData;
 }
 
-/** Human-readable label for the selected range */
 const RANGE_LABELS: Record<string, string> = {
     '1h': 'Last 1h',
     '6h': 'Last 6h',
@@ -183,8 +171,7 @@ export const Analytics: React.FC = () => {
                     const manualWaterSec = totalWaterSec - aiWaterSec;
                     const manualEvents = totalWaterings - totalAIDecisions;
 
-                    // Calculate water saved (AI typically uses less than manual)
-                    const standardUsage = manualEvents * 45; // Assume 45s avg manual
+                    const standardUsage = manualEvents * 45;
                     const waterSavedSec = Math.max(0, standardUsage - aiWaterSec);
                     const efficiencyPct = totalWaterSec > 0 ? Math.round((aiWaterSec / totalWaterSec) * 100) : 0;
 
@@ -272,16 +259,15 @@ export const Analytics: React.FC = () => {
 
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
-            // Filter out entries with null values (gap-filled buckets)
             const validEntries = payload.filter((entry: any) => entry.value !== null && entry.value !== undefined);
             if (validEntries.length === 0) return null;
             return (
-                <div className="bg-slate-900/95 border border-slate-700 p-3 rounded-lg shadow-xl text-white text-xs">
-                    <p className="font-bold text-slate-300 mb-2 border-b border-slate-700 pb-1">{new Date(label).toLocaleString()}</p>
+                <div className="bg-slate-950 border border-border p-3 rounded-xl shadow-xl text-white text-xs">
+                    <p className="font-bold text-slate-400 mb-2 border-b border-border pb-1">{new Date(label).toLocaleString()}</p>
                     {validEntries.map((entry: any, index: number) => (
                         <p key={`item-${index}`} style={{ color: entry.color }} className="flex justify-between gap-4 py-0.5">
-                            <span>{entry.name}:</span>
-                            <span className="font-bold">
+                            <span className="font-medium">{entry.name}:</span>
+                            <span className="font-black">
                                 {Number(entry.value).toFixed(2)} {entry.dataKey === 'soil_moisture' ? '%' : entry.dataKey.includes('usage') || entry.dataKey.includes('duration') || entry.dataKey.includes('cumulative') ? 's' : ''}
                             </span>
                         </p>
@@ -297,9 +283,9 @@ export const Analytics: React.FC = () => {
             const total = distributionData.reduce((s, d) => s + d.count, 0);
             const pct = total > 0 ? ((payload[0].value / total) * 100).toFixed(1) : '0';
             return (
-                <div className="bg-slate-900/95 border border-slate-700 p-3 rounded-lg shadow-xl text-white text-xs">
+                <div className="bg-slate-950 border border-border p-3 rounded-xl shadow-xl text-white text-xs">
                     <p className="font-bold">{payload[0].payload.range} ({payload[0].payload.label})</p>
-                    <p>{payload[0].value} readings ({pct}%)</p>
+                    <p className="text-slate-400 mt-1">{payload[0].value} readings ({pct}%)</p>
                 </div>
             );
         }
@@ -309,40 +295,42 @@ export const Analytics: React.FC = () => {
     // ─── Render ──────────────────────────────────────────────────────────────
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in fade-in duration-500 pb-12 px-4 md:px-0">
             {/* ── Header ───────────────────────────────────────────────────── */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
-                        System Analytics
-                        <Badge variant="outline" className="text-indigo-600 dark:text-indigo-400 border-indigo-500/20 gap-1 font-bold">
-                            <BarChart3 className="size-3" />
-                            Data Insights
-                        </Badge>
+                    <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+                        System <span className="text-emerald-500 dark:text-primary">Analytics</span>
                     </h1>
-                    <p className="dark:text-neutral-500 text-sm font-medium">
+                    <p className="text-muted-foreground font-mono mt-1 uppercase text-[10px] tracking-wider">
                         Deep dive into historical performance and resource efficiency.
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <div className="flex items-center bg-white dark:bg-card border border-border rounded-lg p-1 mr-2 flex-wrap sm:flex-nowrap">
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-1.5 py-1 px-3.5 rounded-full text-[10px] font-bold uppercase tracking-wider border backdrop-blur-sm text-indigo-600 border-indigo-500/20 bg-indigo-500/5">
+                        <BarChart3 className="size-3.5" />
+                        <span>Data Insights</span>
+                    </div>
+
+                    <div className="flex items-center bg-secondary/50 border border-border rounded-xl p-1 flex-wrap sm:flex-nowrap">
                         {(['1h', '6h', '12h', '24h', '7d', '30d'] as const).map((range) => (
                             <button
                                 key={range}
                                 onClick={() => setTimeRange(range)}
-                                className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${timeRange === range
+                                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${timeRange === range
                                     ? 'bg-slate-900 dark:bg-secondary text-white dark:text-white shadow-sm'
-                                    : 'dark:text-neutral-500 hover:text-slate-900 dark:hover:text-slate-200'
+                                    : 'text-muted-foreground hover:text-foreground'
                                     }`}
                             >
                                 {range.toUpperCase()}
                             </button>
                         ))}
                     </div>
-                    <Button variant="outline" size="sm" className="gap-2" onClick={exportToCSV}>
-                        <Download className="size-4 dark:text-neutral-500" />
-                        <span className="hidden sm:inline">Export</span>
+
+                    <Button variant="outline" size="sm" className="gap-2 border-border h-9 rounded-xl text-xs font-bold uppercase tracking-wider" onClick={exportToCSV}>
+                        <Download className="size-4 text-muted-foreground" />
+                        <span className="hidden sm:inline">Export CSV</span>
                     </Button>
                 </div>
             </div>
@@ -350,60 +338,72 @@ export const Analytics: React.FC = () => {
             {/* ── Row 1 — KPI Cards ────────────────────────────────────────── */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Avg Moisture */}
-                <Card className="shadow-none border border-slate-200 dark:border-slate-800">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-3 mb-2">
-                            <Leaf className="size-5 text-emerald-500" />
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Avg Moisture</span>
+                <Card className="shadow-none border border-slate-200 dark:border-slate-800 bg-card rounded-2xl">
+                    <CardContent className="p-5 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                                <Leaf className="size-4" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest font-mono">Avg Moisture</span>
+                                <span className="text-xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">{stats.avg_moisture}%</span>
+                            </div>
                         </div>
-                        <p className="text-2xl font-black text-slate-900 dark:text-white">{stats.avg_moisture}%</p>
-                        <p className="text-[10px] text-slate-400 mt-1">{rangeLabel}</p>
                     </CardContent>
                 </Card>
 
                 {/* Avg Temperature */}
-                <Card className="shadow-none border border-slate-200 dark:border-slate-800">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-3 mb-2">
-                            <Thermometer className="size-5 text-orange-500" />
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Avg Temp</span>
+                <Card className="shadow-none border border-slate-200 dark:border-slate-800 bg-card rounded-2xl">
+                    <CardContent className="p-5 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center">
+                                <Thermometer className="size-4" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest font-mono">Avg Temp</span>
+                                <span className="text-xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">
+                                    {(() => {
+                                        const valid = data.filter(d => !d._isGap && d.temperature !== null && d.temperature !== undefined);
+                                        return valid.length > 0 ? (valid.reduce((s, d) => s + d.temperature, 0) / valid.length).toFixed(1) : '0';
+                                    })()}°C
+                                </span>
+                            </div>
                         </div>
-                        <p className="text-2xl font-black text-slate-900 dark:text-white">
-                            {(() => {
-                                const valid = data.filter(d => !d._isGap && d.temperature !== null && d.temperature !== undefined);
-                                return valid.length > 0 ? (valid.reduce((s, d) => s + d.temperature, 0) / valid.length).toFixed(1) : '0';
-                            })()}°C
-                        </p>
-                        <p className="text-[10px] text-slate-400 mt-1">{rangeLabel}</p>
                     </CardContent>
                 </Card>
 
                 {/* Avg Humidity */}
-                <Card className="shadow-none border border-slate-200 dark:border-slate-800">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-3 mb-2">
-                            <Droplet className="size-5 text-sky-500" />
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Avg Humidity</span>
+                <Card className="shadow-none border border-slate-200 dark:border-slate-800 bg-card rounded-2xl">
+                    <CardContent className="p-5 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center">
+                                <Droplet className="size-4" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest font-mono">Avg Humidity</span>
+                                <span className="text-xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">
+                                    {(() => {
+                                        const valid = data.filter(d => !d._isGap && d.humidity !== null && d.humidity !== undefined);
+                                        return valid.length > 0 ? (valid.reduce((s, d) => s + d.humidity, 0) / valid.length).toFixed(1) : '0';
+                                    })()}%
+                                </span>
+                            </div>
                         </div>
-                        <p className="text-2xl font-black text-slate-900 dark:text-white">
-                            {(() => {
-                                const valid = data.filter(d => !d._isGap && d.humidity !== null && d.humidity !== undefined);
-                                return valid.length > 0 ? (valid.reduce((s, d) => s + d.humidity, 0) / valid.length).toFixed(1) : '0';
-                            })()}%
-                        </p>
-                        <p className="text-[10px] text-slate-400 mt-1">{rangeLabel}</p>
                     </CardContent>
                 </Card>
 
                 {/* Data Points */}
-                <Card className="shadow-none border border-slate-200 dark:border-slate-800">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-3 mb-2">
-                            <BarChart3 className="size-5 text-indigo-500" />
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Readings</span>
+                <Card className="shadow-none border border-slate-200 dark:border-slate-800 bg-card rounded-2xl">
+                    <CardContent className="p-5 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+                                <BarChart3 className="size-4" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest font-mono">Readings</span>
+                                <span className="text-xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">{data.filter(d => !d._isGap).length}</span>
+                            </div>
                         </div>
-                        <p className="text-2xl font-black text-slate-900 dark:text-white">{data.filter(d => !d._isGap).length}</p>
-                        <p className="text-[10px] text-slate-400 mt-1">{rangeLabel}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -419,24 +419,24 @@ export const Analytics: React.FC = () => {
                     className="space-y-6"
                 >
                     {/* ── Row 2 — Weather Historical Trends (full-width) ── */}
-                    <Card className="shadow-sm dark:bg-card">
+                    <Card className="shadow-none border border-slate-200 dark:border-slate-800 bg-card rounded-2xl">
                         <CardHeader>
-                            <CardTitle className="text-base font-bold uppercase tracking-wide dark:text-neutral-500">Weather & Soil Trends</CardTitle>
-                            <CardDescription>Historical comparison of soil moisture, temperature, and humidity over time</CardDescription>
+                            <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">Weather & Soil Trends</CardTitle>
+                            <CardDescription className="text-xs text-muted-foreground mt-0.5">Historical comparison of soil moisture, temperature, and humidity over time</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="h-[350px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="rgba(128,128,128,0.1)" />
-                                        <XAxis dataKey="timestamp" type="number" scale="time" domain={['auto', 'auto']} padding={{ left: 0, right: 0 }} tick={{ fontSize: 12 }} stroke="#a3a3a3" axisLine={false} tickLine={false} interval="preserveStartEnd" tickFormatter={formatXAxis} />
-                                        <YAxis yAxisId="left" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} domain={[0, 'auto']} />
-                                        <YAxis yAxisId="right" orientation="right" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} domain={[0, 100]} />
+                                        <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} padding={{ left: 0, right: 0 }} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} stroke="#a3a3a3" axisLine={false} tickLine={false} interval="preserveStartEnd" tickFormatter={formatXAxis} />
+                                        <YAxis yAxisId="left" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} domain={[0, 'auto']} />
+                                        <YAxis yAxisId="right" orientation="right" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} domain={[0, 100]} />
                                         <Tooltip content={<CustomTooltip />} />
                                         <Legend />
-                                        <Line yAxisId="left" type="monotone" dataKey="soil_moisture" name="Soil Moisture (%)" stroke="#10b981" strokeWidth={2.5} dot={false} connectNulls />
-                                        <Line yAxisId="left" type="monotone" dataKey="temperature" name="Temperature (°C)" stroke="#f97316" strokeWidth={2} dot={false} connectNulls />
-                                        <Line yAxisId="right" type="monotone" dataKey="humidity" name="Humidity (%)" stroke="#3b82f6" strokeWidth={2} dot={false} connectNulls />
+                                        <Line yAxisId="left" type="monotone" dataKey="soil_moisture" name="Soil Moisture (%)" stroke="hsl(var(--chart-1))" strokeWidth={2.5} dot={false} connectNulls />
+                                        <Line yAxisId="left" type="monotone" dataKey="temperature" name="Temperature (°C)" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={false} connectNulls />
+                                        <Line yAxisId="right" type="monotone" dataKey="humidity" name="Humidity (%)" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} connectNulls />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>
@@ -444,18 +444,18 @@ export const Analytics: React.FC = () => {
                     </Card>
 
                     {/* ── Row 3 — Moisture Distribution ──── */}
-                    <Card className="shadow-sm dark:bg-card">
+                    <Card className="shadow-none border border-slate-200 dark:border-slate-800 bg-card rounded-2xl">
                         <CardHeader>
-                            <CardTitle className="text-base font-bold uppercase tracking-wide dark:text-neutral-500">Moisture Distribution</CardTitle>
-                            <CardDescription>Readings by health zone over {rangeLabel.toLowerCase()}</CardDescription>
+                            <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">Moisture Distribution</CardTitle>
+                            <CardDescription className="text-xs text-muted-foreground mt-0.5">Readings by health zone over {rangeLabel.toLowerCase()}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="h-[250px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={distributionData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(128,128,128,0.1)" />
-                                        <XAxis dataKey="range" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 600 }} />
-                                        <YAxis stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} allowDecimals={false} />
+                                        <XAxis dataKey="range" stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 600, fill: 'hsl(var(--muted-foreground))' }} />
+                                        <YAxis stroke="#a3a3a3" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} allowDecimals={false} />
                                         <Tooltip content={<DistTooltip />} />
                                         <Bar dataKey="count" name="Readings" radius={[6, 6, 0, 0]} maxBarSize={60}>
                                             {distributionData.map((entry, index) => (
@@ -468,7 +468,7 @@ export const Analytics: React.FC = () => {
                         </CardContent>
                     </Card>
 
-                    </motion.div>
+                </motion.div>
             </AnimatePresence>
         </div>
     );

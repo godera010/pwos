@@ -1,0 +1,10 @@
+{
+    "moisture_threshold": 30,
+    "moisture_max": 75,
+    "temp_min": 5,
+    "temp_max": 32,
+    "max_duration": 45,
+    "latitude": -20.1492,
+    "longitude": 28.5833,
+    "active_region": "matabeleland"
+}

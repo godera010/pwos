@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Structure - P-WOS Documentation Portal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#16a34a', 600: '#15803d', 700: '#166534' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css" id="hljs-dark-theme" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../search_index.js"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .theme-light ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+        .theme-dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .prose table { width: 100%; margin: 1.5rem 0; border-collapse: collapse; font-size: 0.875rem; }
+        .prose th { background-color: rgba(0,0,0,0.02); font-weight: 600; padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); text-align: left; }
+        .dark .prose th { background-color: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); }
+        .prose td { padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.08); }
+        .dark .prose td { border-color: rgba(255,255,255,0.08); }
+        .prose blockquote { border-left: 3px solid #16a34a; padding-left: 1rem; font-style: italic; color: #4b5563; }
+        .dark .prose blockquote { color: #9ca3af; }
+        .prose img { border-radius: 8px; margin: 1.5rem auto; max-width: 100%; }
+        .prose pre { border-radius: 10px; background: #f8fafc !important; border: 1px solid #e2e8f0; }
+        .dark .prose pre { background: #0f171a !important; border-color: #1e2a2e; }
+
+        .theme-dark { background-color: #0b0f11; color: #f1f5f9; }
+        .theme-dark .sidebar-bg { background-color: #101618; border-color: #1a2225; }
+        .theme-dark .content-card { background-color: #12191b; border-color: #1c272a; }
+
+        .sidebar-group-enter { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-in-out; }
+        .sidebar-group-enter.active { max-height: 500px; }
+    </style>
+</head>
+<body class="theme-light bg-slate-50 text-slate-800 transition-colors duration-200 antialiased font-sans h-screen overflow-hidden flex flex-col">
+
+    <div class="fixed top-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-900/50 z-50">
+        <div id="readingProgress" class="h-full bg-brand-500 w-0 transition-all duration-75"></div>
+    </div>
+
+    <header class="h-14 md:h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/85 dark:bg-[#101618]/85 backdrop-blur-md flex items-center justify-between px-4 md:px-6 z-40 shrink-0">
+        <div class="flex items-center space-x-3">
+            <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-500">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                <div class="p-1.5 bg-gradient-to-tr from-emerald-500 to-green-600 rounded-lg text-white">
+                    <i data-lucide="droplet" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <span class="font-bold text-sm md:text-base tracking-tight text-slate-900 dark:text-white">P-WOS Docs</span>
+                    <span class="hidden md:inline-block ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 font-medium">Predictive Water Optimization</span>
+                </div>
+            </div>
+        </div>
+        <div class="hidden md:block flex-1 max-w-md mx-4">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                </span>
+                <input type="text" id="docSearch" placeholder="Search documentation..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300" title="Toggle Light/Dark Mode">
+                <i data-lucide="sun" id="themeIcon" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Theme</span>
+            </button>
+            <button onclick="window.print()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Print to PDF">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Export PDF</span>
+            </button>
+            <a href="../getting_started/QUICKSTART.html" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition text-slate-600 dark:text-slate-300 flex items-center gap-1 text-xs font-medium" title="Back to Index">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Home</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside id="navSidebar" class="w-64 border-r border-slate-200 dark:border-slate-800/80 overflow-y-auto shrink-0 bg-white dark:bg-[#101618] hidden lg:block z-30">
+            <div class="p-3 space-y-1" id="sidebarGroups"></div>
+        </aside>
+
+        <aside id="mobileSidebar" class="fixed inset-0 z-40 lg:hidden hidden">
+            <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" id="navOverlay"></div>
+            <div class="relative w-72 max-w-[85vw] h-full bg-white dark:bg-[#101618] shadow-2xl overflow-y-auto transform transition-transform duration-300 -translate-x-full">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">Navigation</span>
+                    <button id="closeMobileNav" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-400">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800/50">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="mobileDocSearch" placeholder="Search..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 dark:bg-slate-800/60 border border-transparent rounded-lg focus:outline-none focus:ring-1.5 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition" />
+                    </div>
+                </div>
+                <div class="p-3 space-y-1" id="mobileSidebarGroups"></div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto min-w-0">
+            <div class="px-4 md:px-8 py-6 md:py-10">
+                <div class="flex gap-6 lg:gap-10">
+                    <div class="flex-1 min-w-0 max-w-4xl">
+                        <div class="mb-4 flex items-center space-x-2 text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                            <span id="breadcrumbCategory">Getting Started</span>
+                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                            <span id="breadcrumbTitle" class="text-emerald-500 font-mono">05_structure.md</span>
+                        </div>
+
+                        <article class="content-card bg-white dark:bg-[#12191b] border border-slate-200 dark:border-slate-800/80 rounded-2xl p-6 md:p-10 shadow-sm relative transition-shadow">
+                            <div class="absolute top-6 right-6 flex items-center space-x-2 print:hidden">
+                                <button id="copyDocBtn" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Copy content">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <div id="markdownOutput" class="prose max-w-none dark:prose-invert
+                                prose-headings:font-bold prose-headings:tracking-tight
+                                prose-h1:text-3xl prose-h1:mb-6 prose-h1:text-slate-900 dark:prose-h1:text-white
+                                prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:text-slate-900 dark:prose-h2:text-white
+                                prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-slate-800 dark:prose-h3:text-slate-200
+                                prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:text-sm
+                                prose-code:font-mono prose-code:text-[13px] prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                                prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-li:text-sm">
+<h1>📂 System Structure</h1>
+<p>The <strong>P-WOS</strong> codebase is organized into clean, dedicated modules that separate the hardware, backend server, frontend dashboard, and simulation testing environments.</p>
+<hr />
+<h2>📁 Conceptual Directory Map</h2>
+<p>Here is where the different parts of the system live:</p>
+<pre><code>pwos/
+├── src/
+│   ├── backend/          # The server that hosts the ML &quot;brain&quot; and database.
+│   ├── frontend/         # The web dashboard and mobile app interfaces.
+│   ├── firmware/         # C++ code that runs on the physical ESP32 device in the field.
+│   └── simulation/       # Software models representing virtual plants and weather.
+├── docs/                 # Documentation index, guides, and reports.
+├── data/                 # PostgreSQL databases and crop configurations.
+├── logs/                 # Active log files recording system decisions.
+└── scripts/              # Simple startup tools to launch the system with one click.
+</code></pre>
+<hr />
+<h2>🔧 High-Level Component Roles</h2>
+<h3>💻 1. The Dashboard (Frontend)</h3>
+<p>Located in <code>src/frontend/</code>, this is the user-facing application built using <strong>React</strong>. It displays real-time telemetry from soil sensors, provides historical charts, lets users change crop types, and features an <strong>Explainable AI (XAI)</strong> section that explains the autopilot's decisions in plain English.</p>
+<h3>⚙️ 2. The Control Server (Backend)</h3>
+<p>Located in <code>src/backend/</code>, this is the backend server built in <strong>Python/Flask</strong>. It acts as the coordinator of the system, storing sensor readings in a <strong>PostgreSQL</strong> database and hosting the <strong>autopilot daemon</strong>. The autopilot checks the weather and soil every 5 seconds, consults the ML model, and sends control commands to the pump.</p>
+<h3>🔌 3. The Controller (Firmware)</h3>
+<p>Located in <code>src/firmware/</code>, this is the C++ code written for the <strong>ESP32 microcontroller</strong>. It reads physical data from the temperature, humidity, and soil moisture sensors, and sends that data to the server using the <strong>MQTT</strong> message protocol. It also listens for commands to turn the physical water pump on or off.</p>
+<h3>🌦️ 4. The Digital Twin (Simulation)</h3>
+<p>Located in <code>src/simulation/</code>, these are simulators that generate realistic weather cycles (sun, rain, humidity, wind) and soil physics (how fast water evaporates or drains depending on temperature and root activity). This environment was used to train the ML brain in software before real hardware was built.</p>
+<hr />
+<h2>📡 How Data Flows</h2>
+<p>P-WOS is designed so that each component passes messages to the other in a simple cycle:</p>
+<pre><code>[Soil &amp; Air Sensors] 
+       │ 
+       ▼ (Publish data)
+  [MQTT Broker] ◄━━━━━━━━━━━━━━━━━━━ [Autopilot Engine]
+       │                                     ▲
+       ▼ (Receive data)                      │ (Evaluate status)
+ [Control Server] ──► [Database] ──► [ML Predictor Brain]
+</code></pre>
+<ol>
+<li><strong>Readings:</strong> Sensors (real or simulated) publish soil and air data.</li>
+<li><strong>Delivery:</strong> The MQTT broker forwards these readings to the Control Server.</li>
+<li><strong>Storage:</strong> The Control Server logs the readings in the PostgreSQL Database.</li>
+<li><strong>Decision:</strong> The Autopilot engine reads the database, gets weather forecasts, and calls the ML Predictor Brain to decide if the soil needs moisture.</li>
+<li><strong>Action:</strong> If watering is needed, the Autopilot publishes a "Pump ON" message, which the physical water pump receives and executes.</li>
+</ol>
+<hr />
+<blockquote>
+<p>[!NOTE]
+Are you looking for a file-by-file codebase layout or python configuration keys? Refer to the <strong><a href="../technical_reference/guidelines/project_structure.html">Technical Project Structure Guide</a></strong>.</p>
+</blockquote>
+                            </div>
+                        </article>
+
+                        <div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden text-xs">
+                            <a href="../getting_started/QUICKSTART.html" class="flex items-center space-x-2 text-slate-500 hover:text-slate-950 dark:hover:text-white font-medium transition py-2 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Back to Index</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <aside class="hidden lg:block w-56 shrink-0 border-l border-slate-200 dark:border-slate-800/80 pl-6">
+                        <div class="sticky top-0">
+                            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5 mb-4">
+                                <i data-lucide="list-ordered" class="w-3.5 h-3.5 text-emerald-500"></i> On This Page
+                            </h4>
+                            <ul id="tocList" class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400"></ul>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                            <a href="../getting_started/QUICKSTART.html" class="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-500 transition">
+                                <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                                <span>Back to Home</span>
+                            </a>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const docs = [{"category": "Getting Started", "icon": "rocket", "pages": [{"title": "P-WOS Documentation Index", "file": "getting_started/README.html"}, {"title": "Project Overview", "file": "getting_started/01_project_overview.html"}, {"title": "About P-WOS", "file": "getting_started/02_about.html"}, {"title": "Core Features", "file": "getting_started/03_features.html"}, {"title": "Project Roadmap", "file": "getting_started/04_roadmap.html"}, {"title": "System Structure", "file": "getting_started/05_structure.html"}, {"title": "Core Logic Summary", "file": "getting_started/06_summary.html"}, {"title": "System Overview & Autopilot", "file": "getting_started/07_architecture.html"}]}, {"category": "Core Guides", "icon": "book-open", "pages": [{"title": "guides", "file": "core_guides/README.html"}, {"title": "P-WOS Cloud-Based ML API Implementation", "file": "core_guides/deployment/cloud_ml_deployment.html"}, {"title": "P-WOS LOCAL IMPLEMENTATION GUIDE", "file": "core_guides/deployment/local_implementation.html"}, {"title": "P-WOS ML Implementation Roadmap", "file": "core_guides/deployment/ml_implementation_roadmap.html"}, {"title": "P-WOS Performance & Architecture Guide (v3.0)", "file": "core_guides/operations/performance_guide.html"}, {"title": "P-WOS Test Suite Documentation", "file": "core_guides/operations/tests.html"}, {"title": "P-WOS Troubleshooting Guide", "file": "core_guides/operations/troubleshooting.html"}, {"title": "P-WOS Documentation Portal - Home Page Guide", "file": "core_guides/setup/HOME_PAGE_GUIDE.html"}, {"title": "P-WOS Installation Guide", "file": "core_guides/setup/installation_guide.html"}, {"title": "P-WOS Quick Start Guide", "file": "core_guides/setup/QUICKSTART.html"}, {"title": "P-WOS Documentation Portal - Restructured", "file": "core_guides/setup/README_RESTRUCTURE.html"}, {"title": "Table of Contents Sidebar - Toggle Feature", "file": "core_guides/setup/SIDEBAR_TOGGLE_GUIDE.html"}, {"title": "Backend Architecture & Guide", "file": "core_guides/technical/backend_guide.html"}, {"title": "P-WOS Database Guide", "file": "core_guides/technical/database_guide.html"}, {"title": "ESP32 Firmware Guide", "file": "core_guides/technical/firmware_guide.html"}, {"title": "Analytics Dashboard Guide", "file": "core_guides/ui/analytics_dashboard.html"}, {"title": "Main Dashboard Guide", "file": "core_guides/ui/main_dashboard.html"}, {"title": "P-WOS React Native Mobile Application Guide", "file": "core_guides/ui/mobile_guide.html"}]}, {"category": "System Architecture", "icon": "cpu", "pages": [{"title": "07 — System Behaviour", "file": "system_architecture/README.html"}, {"title": "Analytics & Dashboard Reference", "file": "system_architecture/analytics_reference.html"}, {"title": "Crop Profiles & Regional Adaptation", "file": "system_architecture/crop_profiles.html"}, {"title": "Dataflow", "file": "system_architecture/dataflow.html"}, {"title": "Edge Cases & Scenario Handbook", "file": "system_architecture/edge_cases_and_scenarios.html"}, {"title": "System Architectures & Development Process", "file": "system_architecture/system_architectures.html"}, {"title": "System Overview Specifications", "file": "system_architecture/system_overview.html"}, {"title": "VPD & Weather Engine", "file": "system_architecture/vpd_and_weather_engine.html"}]}, {"category": "Machine Learning", "icon": "brain", "pages": [{"title": "P-WOS Machine Learning", "file": "ml/README.html"}, {"title": "Feature Engineering & Physics Calculations", "file": "ml/feature_engineering.html"}, {"title": "ML Model Deep Dive", "file": "ml/ml_model_deep_dive.html"}, {"title": "ML Model Guide & Architecture", "file": "ml/ml_model_guide.html"}]}, {"category": "Hardware", "icon": "circuit-board", "pages": [{"title": "P-WOS Hardware Documentation", "file": "hardware/README.html"}, {"title": "P-WOS Hardware & Cloud Architecture", "file": "hardware/architecture/hardware_architecture.html"}, {"title": "GL No.12 Solderless Breadboard", "file": "hardware/guides/breadboard.html"}, {"title": "P-WOS Breadboard Assembly Guide", "file": "hardware/guides/breadboard_assembly.html"}, {"title": "Hardware Setup Guide", "file": "hardware/guides/hardware_setup.html"}, {"title": "P-WOS Hardware Migration Plan", "file": "hardware/planning/hardware_migration_plan.html"}, {"title": "P-WOS Hardware Components Shopping List", "file": "hardware/planning/hardware_shopping_list.html"}, {"title": "reports", "file": "hardware/reports/README.html"}, {"title": "P-WOS Hardware Progress Log", "file": "hardware/reports/hardware_progress.html"}, {"title": "P-WOS Phase 1 Report: ESP32 Setup & First Upload", "file": "hardware/reports/phase1_report.html"}, {"title": "P-WOS Hardware Testing Report", "file": "hardware/reports/testing_report.html"}]}, {"category": "Simulation", "icon": "monitor", "pages": [{"title": "P-WOS Simulation (Digital Twin)", "file": "simulation/README.html"}, {"title": "Data Generation & Database Testing", "file": "simulation/data_generation.html"}, {"title": "Simulation Physics & Environmental Modeling", "file": "simulation/physics_model.html"}, {"title": "Simulation Scenarios Reference", "file": "simulation/scenarios.html"}, {"title": "Simulation Guide", "file": "simulation/simulation_guide.html"}]}, {"category": "Scientific Research", "icon": "flask-conical", "pages": [{"title": "Codebase Analysis: P-WOS (Predictive Watering Optimization System)", "file": "scientific_research/analysis/codebase_analysis.html"}, {"title": "P-WOS Complete Codebase Audit", "file": "scientific_research/analysis/codebase_audit.html"}, {"title": "P-WOS Crop & Region Integration Plan", "file": "scientific_research/planning/crop_integration_plan.html"}]}, {"category": "Reports and Validation", "icon": "bar-chart", "pages": [{"title": "reports", "file": "reports_and_validation/README.html"}, {"title": "P-WOS Final Report", "file": "reports_and_validation/analysis/final_report.html"}, {"title": "Moisture Fluctuation Analysis Report", "file": "reports_and_validation/analysis/moisture_analysis.html"}, {"title": "P-WOS Simulation Analysis Report", "file": "reports_and_validation/analysis/simulation_analysis.html"}, {"title": "P-WOS Validation Report", "file": "reports_and_validation/analysis/validation_report.html"}, {"title": "P-WOS Simulation Phase Report", "file": "reports_and_validation/phases/phase_01_setup_report.html"}, {"title": "P-WOS Data Intelligence Report (Phase 5)", "file": "reports_and_validation/phases/phase_05_ml_report.html"}, {"title": "P-WOS Modernization Report (Phase 3)", "file": "reports_and_validation/phases/phase_06_frontend_report.html"}]}, {"category": "Technical Reference", "icon": "book", "pages": [{"title": "reference", "file": "technical_reference/README.html"}, {"title": "P-WOS Technical Development Roadmap", "file": "technical_reference/development_roadmap.html"}, {"title": "DEVELOPMENT GUIDELINES", "file": "technical_reference/guidelines/coding_guidelines.html"}, {"title": "Project Structure Guide", "file": "technical_reference/guidelines/project_structure.html"}, {"title": "P-WOS API Reference", "file": "technical_reference/specs/api_reference.html"}, {"title": "MQTT Topics Reference", "file": "technical_reference/specs/mqtt_topics.html"}, {"title": "VPD & Weather Scenarios Reference", "file": "technical_reference/specs/vpd_scenarios.html"}]}];
+
+        let expandedGroups = {};
+
+        function initTheme() {
+            const saved = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(saved);
+        }
+
+        function setTheme(theme) {
+            document.body.classList.remove('theme-light', 'theme-dark');
+            document.documentElement.classList.remove('dark');
+            const hljsLight = document.getElementById('hljs-light-theme');
+            const hljsDark = document.getElementById('hljs-dark-theme');
+            if (theme === 'dark') {
+                document.body.classList.add('theme-dark');
+                document.documentElement.classList.add('dark');
+                if (hljsLight) hljsLight.disabled = true;
+                if (hljsDark) hljsDark.disabled = false;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'moon');
+            } else {
+                document.body.classList.add('theme-light');
+                if (hljsLight) hljsLight.disabled = false;
+                if (hljsDark) hljsDark.disabled = true;
+                document.getElementById('themeIcon').setAttribute('data-lucide', 'sun');
+            }
+            localStorage.setItem('pwos-theme', theme);
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            const current = localStorage.getItem('pwos-theme') || 'light';
+            setTheme(current === 'light' ? 'dark' : 'light');
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        function renderSidebar(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = docs.map(function(group, gi) {
+                const isOpen = expandedGroups[gi] || false;
+                return '<div class="sidebar-group">' +
+                    '<button onclick="toggleGroup(' + gi + ')" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' +
+                        '<span class="flex items-center gap-2"><i data-lucide="' + group.icon + '" class="w-4 h-4"></i><span>' + group.category + '</span></span>' +
+                        '<i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200 ' + (isOpen ? 'rotate-0' : '-rotate-90') + '"></i>' +
+                    '</button>' +
+                    '<div class="sidebar-group-enter ' + (isOpen ? 'active' : '') + '">' +
+                        '<ul class="ml-6 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3 pb-1">' +
+                            group.pages.map(function(page) {
+                                return '<li><a href="../' + page.file + '" data-file="' + page.file + '" class="block px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 transition">' + page.title + '</a></li>';
+                            }).join('') +
+                        '</ul>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function toggleGroup(idx) {
+            expandedGroups[idx] = !expandedGroups[idx];
+            renderSidebar('sidebarGroups');
+            renderSidebar('mobileSidebarGroups');
+        }
+
+        function setupSearch(inputId, containerId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('input', function(e) {
+                const q = e.target.value.toLowerCase().trim();
+                
+                let matchingFiles = new Set();
+                if (q !== '' && typeof searchIndex !== 'undefined') {
+                    for (let i = 0; i < searchIndex.length; i++) {
+                        if (searchIndex[i].title.toLowerCase().includes(q) || searchIndex[i].content.includes(q)) {
+                            matchingFiles.add(searchIndex[i].file);
+                        }
+                    }
+                }
+
+                document.querySelectorAll('#' + containerId + ' .sidebar-group').forEach(function(groupEl) {
+                    let hasVisibleChild = false;
+                    groupEl.querySelectorAll('li a').forEach(function(linkEl) {
+                        const dataFile = linkEl.getAttribute('data-file');
+                        const isMatch = q === '' || (matchingFiles.has(dataFile) || linkEl.textContent.toLowerCase().includes(q));
+                        linkEl.parentElement.style.display = isMatch ? '' : 'none';
+                        if (isMatch) hasVisibleChild = true;
+                    });
+                    groupEl.style.display = hasVisibleChild ? '' : 'none';
+                    
+                    const btnIcon = groupEl.querySelector('button i.lucide-chevron-down');
+                    const groupEnter = groupEl.querySelector('.sidebar-group-enter');
+                    if (q !== '' && hasVisibleChild) {
+                        groupEnter.classList.add('active');
+                        if (btnIcon) btnIcon.classList.remove('-rotate-90');
+                    }
+                });
+            });
+        }
+
+        setupSearch('docSearch', 'sidebarGroups');
+        setupSearch('mobileDocSearch', 'mobileSidebarGroups');
+
+        function openMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            sidebar.classList.remove('hidden');
+            setTimeout(function() { panel.classList.remove('-translate-x-full'); }, 10);
+        }
+
+        function closeMobileNav() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const panel = sidebar.querySelector('.relative');
+            panel.classList.add('-translate-x-full');
+            setTimeout(function() { sidebar.classList.add('hidden'); }, 300);
+        }
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', openMobileNav);
+        document.getElementById('closeMobileNav').addEventListener('click', closeMobileNav);
+        document.getElementById('navOverlay').addEventListener('click', closeMobileNav);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const output = document.getElementById('markdownOutput');
+            if (!output) return;
+
+            output.querySelectorAll('pre code').forEach(function(block) { hljs.highlightElement(block); });
+
+            try {
+                renderMathInElement(output, {
+                    delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}],
+                    throwOnError: false
+                });
+            } catch(e) {}
+
+            try {
+                mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+                mermaid.run({ nodes: output.querySelectorAll('.mermaid') });
+            } catch(e) {}
+
+            buildTOC(output);
+        });
+
+        function buildTOC(container) {
+            const list = document.getElementById('tocList');
+            if (!list) return;
+            list.innerHTML = '';
+            const headings = container.querySelectorAll('h2, h3');
+            if (headings.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'text-slate-400 italic';
+                li.textContent = 'No sub-headers on page';
+                list.appendChild(li);
+                return;
+            }
+            headings.forEach(function(heading, idx) {
+                const anchorId = 'toc-anchor-' + idx;
+                heading.setAttribute('id', anchorId);
+                const li = document.createElement('li');
+                const isSub = heading.tagName.toLowerCase() === 'h3';
+                li.className = 'transition-colors duration-150 ' + (isSub ? 'pl-3 border-l border-slate-100 dark:border-slate-800 ml-1 py-0.5' : 'font-medium py-1');
+                const link = document.createElement('a');
+                link.href = '#' + anchorId;
+                link.className = 'hover:text-emerald-500 block truncate transition-colors';
+                link.textContent = heading.textContent;
+                link.onclick = function(e) { e.preventDefault(); heading.scrollIntoView({ behavior: 'smooth' }); };
+                li.appendChild(link);
+                list.appendChild(li);
+            });
+        }
+
+        const mainEl = document.querySelector('main');
+        if (mainEl) {
+            mainEl.addEventListener('scroll', function() {
+                const scrollTop = mainEl.scrollTop;
+                const scrollHeight = mainEl.scrollHeight - mainEl.clientHeight;
+                document.getElementById('readingProgress').style.width = (scrollTop / Math.max(scrollHeight, 1)) * 100 + '%';
+            });
+        }
+
+        const copyBtn = document.getElementById('copyDocBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                const content = document.getElementById('markdownOutput')?.innerText;
+                if (!content) return;
+                navigator.clipboard.writeText(content).then(function() {
+                    copyBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>';
+                    lucide.createIcons();
+                    setTimeout(function() {
+                        copyBtn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
+                        lucide.createIcons();
+                    }, 1500);
+                });
+            });
+        }
+
+        initTheme();
+        renderSidebar('sidebarGroups');
+        renderSidebar('mobileSidebarGroups');
+    </script>
+</body>
+</html>

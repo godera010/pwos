@@ -1,11 +1,12 @@
 import mqtt from 'mqtt';
 
-const MQTT_BROKER = 'ws://localhost:9001';
+const MQTT_BROKER = `ws://${window.location.hostname}:9001`;
 
 class MqttService {
     client: mqtt.MqttClient | null = null;
     listeners: { [topic: string]: ((message: any) => void)[] } = {};
     connectionStatusListeners: ((status: boolean) => void)[] = [];
+    lastMessages: { [topic: string]: any } = {};
 
     connect() {
         if (this.client) return;
@@ -40,6 +41,9 @@ class MqttService {
             } catch (e) {
                 // Not JSON
             }
+            
+            this.lastMessages[topic] = parsedMessage;
+
             if (this.listeners[topic]) {
                 this.listeners[topic].forEach(cb => cb(parsedMessage));
             }
@@ -58,11 +62,18 @@ class MqttService {
     }
 
     onConnectionChange(callback: (status: boolean) => void) {
-        this.connectionStatusListeners.push(callback);
+        // Prevent duplicate listeners
+        if (!this.connectionStatusListeners.includes(callback)) {
+            this.connectionStatusListeners.push(callback);
+        }
         // Immediately notify of current state
         if (this.client) {
             callback(this.client.connected);
         }
+    }
+
+    removeConnectionListener(callback: (status: boolean) => void) {
+        this.connectionStatusListeners = this.connectionStatusListeners.filter(cb => cb !== callback);
     }
 
     isConnected(): boolean {
@@ -74,6 +85,10 @@ class MqttService {
             this.listeners[topic] = [];
         }
         this.listeners[topic].push(callback);
+
+        if (topic in this.lastMessages) {
+            callback(this.lastMessages[topic]);
+        }
     }
 
     unsubscribe(topic: string, callback: (message: any) => void) {

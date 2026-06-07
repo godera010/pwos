@@ -172,8 +172,8 @@ void loop() {
     esp_task_wdt_reset();
 
     #if WIFI_ENABLED
-        // --- WiFi Check (every 10s) ---
-        if (now - lastWifiCheck > 10000) {
+        // --- WiFi Check (respects exponential backoff via wifiReconnectDelay) ---
+        if (now - lastWifiCheck > wifiReconnectDelay) {
             lastWifiCheck = now;
             if (WiFi.status() != WL_CONNECTED) {
                 Serial.println("[WARN] WiFi disconnected, reconnecting...");
@@ -289,6 +289,14 @@ void connectWiFi() {
 
     int timeout = 30; // 30 seconds
     while (WiFi.status() != WL_CONNECTED && timeout > 0) {
+        // Feed watchdog — prevents 30s panic reboot if AP is slow/offline
+        esp_task_wdt_reset();
+
+        // Safety: stop pump if its timer expired while we are reconnecting
+        if (pumpActive && (millis() - pumpStartMs >= pumpDurationMs)) {
+            stopPump();
+        }
+
         delay(1000);
         Serial.print(".");
         timeout--;
@@ -378,7 +386,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 // PUMP CONTROL (Non-blocking)
 // ============================================================================
 void handlePumpCommand(const char* message) {
-    StaticJsonDocument<256> doc;
+    JsonDocument doc; // ArduinoJson v7 — heap-allocated, size auto-managed
     DeserializationError error = deserializeJson(doc, message);
 
     if (error) {
@@ -387,7 +395,8 @@ void handlePumpCommand(const char* message) {
     }
 
     const char* action = doc["action"] | "OFF";
-    int duration = doc["duration"] | 30;
+    float raw_duration = doc["duration"] | 2.0f;
+    int duration = (int)raw_duration;
 
     if (strcmp(action, "ON") == 0) {
         if (duration <= 0) {
@@ -402,10 +411,10 @@ void handlePumpCommand(const char* message) {
 
 void startPump(int durationSeconds) {
     if (pumpActive) {
-        // Extend current run
-        pumpDurationMs += (unsigned long)durationSeconds * 1000;
-        Serial.printf("[PUMP] Extended by %ds (total: %lus)\n",
-                      durationSeconds, pumpDurationMs / 1000);
+        // Reset timer instead of compounding to prevent MQTT retry bugs
+        pumpDurationMs = (unsigned long)durationSeconds * 1000;
+        pumpStartMs = millis();
+        Serial.printf("[PUMP] Timer reset to %ds\n", durationSeconds);
     } else {
         pumpActive    = true;
         pumpStartMs   = millis();
@@ -442,7 +451,7 @@ float readSoilMoisture() {
     if (avgRaw > SOIL_WET) return 100.0;
     if (avgRaw <= SOIL_DRY) return 0.0;
     
-    float moisture = map(avgRaw, SOIL_DRY, SOIL_WET, 0, 100);
+    float moisture = (float)(avgRaw - SOIL_DRY) * 100.0f / (float)(SOIL_WET - SOIL_DRY);
     if (moisture > 100.0) return 100.0;
     if (moisture < 0.0) return 0.0;
 
@@ -501,7 +510,7 @@ void publishSensorData() {
     SensorData data = readAllSensors();
 
     // Build JSON payload (matches simulator format for backend compatibility)
-    StaticJsonDocument<384> doc;
+    JsonDocument doc; // ArduinoJson v7
     doc["device_id"]     = DEVICE_ID;
     doc["timestamp"]     = millis(); // Backend will use server time
     doc["soil_moisture"]  = round2(data.soilMoisture);
@@ -538,7 +547,7 @@ void publishSensorData() {
 // HEARTBEAT
 // ============================================================================
 void publishHeartbeat() {
-    StaticJsonDocument<256> doc;
+    JsonDocument doc; // ArduinoJson v7
     doc["device_id"]   = DEVICE_ID;
     doc["uptime_ms"]   = millis();
     doc["free_heap"]   = ESP.getFreeHeap();
@@ -607,5 +616,6 @@ void updateStatusLED(unsigned long now) {
 // UTILITY
 // ============================================================================
 float round2(float value) {
-    return (int)(value * 100 + 0.5) / 100.0;
+    // Use roundf() — correct for both positive and negative floats
+    return roundf(value * 100.0f) / 100.0f;
 }

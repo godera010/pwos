@@ -49,7 +49,7 @@ class BackgroundScheduler:
         # Let's do it every day at midnight
         schedule.every().day.at("00:00").do(job_retrain_model)
         
-        # FOr testing now: also run every 6 hours
+        # For testing: also run every 6 hours
         schedule.every(6).hours.do(job_retrain_model)
         
         logger.info("Scheduler started. Jobs configured.")

@@ -266,7 +266,8 @@ class ScenarioSimulator:
             'soil_moisture': field['moisture'],
             'temperature': weather['temperature'],
             'humidity': weather['humidity'],
-            'forecast_minutes': weather['forecast_minutes']
+            'forecast_minutes': weather['forecast_minutes'],
+            'weather_source': 'simulation'
         })
         
         # Act on recommendation
