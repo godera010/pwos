@@ -119,6 +119,7 @@ htmlcov/
 !data/exports/*.sql
 !models/*.pkl
 !models/*.json
+!src/frontend/src/lib/
 
 # ==============================================================================
 # folders
