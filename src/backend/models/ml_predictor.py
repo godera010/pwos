@@ -221,10 +221,6 @@ class MLPredictor:
         precip    = float(current_data.get('precipitation_chance', 0))
         f_temp    = float(current_data.get('forecast_temp', temp))
 
-        # ── Sensor validity guard ────────────────────────────────
-        if not self._check_sensor(moisture, history_df):
-            return self._build('STOP', 0, None, {}, 0, 'SENSOR_ERROR',
-                               'Broken or disconnected sensor detected.', moisture)
 
         # ── Compute VPD ──────────────────────────────────────────
         vpd = float(calculate_vpd(temp, humidity))

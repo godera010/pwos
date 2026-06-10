@@ -403,7 +403,7 @@ export const actions = {
     const MOISTURE_SATURATION_HIGH = (state.activeCrop?.target_moisture ?? 60) + 15;
 
     // Critical Dry Override: If in MANUAL mode and moisture drops below critical low, engage Autopilot
-    if (state.systemMode === 'MANUAL' && moisture >= 1.0 && moisture < MOISTURE_CRITICAL_LOW) {
+    if (state.systemMode === 'MANUAL' && moisture < MOISTURE_CRITICAL_LOW) {
       actions.addMqttLog(`Safety Override: Soil too dry (${moisture.toFixed(1)}%). Automatically activating AUTO mode.`);
       actions.toggleSystemMode();
       return;

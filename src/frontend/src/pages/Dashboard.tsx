@@ -172,7 +172,7 @@ export const Dashboard: React.FC = () => {
         if (!isHardwareOnline) return;
         const moisture = Number(sensors.soil_moisture) || 0;
 
-        if (!isAuto && moisture >= 1.0 && moisture < MOISTURE_CRITICAL_LOW) {
+        if (!isAuto && moisture < MOISTURE_CRITICAL_LOW) {
             pumpManuallyOn.current = false;
             publishSystemMode('AUTO');
             toast.error('Critical Override: Soil Too Dry', {
@@ -389,9 +389,7 @@ export const Dashboard: React.FC = () => {
                                     />
                                     <div className="mt-4 text-center max-w-xs">
                                         <span className={`text-xs font-black uppercase px-3 py-1 rounded-full border ${
-                                            displayMoisture < 1.0
-                                                ? 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
-                                                : displayMoisture < MOISTURE_CRITICAL_LOW
+                                            displayMoisture < MOISTURE_CRITICAL_LOW
                                                 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
                                                 : displayMoisture < (settings?.moisture_threshold ?? 35)
                                                 ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20'
@@ -399,15 +397,12 @@ export const Dashboard: React.FC = () => {
                                                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                                                 : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 animate-pulse'
                                         }`}>
-                                            {displayMoisture < 1.0 ? 'Sensor Error' :
-                                             displayMoisture < MOISTURE_CRITICAL_LOW ? 'Critical Dry' :
+                                            {displayMoisture < MOISTURE_CRITICAL_LOW ? 'Critical Dry' :
                                              displayMoisture < (settings?.moisture_threshold ?? 35) ? 'Low Moisture' :
                                              displayMoisture < MOISTURE_SATURATION_HIGH ? 'Optimal' : 'Saturated Limit'}
                                         </span>
                                         <p className={`text-[10px] mt-3 font-semibold tracking-wide leading-relaxed ${
-                                            displayMoisture < 1.0
-                                                ? 'text-red-500 animate-pulse'
-                                                : displayMoisture < MOISTURE_CRITICAL_LOW
+                                            displayMoisture < MOISTURE_CRITICAL_LOW
                                                 ? 'text-rose-500 animate-pulse'
                                                 : displayMoisture < (settings?.moisture_threshold ?? 35)
                                                 ? 'text-orange-500'
@@ -415,8 +410,7 @@ export const Dashboard: React.FC = () => {
                                                 ? 'text-emerald-500'
                                                 : 'text-cyan-500'
                                         }`}>
-                                            {displayMoisture < 1.0 ? `Broken or disconnected sensor detected. Auto-irrigation halted.` :
-                                             displayMoisture < MOISTURE_CRITICAL_LOW ? `Soil critically dry (<${MOISTURE_CRITICAL_LOW}%). Failsafe auto-irrigation engaged.` :
+                                            {displayMoisture < MOISTURE_CRITICAL_LOW ? `Soil critically dry (<${MOISTURE_CRITICAL_LOW}%). Failsafe auto-irrigation engaged.` :
                                              displayMoisture < (settings?.moisture_threshold ?? 35) ? `Moisture low. Autopilot scheduled to trigger soon.` :
                                              displayMoisture < MOISTURE_SATURATION_HIGH ? `Moisture optimal for ${activeCrop?.name || 'crop'} growth.` :
                                              `Soil saturated (≥${MOISTURE_SATURATION_HIGH}%). Pump locked out to prevent root rot.`}
@@ -616,12 +610,14 @@ export const Dashboard: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* ── Main Premium AI Prediction Card (Custom IntelligenceCard) ── */}
                 <IntelligenceCard
-                    soilMoisture={Number(sensors.soil_moisture) || 58.2}
-                    vpd={vpd || 1.08}
-                    confidence={prediction?.ml_analysis?.confidence ?? 100}
-                    statusText={prediction?.ml_analysis?.system_status === 'ACTIVE' ? 'Active' : (backendOffline ? 'Offline' : 'Active')}
-                    subtitleText={backendOffline ? 'API Offline' : (prediction?.ml_analysis?.reason || 'Soil values balanced')}
-                    lastUpdateText={logs[0] ? getRelativeTime(logs[0].timestamp) : '2 min ago'}
+                    soilMoisture={Number(sensors.soil_moisture) || 0}
+                    vpd={vpd}
+                    confidence={prediction?.ml_analysis?.confidence ?? 0}
+                    subtitleText={backendOffline ? 'Backend API unreachable — predictions unavailable' : (prediction?.ml_analysis?.reason || 'Awaiting prediction data...')}
+                    lastUpdateText={logs[0] ? getRelativeTime(logs[0].timestamp) : '--'}
+                    recommendedAction={prediction?.recommended_action}
+                    systemStatus={prediction?.ml_analysis?.system_status}
+                    isOffline={backendOffline}
                     moistureHistory={history.length >= 2 ? history.slice(-9).map(h => h.soil_moisture) : undefined}
                     vpdHistory={history.length >= 2 ? history.slice(-9).map(h => {
                         if (h.vpd !== undefined && h.vpd > 0) return h.vpd;
@@ -630,7 +626,7 @@ export const Dashboard: React.FC = () => {
                         const e_s = 0.61078 * Math.exp((17.27 * T) / (T + 237.3));
                         const e_a = e_s * (RH / 100);
                         const calculatedVpd = e_s - e_a;
-                        return calculatedVpd > 0 ? calculatedVpd : 0.8;
+                        return calculatedVpd > 0 ? calculatedVpd : 0;
                     }) : undefined}
                 />
 

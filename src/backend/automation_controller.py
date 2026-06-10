@@ -88,9 +88,7 @@ def run_autopilot():
                     # Safety overrides even in manual mode
                     moisture = _get_moisture(logger)
                     if moisture is not None:
-                        # If sensor is broken (moisture < 1.0), do not trigger safety override for critical low.
-                        # We let the user manually operate the pump, or we rely on other safety mechanisms.
-                        if moisture >= 1.0 and moisture < critical_limit:
+                        if moisture < critical_limit:
                             logger.warning(f"SAFETY: Manual mode but moisture {moisture:.1f}% critically low. Forcing AUTO.")
                             _set_mode('AUTO', logger)
                             _post_log(logger, f"Safety Override: moisture {moisture:.1f}% below critical {critical_limit}%. Forced AUTO.", "ERROR")
