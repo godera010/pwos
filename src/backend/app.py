@@ -22,7 +22,6 @@ from src.backend.models.ml_predictor import MLPredictor
 from src.backend.utils.vpd_calculator import calculate_vpd
 
 import logging
-from logging.handlers import RotatingFileHandler
 import time
 import threading
 from collections import deque
@@ -42,7 +41,6 @@ log_dir = os.path.join(project_root, "logs", "app")
 # Create 'logs/app' directory if it doesn't exist
 os.makedirs(log_dir, exist_ok=True)
 
-# Configure file logging
 # Configure file logging
 log_file_path = os.path.join(log_dir, 'app.log')
 # Use standard FileHandler instead of RotatingFileHandler to avoid WinError 32 (file lock) on Windows with Flask reloader
@@ -75,7 +73,9 @@ def log_response_info(response):
 db = PWOSDatabase()
 predictor = MLPredictor()
 
-# Global state for latest sensor data (thread-safe ideally, but simple dict for now)
+# Global state shared between the MQTT thread and Flask request threads.
+# All mutations and multi-key reads must hold state_lock.
+state_lock = threading.Lock()
 latest_sensor_data = {'weather_source': 'initializing'}
 
 # In-memory history cache to avoid database latency on ML predictions
@@ -86,6 +86,22 @@ system_state = {
     'pump_active': False,
     'hardware_status': 'OFFLINE',
 }
+
+# Single background worker for ML decision logging (avoids one thread per request)
+import queue
+ml_decision_queue = queue.Queue(maxsize=1000)
+
+def _ml_decision_log_worker():
+    while True:
+        record = ml_decision_queue.get()
+        try:
+            db.insert_ml_decision(record)
+        except Exception as e:
+            app.logger.error(f"[ML LOG] Failed to log decision: {e}")
+        finally:
+            ml_decision_queue.task_done()
+
+threading.Thread(target=_ml_decision_log_worker, daemon=True).start()
 
 client_id = f"PWOS_API_{random.randint(1000, 9999)}"
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id)
@@ -104,6 +120,43 @@ def on_connect(client, userdata, flags, rc, properties=None):
 from src.config import WEATHER_API_MODE
 from src.backend.weather_api import weather_api
 
+def _merge_weather_forecast(forecast):
+    """Merge a weather forecast into latest_sensor_data (thread-safe)."""
+    weather_update = {
+        'forecast_minutes': forecast.get('forecast_minutes', 0),
+        'rain_intensity': forecast.get('rain_intensity', 0.0),
+        'cloud_cover': forecast.get('cloud_cover', 0.0),
+        'weather_condition': forecast.get('condition', 'unknown'),
+        'precipitation_chance': forecast.get('precipitation_chance', 0),
+        'wind_speed': forecast.get('wind_speed', 0.0),
+        'forecast_temp': forecast.get('forecast_temp', 0.0),
+        'forecast_humidity': forecast.get('forecast_humidity', 0.0),
+        'weather_source': forecast.get('source', 'openweathermap'),
+        'weather_updated_at': datetime.now().isoformat()
+    }
+    with state_lock:
+        latest_sensor_data.update(weather_update)
+
+# Single-flight guard so at most one background weather refresh runs at a time
+_weather_refresh_inflight = threading.Event()
+
+def _refresh_weather_async():
+    """Fetch weather on a background thread so the MQTT ingest thread never
+    blocks on HTTP (a cache-miss fetch costs up to 2x5s timeouts)."""
+    if _weather_refresh_inflight.is_set():
+        return
+    _weather_refresh_inflight.set()
+
+    def _job():
+        try:
+            _merge_weather_forecast(weather_api.get_forecast())
+        except Exception as e:
+            app.logger.warning(f"Async weather refresh failed: {e}")
+        finally:
+            _weather_refresh_inflight.clear()
+
+    threading.Thread(target=_job, daemon=True).start()
+
 def on_message(client, userdata, msg):
     try:
         topic = msg.topic
@@ -113,13 +166,15 @@ def on_message(client, userdata, msg):
         if topic == "pwos/system/mode":
             mode = raw.upper().strip().strip('"')
             if mode in ["AUTO", "MANUAL"]:
-                system_state['mode'] = mode
+                with state_lock:
+                    system_state['mode'] = mode
                 app.logger.info(f"[MQTT] System mode synchronized to {mode}")
             return
-                
+
         if topic == "pwos/system/hardware":
             status = raw.upper().strip().strip('"')
-            system_state['hardware_status'] = status
+            with state_lock:
+                system_state['hardware_status'] = status
             app.logger.info(f"[MQTT] Hardware status: {status}")
             return
             
@@ -128,31 +183,26 @@ def on_message(client, userdata, msg):
         
         if topic == "pwos/sensor/data":
             # Update sensor values (use server time — ESP32 sends millis())
-            latest_sensor_data.update({
-                'soil_moisture': payload.get('soil_moisture'),
-                'temperature': payload.get('temperature'),
-                'humidity': payload.get('humidity'),
-                'timestamp': datetime.now().isoformat()
-            })
+            with state_lock:
+                latest_sensor_data.update({
+                    'soil_moisture': payload.get('soil_moisture'),
+                    'temperature': payload.get('temperature'),
+                    'humidity': payload.get('humidity'),
+                    'timestamp': datetime.now().isoformat()
+                })
 
-            # If in Real Weather Mode, fetch forecast NOW and update latest_sensor_data
+            # If in Real Weather Mode, merge the current forecast.
+            # Inline only when the answer is already cached (sub-ms); a cache
+            # miss goes to a background thread so this MQTT callback — which
+            # every subsequent sensor message queues behind — never blocks on HTTP.
             if WEATHER_API_MODE == 'openweathermap':
-                try:
-                    forecast = weather_api.get_forecast()
-                    latest_sensor_data.update({
-                        'forecast_minutes': forecast.get('forecast_minutes', 0),
-                        'rain_intensity': forecast.get('rain_intensity', 0.0),
-                        'cloud_cover': forecast.get('cloud_cover', 0.0),
-                        'weather_condition': forecast.get('condition', 'unknown'),
-                        'precipitation_chance': forecast.get('precipitation_chance', 0),
-                        'wind_speed': forecast.get('wind_speed', 0.0),
-                        'forecast_temp': forecast.get('forecast_temp', 0.0),
-                        'forecast_humidity': forecast.get('forecast_humidity', 0.0),
-                        'weather_source': 'openweathermap',
-                        'weather_updated_at': datetime.now().isoformat()
-                    })
-                except Exception as e:
-                    app.logger.warning(f"Failed to fetch real weather on sensor update: {e}")
+                if getattr(weather_api, 'has_fresh_cache', lambda: False)():
+                    try:
+                        _merge_weather_forecast(weather_api.get_forecast())
+                    except Exception as e:
+                        app.logger.warning(f"Failed to fetch real weather on sensor update: {e}")
+                else:
+                    _refresh_weather_async()
             
             # Persist the latest reading to the database
             log_sensor_data()
@@ -164,18 +214,19 @@ def on_message(client, userdata, msg):
             api_is_down = getattr(weather_api, '_api_was_down', False)
             if WEATHER_API_MODE == 'simulation' or api_is_down:
                 source_label = 'simulation' if WEATHER_API_MODE == 'simulation' else 'simulation_fallback'
-                latest_sensor_data.update({
-                    'forecast_minutes': payload.get('forecast_minutes', 0),
-                    'rain_intensity': payload.get('rain_intensity', 0.0),
-                    'cloud_cover': payload.get('cloud_cover', 0.0),
-                    'weather_condition': payload.get('condition', 'unknown'),
-                    'precipitation_chance': payload.get('precipitation_chance', 0),
-                    'wind_speed': payload.get('wind_speed', 0.0),
-                    'forecast_temp': payload.get('temperature') or payload.get('forecast_temp', 0.0),
-                    'forecast_humidity': payload.get('humidity') or payload.get('forecast_humidity', 0.0),
-                    'weather_source': source_label,
-                    'weather_updated_at': datetime.now().isoformat()
-                })
+                with state_lock:
+                    latest_sensor_data.update({
+                        'forecast_minutes': payload.get('forecast_minutes', 0),
+                        'rain_intensity': payload.get('rain_intensity', 0.0),
+                        'cloud_cover': payload.get('cloud_cover', 0.0),
+                        'weather_condition': payload.get('condition', 'unknown'),
+                        'precipitation_chance': payload.get('precipitation_chance', 0),
+                        'wind_speed': payload.get('wind_speed', 0.0),
+                        'forecast_temp': payload.get('temperature') or payload.get('forecast_temp', 0.0),
+                        'forecast_humidity': payload.get('humidity') or payload.get('forecast_humidity', 0.0),
+                        'weather_source': source_label,
+                        'weather_updated_at': datetime.now().isoformat()
+                    })
             
     except Exception as e:
         app.logger.error(f"API MQTT Message Error: {e}")
@@ -183,12 +234,15 @@ def on_message(client, userdata, msg):
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
 
-# Connect to MQTT broker
-try:
-    mqtt_client.connect("localhost", 1883, 60)
-    mqtt_client.loop_start()
-except Exception as e:
-    app.logger.warning(f"MQTT connection failed: {e}")
+# Connect to MQTT broker.
+# Skipped under pytest: a live broker feeding on_message during a test run does
+# DB writes and weather fetches inside the test process, skewing benchmarks.
+if 'pytest' not in sys.modules:
+    try:
+        mqtt_client.connect("localhost", 1883, 60)
+        mqtt_client.loop_start()
+    except Exception as e:
+        app.logger.warning(f"MQTT connection failed: {e}")
 
 # ML Prediction logic is now handled by the MLPredictor class
 
@@ -365,12 +419,15 @@ def control_pump():
         })
         
         result = mqtt_client.publish('pwos/control/pump', payload)
-        
+        mqtt_ok = (result.rc == mqtt.MQTT_ERR_SUCCESS)
+        if not mqtt_ok:
+            app.logger.warning(f"MQTT publish of pump command failed (rc={result.rc}); hardware may not have received it")
+
         # Determine trigger type (Default to MANUAL if not specified)
         trigger_source = data.get('trigger_source', 'MANUAL')
         
         # Log watering event
-        if action == 'ON' and moisture_before:
+        if action == 'ON' and moisture_before is not None:
             event_id = db.insert_watering_event(
                 duration=duration,
                 trigger_type=trigger_source,
@@ -389,7 +446,6 @@ def control_pump():
                 except Exception as ex:
                     app.logger.error(f"moisture_after capture failed: {ex}")
             
-            import threading
             # Wait for pump duration + 60s settling time using a lightweight Timer thread
             total_delay = duration + 60
             t = threading.Timer(total_delay, capture_moisture_after, args=[event_id])
@@ -397,14 +453,17 @@ def control_pump():
             t.start()
         
         # Update in-memory pump state
-        system_state['pump_active'] = (action == 'ON')
-        
+        with state_lock:
+            system_state['pump_active'] = (action == 'ON')
+            pump_active = system_state['pump_active']
+
         return jsonify({
             'status': 'success',
             'message': f'Pump {action}',
             'duration': duration,
             'mqtt_result': result.rc,
-            'pump_active': system_state['pump_active']
+            'mqtt_ok': mqtt_ok,
+            'pump_active': pump_active
         })
         
     except Exception as e:
@@ -437,16 +496,17 @@ def get_weather_forecast():
         vpd = calculate_vpd(temp, humidity)
         
         # Update global state for logging and predictions
-        latest_sensor_data.update({
-            'forecast_minutes': rain_minutes,
-            'wind_speed': wind_speed,
-            'precipitation_chance': precipitation,
-            'vpd': vpd,
-            'weather_condition': condition,
-            'forecast_temp': temp,
-            'forecast_humidity': humidity,
-            'weather_source': forecast.get('source', 'openweathermap')
-        })
+        with state_lock:
+            latest_sensor_data.update({
+                'forecast_minutes': rain_minutes,
+                'wind_speed': wind_speed,
+                'precipitation_chance': precipitation,
+                'vpd': vpd,
+                'weather_condition': condition,
+                'forecast_temp': temp,
+                'forecast_humidity': humidity,
+                'weather_source': forecast.get('source', 'openweathermap')
+            })
         
         return jsonify({
             'temperature': temp,
@@ -482,16 +542,21 @@ def predict_next_watering():
     Logic is now centralized in MLPredictor class.
     """
     try:
+        # Snapshot shared state once so the MQTT thread can't mutate it mid-request
+        with state_lock:
+            sensor_data = dict(latest_sensor_data)
+            hardware_status = system_state.get('hardware_status', 'OFFLINE')
+
         # 1. HARDWARE ALIVE CHECK
-        if system_state.get('hardware_status', 'OFFLINE') == 'OFFLINE':
+        if hardware_status == 'OFFLINE':
             return jsonify({
                 'timestamp': datetime.now().isoformat(),
-                'current_moisture': latest_sensor_data.get('soil_moisture', 0.0) if latest_sensor_data else 0.0,
-                'forecast_minutes': latest_sensor_data.get('forecast_minutes', 0) if latest_sensor_data else 0,
+                'current_moisture': sensor_data.get('soil_moisture', 0.0),
+                'forecast_minutes': sensor_data.get('forecast_minutes', 0),
                 'sensor_snapshot': {
-                    'moisture': float(latest_sensor_data.get('soil_moisture', 0.0) if latest_sensor_data else 0.0),
-                    'temperature': float(latest_sensor_data.get('temperature', 0.0) if latest_sensor_data else 0.0),
-                    'humidity': float(latest_sensor_data.get('humidity', 0.0) if latest_sensor_data else 0.0)
+                    'moisture': float(sensor_data.get('soil_moisture') or 0.0),
+                    'temperature': float(sensor_data.get('temperature') or 0.0),
+                    'humidity': float(sensor_data.get('humidity') or 0.0)
                 },
                 'recommended_action': 'STOP',
                 'recommended_duration': 0,
@@ -500,9 +565,7 @@ def predict_next_watering():
             })
 
         # Use real data if available, otherwise return error
-        if latest_sensor_data and 'soil_moisture' in latest_sensor_data:
-            sensor_data = latest_sensor_data
-        else:
+        if 'soil_moisture' not in sensor_data:
             return jsonify({'error': 'No active sensor data available for prediction'}), 503
             
         current_moisture = float(sensor_data.get('soil_moisture', 50))
@@ -526,12 +589,6 @@ def predict_next_watering():
         ml_result = predictor.predict_next_watering(sensor_data, history_df=history_df, active_settings=operational_settings)
 
         # Log ML decision to database asynchronously to eliminate ~20ms write latency
-        def async_log_decision(decision_data):
-            try:
-                db.insert_ml_decision(decision_data)
-            except Exception as e:
-                app.logger.error(f"[ML LOG] Failed to log decision: {e}")
-                
         decision_record = {
             'soil_moisture': current_moisture,
             'temperature': sensor_data.get('temperature', 25),
@@ -548,7 +605,10 @@ def predict_next_watering():
             'recommended_duration': ml_result['recommended_duration'],
             'features': ml_result.get('features_used', {})
         }
-        threading.Thread(target=async_log_decision, args=(decision_record,)).start()
+        try:
+            ml_decision_queue.put_nowait(decision_record)
+        except queue.Full:
+            app.logger.warning("[ML LOG] Decision log queue full — dropping record")
         
         return jsonify({
             'timestamp': datetime.now().isoformat(),
@@ -581,48 +641,55 @@ def get_system_state():
         if 'mode' in data:
             new_mode = data['mode'].upper()
             if new_mode in ('AUTO', 'MANUAL'):
-                system_state['mode'] = new_mode
+                with state_lock:
+                    system_state['mode'] = new_mode
                 mqtt_client.publish('pwos/system/mode', new_mode, retain=True)
                 add_log(f"System mode changed to {new_mode}", category='ACTION')
         if 'pump_active' in data:
-            system_state['pump_active'] = bool(data['pump_active'])
-            
-    return jsonify(system_state)
+            with state_lock:
+                system_state['pump_active'] = bool(data['pump_active'])
+
+    with state_lock:
+        return jsonify(dict(system_state))
 
 def log_sensor_data():
     """Background task to log sensor data with weather context.
     Includes staleness detection for weather data.
     """
-    if latest_sensor_data and 'soil_moisture' in latest_sensor_data:
+    with state_lock:
+        snapshot = dict(latest_sensor_data)
+
+    if snapshot and 'soil_moisture' in snapshot:
         # P3: Weather staleness detection
-        weather_source = latest_sensor_data.get('weather_source', 'none')
-        weather_ts = latest_sensor_data.get('weather_updated_at')
+        weather_source = snapshot.get('weather_source', 'none')
+        weather_ts = snapshot.get('weather_updated_at')
         if weather_ts:
             try:
                 age = (datetime.now() - datetime.fromisoformat(weather_ts)).total_seconds()
                 if age > 600:  # 10 minutes
                     app.logger.warning(f"Weather data is {age/60:.0f}m old — marking as stale")
                     weather_source = 'stale'
-                    latest_sensor_data['weather_source'] = 'stale'
+                    with state_lock:
+                        latest_sensor_data['weather_source'] = 'stale'
             except (ValueError, TypeError):
                 pass
 
         try:
             reading = {
                 'timestamp': datetime.now().isoformat(),
-                'soil_moisture': latest_sensor_data.get('soil_moisture'),
-                'temperature': latest_sensor_data.get('temperature'),
-                'humidity': latest_sensor_data.get('humidity'),
+                'soil_moisture': snapshot.get('soil_moisture'),
+                'temperature': snapshot.get('temperature'),
+                'humidity': snapshot.get('humidity'),
                 'device_id': 'esp32_001',
-                'forecast_minutes': latest_sensor_data.get('forecast_minutes', 0),
-                'wind_speed': latest_sensor_data.get('wind_speed', 0.0),
-                'precipitation_chance': latest_sensor_data.get('precipitation_chance', 0),
-                'vpd': latest_sensor_data.get('vpd', 0.0),
-                'rain_intensity': latest_sensor_data.get('rain_intensity', 0.0),
-                'cloud_cover': latest_sensor_data.get('cloud_cover', 0.0),
-                'forecast_temp': latest_sensor_data.get('forecast_temp', 0.0),
-                'forecast_humidity': latest_sensor_data.get('forecast_humidity', 0.0),
-                'weather_condition': latest_sensor_data.get('weather_condition', 'unknown'),
+                'forecast_minutes': snapshot.get('forecast_minutes', 0),
+                'wind_speed': snapshot.get('wind_speed', 0.0),
+                'precipitation_chance': snapshot.get('precipitation_chance', 0),
+                'vpd': snapshot.get('vpd', 0.0),
+                'rain_intensity': snapshot.get('rain_intensity', 0.0),
+                'cloud_cover': snapshot.get('cloud_cover', 0.0),
+                'forecast_temp': snapshot.get('forecast_temp', 0.0),
+                'forecast_humidity': snapshot.get('forecast_humidity', 0.0),
+                'weather_condition': snapshot.get('weather_condition', 'unknown'),
                 'weather_source': weather_source
             }
             db.insert_sensor_reading(reading)
@@ -1018,7 +1085,6 @@ def model_reload():
 def trigger_retrain():
     """Manually trigger the model retraining pipeline"""
     try:
-        import threading
         from ai_service.retrain_pipeline import run_retraining_pipeline
         
         # Run in background to avoid blocking the HTTP request

@@ -17,8 +17,9 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import TimeSeriesSplit, cross_val_score, RandomizedSearchCV
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import (classification_report, accuracy_score,
-                             confusion_matrix, roc_auc_score)
+                             confusion_matrix, roc_auc_score, brier_score_loss)
 import joblib, json, os, sys, warnings
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -39,11 +40,12 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 # ─────────────────────────────────────────────────────────────────
 # FEATURE LIST — single source of truth shared with ml_predictor
 # ─────────────────────────────────────────────────────────────────
+# growth_stage removed: constant (always 2) in all data sources — importance 0.0
 FEATURES = [
     'soil_moisture', 'temperature', 'humidity', 'vpd',
     'precipitation_chance', 'forecast_temp', 'wind_speed',
     'crop_type_id', 'root_depth_cm', 'wilting_point_threshold',
-    'growth_stage', 'optimal_vpd_min', 'optimal_vpd_max',
+    'optimal_vpd_min', 'optimal_vpd_max',
     'hour', 'is_daytime', 'moisture_change_rate', 'moisture_rolling_6',
 ]
 TARGET = 'needs_watering_soon'
@@ -58,15 +60,18 @@ def train_model():
     logger.info("=" * 65)
 
     # ── 1. Load data ────────────────────────────────────────────
+    # Synthetic CSV intentionally excluded: its labels use the legacy rule-based
+    # (suppression) scheme, which contradicts the outcome-based labels produced
+    # by data_extractor.py and would reintroduce rule-encoding into the model.
     dfs = []
-    for path, label in [(DATA_REAL, 'real'), (DATA_SYNTHETIC, 'synthetic')]:
+    for path, label in [(DATA_REAL, 'real')]:
         if os.path.exists(path):
             df_tmp = pd.read_csv(path)
             logger.info(f"Loaded {len(df_tmp):,} {label} rows from {path}")
             dfs.append(df_tmp)
 
     if not dfs:
-        logger.error("No training data found. Run generate_synthetic_history.py first.")
+        logger.error("No training data found. Run ai_service/data_extractor.py first.")
         return None
 
     df = pd.concat(dfs, ignore_index=True)
@@ -74,8 +79,14 @@ def train_model():
 
     # ── 2. Chronological sort ────────────────────────────────────
     if 'timestamp' in df.columns:
-        df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+        n_before = len(df)
+        # format='mixed' parses per-element; a single inferred format silently
+        # coerces rows from other data sources to NaT and drops them
+        df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce', format='mixed')
         df = df.dropna(subset=['timestamp']).sort_values('timestamp').reset_index(drop=True)
+        dropped = n_before - len(df)
+        if dropped > 0:
+            logger.warning(f"Dropped {dropped:,} rows with unparseable timestamps.")
         logger.info("Sorted chronologically by timestamp.")
     else:
         logger.warning("No timestamp column — cannot guarantee chronological order.")
@@ -96,11 +107,12 @@ def train_model():
     if pos_rate > 85 or pos_rate < 15:
         logger.warning(f"Severe class imbalance ({pos_rate:.1f}%). Check labelling logic.")
 
-    # ── 4. Chronological train / test split (80 / 20) ────────────
+    # ── 4. Chronological train / calibration / test split (70/10/20) ──
+    cal_idx   = int(len(df) * 0.70)
     split_idx = int(len(df) * 0.80)
-    X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
-    y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
-    logger.info(f"Train: {len(X_train):,} rows | Test: {len(X_test):,} rows (chronological 80/20)")
+    X_train, X_cal, X_test = X.iloc[:cal_idx], X.iloc[cal_idx:split_idx], X.iloc[split_idx:]
+    y_train, y_cal, y_test = y.iloc[:cal_idx], y.iloc[cal_idx:split_idx], y.iloc[split_idx:]
+    logger.info(f"Train: {len(X_train):,} | Calibration: {len(X_cal):,} | Test: {len(X_test):,} (chronological)")
 
     # ── 5. Hyperparameter search (optional) ─────────────────────
     if RUN_HYPERPARAM_SEARCH:
@@ -139,6 +151,18 @@ def train_model():
     clf.fit(X_train, y_train)
     logger.info("Training complete.")
 
+    # ── 6b. Probability calibration ──────────────────────────────
+    # The decision logic gates on predict_proba thresholds (0.55/0.70/0.80);
+    # raw Random Forest probabilities are poorly calibrated, so calibrate on a
+    # chronologically later slice the forest never saw.
+    logger.info("Calibrating probabilities (isotonic) on held-out calibration slice...")
+    try:
+        from sklearn.frozen import FrozenEstimator
+        model = CalibratedClassifierCV(FrozenEstimator(clf), method='isotonic')
+    except ImportError:  # sklearn < 1.6
+        model = CalibratedClassifierCV(clf, method='isotonic', cv='prefit')
+    model.fit(X_cal, y_cal)
+
     # ── 7. Time-series cross-validation (honest variance) ────────
     logger.info("Running 5-fold TimeSeriesSplit cross-validation...")
     tscv = TimeSeriesSplit(n_splits=5)
@@ -149,15 +173,19 @@ def train_model():
     logger.info(f"CV Acc : {cv_acc.mean():.4f}  ±{cv_acc.std():.4f}")
     logger.info(f"CV AUC : {cv_auc.mean():.4f}  ±{cv_auc.std():.4f}")
 
-    # ── 8. Held-out test evaluation ──────────────────────────────
+    # ── 8. Held-out test evaluation (calibrated model) ───────────
     logger.info("Evaluating on held-out chronological test set...")
-    y_pred  = clf.predict(X_test)
-    y_proba = clf.predict_proba(X_test)[:, 1]
+    y_pred  = model.predict(X_test)
+    y_proba = model.predict_proba(X_test)[:, 1]
 
     acc    = accuracy_score(y_test, y_pred)
     auc    = roc_auc_score(y_test, y_proba)
     report = classification_report(y_test, y_pred, output_dict=True)
     cm     = confusion_matrix(y_test, y_pred).tolist()
+
+    brier_raw = brier_score_loss(y_test, clf.predict_proba(X_test)[:, 1])
+    brier_cal = brier_score_loss(y_test, y_proba)
+    logger.info(f"Brier score: raw={brier_raw:.4f} -> calibrated={brier_cal:.4f} (lower is better)")
 
     logger.info(f"Accuracy  : {acc*100:.2f}%")
     logger.info(f"ROC-AUC   : {auc:.4f}")
@@ -191,8 +219,8 @@ def train_model():
     else:
         logger.info(f"soil_moisture importance: {sm_imp*100:.1f}% — multi-feature learning confirmed.")
 
-    # ── 10. Save artefacts ───────────────────────────────────────
-    joblib.dump(clf, MODEL_PATH)
+    # ── 10. Save artefacts (calibrated wrapper around the forest) ─
+    joblib.dump(model, MODEL_PATH)
     logger.info(f"Model saved: {MODEL_PATH}")
 
     metadata = {
@@ -223,6 +251,12 @@ def train_model():
             'accuracy_mean':   round(float(cv_acc.mean()), 6),
             'auc_mean':        round(float(cv_auc.mean()), 6),
         },
+        # Probability calibration
+        'calibration': {
+            'method':           'isotonic',
+            'brier_raw':        round(float(brier_raw), 6),
+            'brier_calibrated': round(float(brier_cal), 6),
+        },
         # Feature importances for XAI panel
         'feature_importances': {k: round(v, 6) for k, v in sorted_imp},
     }
@@ -234,7 +268,7 @@ def train_model():
     logger.info("=" * 65)
     logger.info("TRAINING COMPLETE")
     logger.info("=" * 65)
-    return clf
+    return model
 
 
 if __name__ == "__main__":

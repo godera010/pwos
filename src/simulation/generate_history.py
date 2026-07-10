@@ -13,7 +13,7 @@ import sys
 import os
 import random
 import logging
-import numpy as np
+import math
 from datetime import datetime, timedelta
 
 # Add project root to path
@@ -66,7 +66,7 @@ def generate_history(days=90):
         base_temp = 25.0
         temp_swing = 5.0
         # Sin wave shifted so peak is at 14:00
-        temp = base_temp + temp_swing * np.sin((hour - 8) * np.pi / 12)
+        temp = base_temp + temp_swing * math.sin((hour - 8) * math.pi / 12)
         # Add random noise
         temp += random.uniform(-1.0, 1.0)
         
@@ -131,21 +131,20 @@ def generate_history(days=90):
         
     logger.info(f"Inserting {len(records)} sensor readings...")
     
-    # Bulk insert for speed
-    import sqlite3
-    conn = sqlite3.connect(db.db_file)
+    # Bulk insert for speed using PostgreSQL
+    conn = db.get_connection()
     cursor = conn.cursor()
     
-    # Add forecast column if not exists (quick hack for simulation)
+    # Add forecast column if not exists (defensive check)
     try:
-        cursor.execute("ALTER TABLE sensor_readings ADD COLUMN forecast_minutes INTEGER DEFAULT 0")
-    except:
-        pass # Column likely exists
+        cursor.execute("ALTER TABLE sensor_readings ADD COLUMN IF NOT EXISTS forecast_minutes INTEGER DEFAULT 0")
+    except Exception as e:
+        logger.debug(f"Column check exception (expected if already exists): {e}")
 
     cursor.executemany('''
         INSERT INTO sensor_readings 
         (timestamp, soil_moisture, temperature, humidity, device_id, forecast_minutes)
-        VALUES (:timestamp, :soil_moisture, :temperature, :humidity, :device_id, :forecast_minutes)
+        VALUES (%(timestamp)s, %(soil_moisture)s, %(temperature)s, %(humidity)s, %(device_id)s, %(forecast_minutes)s)
     ''', records)
     
     logger.info(f"Inserting {len(waterings)} watering events...")
@@ -153,7 +152,7 @@ def generate_history(days=90):
         cursor.execute('''
             INSERT INTO watering_events 
             (timestamp, duration_seconds, trigger_type, moisture_before, moisture_after)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s)
         ''', (w['timestamp'], w['duration'], w['trigger'], w['before'], w['after']))
         
     conn.commit()

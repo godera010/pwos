@@ -1,6 +1,6 @@
 {
     "model_type": "RandomForestClassifier",
-    "timestamp": "2026-05-29T21:40:34.100545",
+    "timestamp": "2026-07-10T07:57:20.484514",
     "features": [
         "soil_moisture",
         "temperature",
@@ -12,7 +12,6 @@
         "crop_type_id",
         "root_depth_cm",
         "wilting_point_threshold",
-        "growth_stage",
         "optimal_vpd_min",
         "optimal_vpd_max",
         "hour",
@@ -20,7 +19,7 @@
         "moisture_change_rate",
         "moisture_rolling_6"
     ],
-    "n_features": 17,
+    "n_features": 16,
     "hyperparameters": {
         "n_estimators": 200,
         "max_depth": 12,
@@ -28,58 +27,62 @@
         "min_samples_leaf": 2,
         "max_features": "sqrt"
     },
-    "training_samples": 484196,
-    "test_samples": 121049,
-    "accuracy": 0.999959,
-    "roc_auc": 1.0,
+    "training_samples": 234499,
+    "test_samples": 67000,
+    "accuracy": 0.732284,
+    "roc_auc": 0.796975,
     "metrics": {
-        "precision": 1.0,
-        "recall": 0.999511,
-        "f1_score": 0.999755,
-        "support": 10224
+        "precision": 0.897502,
+        "recall": 0.698864,
+        "f1_score": 0.785824,
+        "support": 47085
     },
     "confusion_matrix": [
         [
-            110825,
-            0
+            16157,
+            3758
         ],
         [
-            5,
-            10219
+            14179,
+            32906
         ]
     ],
     "cv": {
         "n_splits": 5,
         "method": "TimeSeriesSplit",
-        "f1_mean": 0.999135,
-        "f1_std": 0.001097,
+        "f1_mean": 0.62625,
+        "f1_std": 0.235974,
         "f1_folds": [
-            0.9986,
-            1.0,
-            1.0,
-            0.9972,
-            0.9999
+            0.975,
+            0.7102,
+            0.2839,
+            0.4617,
+            0.7004
         ],
-        "accuracy_mean": 0.999911,
-        "auc_mean": 1.0
+        "accuracy_mean": 0.691584,
+        "auc_mean": 0.845502
+    },
+    "calibration": {
+        "method": "isotonic",
+        "brier_raw": 0.396604,
+        "brier_calibrated": 0.16943
     },
     "feature_importances": {
-        "soil_moisture": 0.445944,
-        "moisture_rolling_6": 0.427217,
-        "moisture_change_rate": 0.031709,
-        "optimal_vpd_max": 0.020015,
-        "optimal_vpd_min": 0.019275,
-        "wilting_point_threshold": 0.017802,
-        "hour": 0.014858,
-        "root_depth_cm": 0.010166,
-        "crop_type_id": 0.007117,
-        "precipitation_chance": 0.002437,
-        "wind_speed": 0.001113,
-        "temperature": 0.000887,
-        "is_daytime": 0.00088,
-        "forecast_temp": 0.000319,
-        "vpd": 0.00015,
-        "humidity": 0.00011,
-        "growth_stage": 0.0
+        "moisture_rolling_6": 0.304496,
+        "soil_moisture": 0.229591,
+        "forecast_temp": 0.094251,
+        "wind_speed": 0.07394,
+        "precipitation_chance": 0.057387,
+        "optimal_vpd_min": 0.036513,
+        "wilting_point_threshold": 0.035722,
+        "humidity": 0.028547,
+        "hour": 0.026952,
+        "optimal_vpd_max": 0.026738,
+        "moisture_change_rate": 0.019163,
+        "vpd": 0.01731,
+        "crop_type_id": 0.013906,
+        "temperature": 0.013656,
+        "root_depth_cm": 0.011671,
+        "is_daytime": 0.010156
     }
 }

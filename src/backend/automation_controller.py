@@ -13,7 +13,7 @@ Improvements over v1:
   - Clean state machine with explicit transitions
 """
 
-import requests, time, sys, os, logging
+import requests, time, sys, os, logging, threading
 from datetime import datetime, timedelta
 
 API_URL = "http://localhost:5000/api"
@@ -26,6 +26,44 @@ POLL_ACTIVE_S     = 2      # seconds between polls when decision is NOW/STALL
 POLL_PUMP_S       = 1      # seconds between safety checks during pump cycle
 NOW_COOLDOWN_S    = 90     # minimum seconds between consecutive NOW triggers
 MAX_API_ERRORS    = 10     # consecutive errors before emergency stop
+WAKE_DELTA_PCT    = 2.0    # moisture jump (%) that wakes the loop immediately
+RELOAD_CHECK_S    = 60     # seconds between model reload-flag checks
+
+
+def _setup_sensor_listener(logger, wake_event):
+    """Subscribe to sensor data and wake the decision loop immediately when
+    moisture jumps by >= WAKE_DELTA_PCT (e.g. the probe was moved into dry
+    soil) instead of waiting out the poll interval. Fixed polling remains the
+    fallback if the broker is unavailable."""
+    try:
+        import paho.mqtt.client as mqtt
+        import json, random
+
+        last = {'moisture': None}
+
+        def on_message(client, userdata, msg):
+            try:
+                m = json.loads(msg.payload.decode()).get('soil_moisture')
+                if m is None:
+                    return
+                prev = last['moisture']
+                last['moisture'] = float(m)
+                if prev is None or abs(float(m) - prev) >= WAKE_DELTA_PCT:
+                    wake_event.set()
+            except Exception:
+                pass
+
+        client_id = f"PWOS_Autopilot_{random.randint(1000, 9999)}"
+        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id)
+        client.on_message = on_message
+        client.connect("localhost", 1883, 60)
+        client.subscribe("pwos/sensor/data")
+        client.loop_start()
+        logger.info(f"Sensor listener active: instant wake on moisture jumps >= {WAKE_DELTA_PCT}%")
+        return client
+    except Exception as e:
+        logger.warning(f"Sensor listener unavailable ({e}); using fixed polling only.")
+        return None
 
 
 def run_autopilot():
@@ -62,6 +100,16 @@ def run_autopilot():
     consecutive_errs   = 0
     settings_cache     = {}
     settings_ts        = datetime.min
+    reload_check_ts    = datetime.min
+
+    # Wake immediately on significant sensor changes instead of sleeping out the poll
+    wake_event = threading.Event()
+    _setup_sensor_listener(logger, wake_event)
+
+    def _sleep(seconds):
+        """Poll-interval sleep that a significant sensor change can interrupt."""
+        if wake_event.wait(timeout=seconds):
+            wake_event.clear()
 
     # Seed last known state from recent logs (avoids duplicate logs on restart)
     last_action, last_system_status = _seed_state(logger)
@@ -70,16 +118,23 @@ def run_autopilot():
     try:
         while True:
             try:
-                # ── Check for newly trained model ─────────────────
-                _check_model_reload(logger)
+                # ── Check for newly trained model (throttled) ─────
+                if (datetime.now() - reload_check_ts).total_seconds() > RELOAD_CHECK_S:
+                    _check_model_reload(logger)
+                    reload_check_ts = datetime.now()
 
                 # ── Refresh settings cache every 60s ──────────────
                 if (datetime.now() - settings_ts).total_seconds() > 60:
                     settings_cache = _fetch_settings(logger)
                     settings_ts    = datetime.now()
 
-                critical_limit = settings_cache.get('crop_critical_moisture', 15)
-                high_limit     = settings_cache.get('crop_high_threshold', 85)
+                # /api/settings exposes 'moisture_threshold' (water below) and
+                # 'moisture_max' (stop above). The old crop_* keys never existed
+                # in that response, so both limits silently ran on their
+                # fallbacks (15/85) and ignored the configured values.
+                moisture_threshold = float(settings_cache.get('moisture_threshold', 30))
+                critical_limit     = moisture_threshold * 0.5   # emergency floor for MANUAL override
+                high_limit         = float(settings_cache.get('moisture_max', 85))
 
                 # ── Check system mode ─────────────────────────────
                 mode = _get_mode(logger)
@@ -99,7 +154,7 @@ def run_autopilot():
                             _set_mode('AUTO', logger)
                             _post_log(logger, f"Safety Override: moisture {moisture:.1f}% saturated. Forced AUTO.", "ERROR")
                             continue
-                    time.sleep(POLL_IDLE_S)
+                    _sleep(POLL_IDLE_S)
                     continue
 
                 # ── Ask the brain ─────────────────────────────────
@@ -156,9 +211,10 @@ def run_autopilot():
                 last_action = action
                 last_system_status = system_status
 
-                # Adaptive sleep: faster when something is happening
+                # Adaptive sleep: faster when something is happening, and a
+                # significant moisture jump interrupts the wait entirely
                 poll = POLL_IDLE_S if action == 'MONITOR' else POLL_ACTIVE_S
-                time.sleep(poll)
+                _sleep(poll)
 
             except requests.exceptions.ConnectionError:
                 logger.error("Connection refused. Is the API server running?")

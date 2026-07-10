@@ -46,6 +46,8 @@ class WeatherAPI:
 
     def _setup_mqtt_listener(self):
         """Listen to Simulator for offline weather data."""
+        if 'pytest' in sys.modules:
+            return  # live broker traffic must not reach the test process
         try:
             import paho.mqtt.client as mqtt
             import json
@@ -136,6 +138,17 @@ class WeatherAPI:
         except Exception as e:
             logger.warning(f"Failed to read weather cache from file: {e}")
         return None
+
+    def has_fresh_cache(self) -> bool:
+        """True if get_forecast() can answer from the in-memory cache without
+        network I/O. Lets the MQTT ingest thread avoid blocking on HTTP."""
+        if self.mode != "openweathermap":
+            return True  # simulation path never touches the network
+        if not (self._cache and self._cache_time):
+            return False
+        age = (datetime.now(timezone.utc) - self._cache_time).total_seconds()
+        valid = self._cache_duration if self._cache.get("source") == "openweathermap" else 60
+        return age < valid
 
     def get_forecast(self) -> dict:
         """

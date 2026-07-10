@@ -341,12 +341,15 @@ class PWOSDatabase:
         return rows
     
     def get_readings_by_timerange(self, hours=24):
-        """Get readings from last N hours"""
+        """Get readings from last N hours.
+        Column order is a contract with app.py (positional access, vpd at index 9)."""
         conn = self.get_connection()
         cursor = conn.cursor()
-        
+
         cursor.execute('''
-            SELECT * FROM sensor_readings 
+            SELECT id, timestamp, soil_moisture, temperature, humidity, device_id,
+                   forecast_minutes, wind_speed, precipitation_chance, vpd
+            FROM sensor_readings
             WHERE timestamp > NOW() - make_interval(hours => %s)
             ORDER BY timestamp ASC
         ''', (hours,))

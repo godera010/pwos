@@ -46,11 +46,8 @@ class BackgroundScheduler:
         # But for prod: Every 24 hours? Or every week?
         # User said "self retrain", implying it just happens.
         
-        # Let's do it every day at midnight
+        # Retrain once a day at midnight
         schedule.every().day.at("00:00").do(job_retrain_model)
-        
-        # For testing: also run every 6 hours
-        schedule.every(6).hours.do(job_retrain_model)
         
         logger.info("Scheduler started. Jobs configured.")
         logger.info(f"Next run: {schedule.next_run()}")

@@ -34,12 +34,12 @@ MODEL_PATH    = os.path.join(BASE_DIR, 'src', 'backend', 'models', 'artifacts', 
 METADATA_PATH = os.path.join(BASE_DIR, 'src', 'backend', 'models', 'artifacts', 'model_metadata.json')
 SETTINGS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'operational_settings.json')
 
-# Matches generate_synthetic_history.py and train_model.py exactly
+# Matches train_model.py exactly (growth_stage removed: constant in all data)
 FEATURES = [
     'soil_moisture', 'temperature', 'humidity', 'vpd',
     'precipitation_chance', 'forecast_temp', 'wind_speed',
     'crop_type_id', 'root_depth_cm', 'wilting_point_threshold',
-    'growth_stage', 'optimal_vpd_min', 'optimal_vpd_max',
+    'optimal_vpd_min', 'optimal_vpd_max',
     'hour', 'is_daytime', 'moisture_change_rate', 'moisture_rolling_6',
 ]
 
@@ -57,12 +57,29 @@ class MLPredictor:
     # ─────────────────────────────────────────────────────────────
     # INITIALISATION
     # ─────────────────────────────────────────────────────────────
+    @staticmethod
+    def _force_single_thread(est, _depth=0):
+        """Set n_jobs=1 on the estimator and anything nested inside it.
+        Single-row inference is far faster without joblib's per-call parallel
+        dispatch: n_jobs=-1 costs ~40ms of thread-pool overhead per call."""
+        if est is None or _depth > 4:
+            return
+        if hasattr(est, 'n_jobs'):
+            est.n_jobs = 1
+        for attr in ('estimator', 'base_estimator'):
+            MLPredictor._force_single_thread(getattr(est, attr, None), _depth + 1)
+        for cc in getattr(est, 'calibrated_classifiers_', None) or []:
+            MLPredictor._force_single_thread(getattr(cc, 'estimator', None), _depth + 1)
+
     def _load_model(self):
         if os.path.exists(MODEL_PATH):
             self.model = joblib.load(MODEL_PATH)
+            self._force_single_thread(self.model)
             with open(METADATA_PATH) as f:
                 self.metadata = json.load(f)
-            logger.info(f"Model loaded. Accuracy={self.metadata.get('accuracy','?'):.4f}  "
+            acc = self.metadata.get('accuracy')
+            acc_str = f"{acc:.4f}" if isinstance(acc, (int, float)) else "?"
+            logger.info(f"Model loaded. Accuracy={acc_str}  "
                         f"F1={self.metadata.get('metrics',{}).get('f1_score','?')}")
         else:
             logger.error(f"Model not found at {MODEL_PATH}. Run train_model.py first.")
@@ -128,6 +145,18 @@ class MLPredictor:
         root_factor  = max(0.5, root_depth_cm / 60.0)   # normalised around 60cm
         base_seconds = (deficit / 0.5) * region_mult * root_factor
         scaled       = base_seconds * scale_factor
+        if scale_factor != 1.0 and base_seconds > 2.0 and scaled < 2.0:
+            # Throttled: at bench scales this fires on every prediction cycle
+            now = datetime.now()
+            last = getattr(self, '_floor_warn_time', None)
+            if last is None or (now - last).total_seconds() > 600:
+                self._floor_warn_time = now
+                logger.warning(
+                    f"pump_scale_factor={scale_factor} clamps durations to the 2s "
+                    f"floor (unscaled {base_seconds:.0f}s). Duration output is "
+                    f"flat at this scale — intentional for bench rigs; use "
+                    f"~0.05-0.1 if proportional durations are wanted."
+                )
         return round(min(120.0, max(2.0, scaled)), 1)
 
     # ─────────────────────────────────────────────────────────────
@@ -279,9 +308,11 @@ class MLPredictor:
         }
 
         # ── ML inference ─────────────────────────────────────────
+        # Single predict_proba call; predict() would traverse the forest a
+        # second time for information the probabilities already contain.
         X          = pd.DataFrame([[features[f] for f in FEATURES]], columns=FEATURES)
-        prediction = int(self.model.predict(X)[0])
         probs      = self.model.predict_proba(X)[0]
+        prediction = int(np.argmax(probs))
         confidence = float(np.max(probs))
 
         # ── Environmental suppression (same logic as training) ────
@@ -298,7 +329,7 @@ class MLPredictor:
 
         # ── Scale factor for hardware (pot vs field) ─────────────
         try:
-            scale_factor = float(db.get_system_setting('pump_scale_factor', '1.0'))
+            scale_factor = float(self.db.get_system_setting('pump_scale_factor', '1.0'))
         except Exception:
             scale_factor = 1.0
 

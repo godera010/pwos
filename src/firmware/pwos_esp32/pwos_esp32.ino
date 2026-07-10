@@ -127,7 +127,7 @@ void setup() {
 
     // Initialize DHT sensor
     dht.begin();
-    Serial.println("[INIT] DHT11 initialized");
+    Serial.printf("[INIT] DHT11 on GPIO %d initialized\n", DHT_PIN);
 
     #if WIFI_ENABLED
         // Initialize WiFi
@@ -138,6 +138,13 @@ void setup() {
         mqttClient.setCallback(mqttCallback);
         mqttClient.setBufferSize(512);
         connectMQTT();
+
+        // Re-initialize DHT after WiFi/MQTT setup.
+        // Warm resets (WDT crash etc.) can leave GPIO in an unknown state.
+        // A fresh begin() + 2s settle guarantees a clean first read.
+        dht.begin();
+        delay(2000);
+        Serial.println("[INIT] DHT11 re-initialized after network setup");
     #else
         Serial.println("[INIT] WiFi DISABLED — USB serial mode");
         Serial.println("[INIT] Sensor data will be output on serial");
@@ -146,7 +153,10 @@ void setup() {
         Serial.println("[INIT]   {\"action\":\"ON\",\"duration\":30}");
     #endif
 
-    // Enable watchdog timer (30 second timeout) — ESP32 Core 3.x API
+    // Enable watchdog timer (30 second timeout)
+    // Deinit first in case the Arduino framework already initialized TWDT
+    // (prevents "TWDT already initialized" error on warm boots / reflashes)
+    esp_task_wdt_deinit();
     esp_task_wdt_config_t wdt_config = {
         .timeout_ms = 30000,
         .idle_core_mask = (1 << 0),
@@ -284,12 +294,19 @@ void connectWiFi() {
 
     Serial.printf("[WiFi] Connecting to: %s", WIFI_SSID);
 
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_SSID, WIFI_PASS);
+    // Only call begin() if not already in the middle of connecting;
+    // calling WiFi.begin() while associating causes "sta is connecting,
+    // cannot set config" and corrupts the connection state.
+    wl_status_t wifiStatus = WiFi.status();
+    if (wifiStatus != WL_CONNECTED && wifiStatus != WL_IDLE_STATUS) {
+        WiFi.mode(WIFI_STA);
+        WiFi.begin(WIFI_SSID, WIFI_PASS);
+    }
 
-    int timeout = 30; // 30 seconds
+    // Wait up to 15 s (non-blocking-friendly: feed WDT each second)
+    int timeout = 15;
     while (WiFi.status() != WL_CONNECTED && timeout > 0) {
-        // Feed watchdog — prevents 30s panic reboot if AP is slow/offline
+        // Feed watchdog — prevents panic reboot if AP is slow/offline
         esp_task_wdt_reset();
 
         // Safety: stop pump if its timer expired while we are reconnecting
@@ -411,10 +428,10 @@ void handlePumpCommand(const char* message) {
 
 void startPump(int durationSeconds) {
     if (pumpActive) {
-        // Reset timer instead of compounding to prevent MQTT retry bugs
-        pumpDurationMs = (unsigned long)durationSeconds * 1000;
-        pumpStartMs = millis();
-        Serial.printf("[PUMP] Timer reset to %ds\n", durationSeconds);
+        // Extend current run (same as original — avoids MQTT retry bugs
+        // where rapid ON commands would compound the duration unexpectedly)
+        pumpDurationMs += (unsigned long)durationSeconds * 1000;
+        Serial.printf("[PUMP] Extended by %ds\n", durationSeconds);
     } else {
         pumpActive    = true;
         pumpStartMs   = millis();
@@ -467,7 +484,10 @@ SensorData readAllSensors() {
     // Read soil moisture
     data.soilMoisture = readSoilMoisture();
 
-    // Read DHT11 (temperature + humidity)
+    // Read DHT11 (temperature + humidity).
+    // The Adafruit DHT library manages its own 2-second minimum interval
+    // internally: if called faster, it returns the last cached value (not NaN).
+    // NaN only means the sensor didn't respond — a genuine hardware/wiring fault.
     float temp = dht.readTemperature();
     float hum  = dht.readHumidity();
 
@@ -476,29 +496,23 @@ SensorData readAllSensors() {
         Serial.println("[WARN] DHT11 read failed!");
 
         if (dhtErrors > 3) {
-            // Too many consecutive failures
+            // Persistent failure — publish sentinel so backend knows
             data.temperature = -999.0;
             data.humidity    = -999.0;
-            data.valid = false;
         } else {
-            // Use last known values (sensor may recover)
-            data.temperature = temp;
-            data.humidity    = hum;
-            data.valid = false;
+            // First few transient failures: use NaN (don't publish junk values)
+            data.temperature = NAN;
+            data.humidity    = NAN;
         }
+        data.valid = false;
     } else {
         data.temperature = temp;
         data.humidity    = hum;
-        dhtErrors = 0;
+        dhtErrors = 0;    // Reset counter on any successful read
         data.valid = true;
     }
 
     data.pumpActive = pumpActive;
-
-    // Also valid if soil is OK even though DHT failed
-    if (data.soilMoisture >= 0) {
-        data.valid = true;
-    }
 
     return data;
 }

@@ -86,6 +86,28 @@ def add_temporal_features(df, timestamp_col='timestamp'):
     df.bfill(inplace=True)
     return df
 
+# Outcome-based labeling: a row is positive when the *observed* soil moisture drops
+# below the crop's critical threshold within the next LOOKAHEAD_HOURS. The future
+# window feeds only the label, never the features, so the model learns to predict
+# outcomes instead of re-encoding the rule engine (which inflated accuracy to 100%).
+# 6h horizon: chosen empirically. 3h makes the label depend almost entirely on
+# current moisture (weather never decides the future minimum); 24h degenerates to
+# ~80% positive because fast local pump cycles always cross the threshold within
+# a day (model collapses to always-water: recall 1.0, AUC 0.65).
+LOOKAHEAD_HOURS = 6.0
+LABEL_MARGIN = 5.0  # water shortly *before* the wilting point is crossed
+
+def compute_future_min_moisture(df, timestamp_col='timestamp', hours=LOOKAHEAD_HOURS):
+    """Minimum observed soil moisture within the next `hours` for each row.
+    Requires df sorted ascending by timestamp_col (add_temporal_features guarantees this)."""
+    ts = pd.to_datetime(df[timestamp_col])
+    # Mirror time so a backwards-looking rolling window becomes forwards-looking
+    mirrored = pd.Timestamp('2000-01-01') + (ts.max() - ts)
+    rev = pd.Series(df['soil_moisture'].values[::-1],
+                    index=pd.DatetimeIndex(mirrored.values[::-1]))
+    future_min = rev.rolling(f'{int(hours * 60)}min').min()
+    return pd.Series(future_min.values[::-1], index=df.index)
+
 def load_mendeley_tomato_data():
     """Loads and cleans real Mendeley Tomato IoT sensor logs."""
     logger.info("Ingesting real Mendeley Tomato Cultivation IoT dataset...")
@@ -133,12 +155,13 @@ def load_mendeley_tomato_data():
         df_out['optimal_vpd_min'] = 0.8
         df_out['optimal_vpd_max'] = 1.2
         
-        # Determine labels based on Tomato critical threshold
-        df_out['needs_watering_soon'] = (df_out['soil_moisture'] < 42.0).astype(int)
-        
         # Keep timestamp to add temporal features
         df_out['timestamp'] = pd.to_datetime(df_merged['ts_round'], unit='ms')
         df_out = add_temporal_features(df_out, 'timestamp')
+
+        # Outcome-based label: moisture drops below wilting+margin within lookahead window
+        future_min = compute_future_min_moisture(df_out)
+        df_out['needs_watering_soon'] = (future_min < (35.0 + LABEL_MARGIN)).astype(int)
         
         df_out = df_out.dropna().sample(n=min(len(df_out), 15000), random_state=42)
         logger.info(f"Loaded {len(df_out)} real Tomato IoT readings")
@@ -147,54 +170,78 @@ def load_mendeley_tomato_data():
         logger.error(f"Failed to load Mendeley Tomato data: {e}")
         return None
 
-def load_zenodo_maize_data():
-    """Loads and cleans real Zenodo Maize-Cowpea arid farming sensor logs."""
-    logger.info("Ingesting real Zenodo Maize Arid farming dataset...")
+def load_zenodo_maize_data(max_rows=120000):
+    """Loads real Zenodo Maize-Cowpea arid farming sensor logs (all 5 dataloggers,
+    every 10cm moisture probe). This is the only source where weather and soil
+    moisture were CO-OBSERVED in the field (rain correlates ~+0.25 with future
+    moisture change), so it carries the weather signal for the model."""
+    logger.info("Ingesting real Zenodo Maize Arid farming dataset (all loggers)...")
     try:
-        logger_path = os.path.join(BASE_DIR, "data/raw/maize_cowpea/datalogger1_Raw.txt")
         weather_path = os.path.join(BASE_DIR, "data/raw/maize_cowpea/weatherData.txt")
-        if not os.path.exists(logger_path) or not os.path.exists(weather_path):
-            logger.warning(f"Zenodo Maize dataset files not found. Skipping. Paths checked: {logger_path}, {weather_path}")
+        if not os.path.exists(weather_path):
+            logger.warning(f"Zenodo Maize weather file not found. Skipping. Path checked: {weather_path}")
             return None
-            
-        df_log = pd.read_csv(logger_path)
         df_weather = pd.read_csv(weather_path)
-        
-        # Merge on time
-        df_merged = pd.merge(df_log, df_weather, on='Time')
-        
-        df_out = pd.DataFrame()
-        # Volumetric moisture to percentage conversion (multiply by 200 to scale typical 0.10-0.45 range to 20-90%)
-        df_out['soil_moisture'] = (df_merged['Theta_IC1_10cm'].clip(lower=0) * 200).clip(upper=100)
-        df_out['temperature'] = df_merged['AirTC']
-        df_out['humidity'] = df_merged['RH']
-        df_out['wind_speed'] = df_merged['WS'] * 3.6  # Convert m/s to km/h
-        df_out['rain_intensity'] = df_merged['Rain']
-        
-        # Calculate VPD
-        es = 0.6108 * np.exp((17.27 * df_out['temperature']) / (df_out['temperature'] + 237.3))
-        ea = es * (df_out['humidity'] / 100.0)
-        df_out['vpd'] = es - ea
-        df_out['vpd'] = df_out['vpd'].clip(lower=0)
-        
-        # Biological thresholds (Maize Defaults)
-        df_out['crop_type_id'] = 2
-        df_out['root_depth_cm'] = 40.0
-        df_out['wilting_point_threshold'] = 30.0
-        df_out['growth_stage'] = 2
-        df_out['optimal_vpd_min'] = 1.0
-        df_out['optimal_vpd_max'] = 1.5
-        
-        # Determine labels based on Maize critical threshold
-        df_out['needs_watering_soon'] = (df_out['soil_moisture'] < 38.0).astype(int)
-        
-        # Keep timestamp to add temporal features
-        df_out['timestamp'] = pd.to_datetime(df_merged['Time'])
-        df_out = add_temporal_features(df_out, 'timestamp')
-        
-        df_out = df_out.dropna().sample(n=min(len(df_out), 15000), random_state=42)
-        logger.info(f"Loaded {len(df_out)} real Maize Arid sensor readings")
-        return df_out
+
+        probe_frames = []
+        for i in range(1, 6):
+            logger_path = os.path.join(BASE_DIR, f"data/raw/maize_cowpea/datalogger{i}_Raw.txt")
+            if not os.path.exists(logger_path):
+                continue
+            df_log = pd.read_csv(logger_path)
+            df_merged = pd.merge(df_log, df_weather, on='Time')
+
+            # Each logger has one or more 10cm volumetric moisture probes
+            theta_cols = [c for c in df_log.columns if c.startswith('Theta_') and c.endswith('_10cm')]
+            for theta_col in theta_cols:
+                df_out = pd.DataFrame()
+                # Volumetric water content -> system moisture %, anchored to
+                # sandy-soil agronomy: wilting ~0.05 v/v, field capacity ~0.25 v/v,
+                # mapped to the system scale where 30% = wilting, 90% = field
+                # capacity. (The previous ad-hoc x200 scaling put the median arid
+                # reading at 21% — below every crop threshold — which made ~90%
+                # of this stratum's labels positive.)
+                theta = df_merged[theta_col]
+                df_out['soil_moisture'] = (30.0 + (theta - 0.05) / (0.25 - 0.05) * 60.0).clip(0, 100)
+                df_out['temperature'] = df_merged['AirTC']
+                df_out['humidity'] = df_merged['RH']
+                df_out['wind_speed'] = df_merged['WS'] * 3.6  # m/s to km/h
+                df_out['rain_intensity'] = df_merged['Rain']
+
+                # Calculate VPD
+                es = 0.6108 * np.exp((17.27 * df_out['temperature']) / (df_out['temperature'] + 237.3))
+                ea = es * (df_out['humidity'] / 100.0)
+                df_out['vpd'] = (es - ea).clip(lower=0)
+
+                # Biological thresholds (Maize Defaults)
+                df_out['crop_type_id'] = 2
+                df_out['root_depth_cm'] = 40.0
+                df_out['wilting_point_threshold'] = 30.0
+                df_out['growth_stage'] = 2
+                df_out['optimal_vpd_min'] = 1.0
+                df_out['optimal_vpd_max'] = 1.5
+
+                df_out['timestamp'] = pd.to_datetime(df_merged['Time'])
+                # Drop pre-installation period where the probe reads ~0
+                df_out = df_out[df_out['soil_moisture'] > 1.0]
+                if df_out.empty:
+                    continue
+                df_out = add_temporal_features(df_out, 'timestamp')
+
+                # Outcome-based label: moisture drops below wilting+margin within lookahead window
+                future_min = compute_future_min_moisture(df_out)
+                df_out['needs_watering_soon'] = (future_min < (30.0 + LABEL_MARGIN)).astype(int)
+                probe_frames.append(df_out.dropna())
+
+        if not probe_frames:
+            logger.warning("No Zenodo Maize datalogger files found. Skipping.")
+            return None
+
+        df_all = pd.concat(probe_frames, ignore_index=True)
+        if len(df_all) > max_rows:
+            df_all = df_all.sample(n=max_rows, random_state=42)
+        logger.info(f"Loaded {len(df_all)} real Maize Arid readings from {len(probe_frames)} probes")
+        return df_all
     except Exception as e:
         logger.error(f"Failed to load Zenodo Maize data: {e}")
         return None
@@ -212,8 +259,9 @@ def extract_and_label_data(output_path=None):
         # 1. Fetch Sensor Readings
         logger.info("Retrieving sensor readings from Postgres...")
         query_readings = """
-            SELECT timestamp, soil_moisture, temperature, humidity, 
-                   wind_speed, rain_intensity, vpd
+            SELECT timestamp, soil_moisture, temperature, humidity,
+                   wind_speed, rain_intensity, vpd,
+                   precipitation_chance, forecast_temp
             FROM sensor_readings
             ORDER BY timestamp ASC
         """
@@ -249,107 +297,61 @@ def extract_and_label_data(output_path=None):
             
         # Calculate temporal features for local readings before modifying
         df_readings = add_temporal_features(df_readings, 'timestamp')
-        
+
+        # Outcome basis for labels — computed BEFORE any sampling shuffles time order.
+        # Feeds only the label downstream, never the feature matrix.
+        df_readings['future_min_moisture'] = compute_future_min_moisture(df_readings)
+
         # Clean local dataframe
-        export_cols = ['timestamp', 'soil_moisture', 'temperature', 'humidity', 'wind_speed', 
-                       'rain_intensity', 'vpd', 'needs_watering_soon',
-                       'hour', 'day_of_week', 'is_daytime', 'is_hot_hours', 
-                       'forecast_minutes', 'moisture_change_rate', 
-                       'moisture_rolling_6', 'temp_rolling_6']
+        export_cols = ['timestamp', 'soil_moisture', 'temperature', 'humidity', 'wind_speed',
+                       'rain_intensity', 'vpd', 'precipitation_chance', 'forecast_temp',
+                       'needs_watering_soon',
+                       'hour', 'day_of_week', 'is_daytime', 'is_hot_hours',
+                       'forecast_minutes', 'moisture_change_rate',
+                       'moisture_rolling_6', 'temp_rolling_6', 'future_min_moisture']
         df_local = df_readings[export_cols].dropna()
         
         if len(df_local) > 40000:
             df_local = df_local.sample(n=40000, random_state=42)
         
-        # 4. Multi-Crop & Multi-Region Crop-Region-Weather Infused Expansion
-        logger.info("Performing Multi-Crop & Multi-Region crop-aware dataset weather-infusion...")
+        # 4. Multi-crop expansion — replicate local telemetry per crop profile so the
+        # model learns crop-threshold conditioning. Weather columns keep the values
+        # that were actually recorded alongside each reading: randomly injected
+        # weather (previous approach) is uncorrelated with the moisture outcome by
+        # construction and teaches the model to ignore weather entirely.
+        logger.info("Performing multi-crop expansion (recorded weather preserved)...")
         df_expanded_list = []
-        
-        # Load weather datasets for the three regions
-        weather_data = {
-            'matabeleland': load_zimbabwe_weather_data('matabeleland'),
-            'manicaland': load_zimbabwe_weather_data('manicaland'),
-            'mashonaland': load_zimbabwe_weather_data('mashonaland')
-        }
-        
+
         crops = db.get_crops()
         if not crops:
             logger.error("No crops found in DB.")
             return None
-            
+
         for crop in crops:
-            for region, w_df in weather_data.items():
-                df_crop_region = df_local.copy()
-                
-                # If we have real weather records for this region, inject them!
-                if w_df is not None and len(w_df) > 0:
-                    # Randomly sample weather rows to match the length of df_crop_region
-                    sampled_weather = w_df.sample(n=len(df_crop_region), replace=True, random_state=42).reset_index(drop=True)
-                    df_crop_region['temperature'] = sampled_weather['temperature'].values
-                    df_crop_region['humidity'] = sampled_weather['humidity'].values
-                    df_crop_region['wind_speed'] = sampled_weather['wind_speed'].values
-                    df_crop_region['rain_intensity'] = sampled_weather['rain_intensity'].values
-                    df_crop_region['vpd'] = sampled_weather['vpd'].values
-                
-                # Add weather inputs (assuming precipitation_chance & forecast_temp not in all raw datasets, so mock or use existing)
-                if 'precipitation_chance' not in df_crop_region.columns:
-                    df_crop_region['precipitation_chance'] = np.random.randint(0, 30, len(df_crop_region))
-                if 'forecast_temp' not in df_crop_region.columns:
-                    df_crop_region['forecast_temp'] = df_crop_region['temperature'] + np.random.uniform(-2, 2, len(df_crop_region))
-                
-                # Biological features
-                df_crop_region['crop_type_id'] = crop['id']
-                df_crop_region['root_depth_cm'] = crop['root_depth_cm']
-                df_crop_region['wilting_point_threshold'] = crop['wilting_point_threshold']
-                df_crop_region['growth_stage'] = crop['growth_stage']
-                df_crop_region['optimal_vpd_min'] = crop['optimal_vpd_min']
-                df_crop_region['optimal_vpd_max'] = crop['optimal_vpd_max']
-                
-                # Re-label the expanded data to be purely biologically sensitive to this crop's limits
-                critical_limit = crop['wilting_point_threshold']
-                will_drop_critical = df_crop_region['soil_moisture'] < critical_limit + 5.0
-                
-                suppression = pd.Series(0.0, index=df_crop_region.index)
-                
-                # Time of day
-                hour = df_crop_region['hour']
-                suppression += np.where((hour >= 21) | (hour <= 4), 0.50, 0.0)
-                suppression += np.where(((hour >= 18) & (hour < 21)) | ((hour > 4) & (hour <= 6)), 0.20, 0.0)
-                
-                # Atmospheric humidity
-                humidity = df_crop_region['humidity']
-                suppression += np.where(humidity >= 85, 0.40, 0.0)
-                suppression += np.where((humidity >= 70) & (humidity < 85), 0.20, 0.0)
-                suppression += np.where((humidity >= 55) & (humidity < 70), 0.08, 0.0)
-                
-                # Rain forecast
-                if 'precipitation_chance' in df_crop_region.columns:
-                    precip = df_crop_region['precipitation_chance']
-                    suppression += np.where(precip >= 70, 0.50, 0.0)
-                    suppression += np.where((precip >= 45) & (precip < 70), 0.28, 0.0)
-                    suppression += np.where((precip >= 25) & (precip < 45), 0.12, 0.0)
-                
-                # Season
-                month = df_crop_region['timestamp'].dt.month
-                suppression += np.where(month.isin([5, 6, 7, 8]), 0.22, 0.0)  # winter
-                suppression += np.where(month.isin([10, 11, 12, 1, 2, 3]), -0.08, 0.0) # summer
-                
-                # VPD
-                vpd = df_crop_region['vpd']
-                suppression += np.where(vpd < 0.25, 0.30, 0.0)
-                suppression += np.where((vpd >= 0.25) & (vpd < 0.50), 0.12, 0.0)
-                suppression += np.where(vpd > 2.0, -0.10, 0.0)
-                
-                # Emergency override
-                suppression += np.where(df_crop_region['soil_moisture'] < critical_limit * 0.65, -0.90, 0.0)
-                
-                # Final label
-                df_crop_region['needs_watering_soon'] = np.where(will_drop_critical & (suppression < 0.42), 1, 0)
-                
-                df_expanded_list.append(df_crop_region)
-            
+            df_crop = df_local.copy()
+
+            # Biological features
+            df_crop['crop_type_id'] = crop['id']
+            df_crop['root_depth_cm'] = crop['root_depth_cm']
+            df_crop['wilting_point_threshold'] = crop['wilting_point_threshold']
+            df_crop['growth_stage'] = crop['growth_stage']
+            df_crop['optimal_vpd_min'] = crop['optimal_vpd_min']
+            df_crop['optimal_vpd_max'] = crop['optimal_vpd_max']
+
+            # Outcome-based label: the observed moisture actually drops below this
+            # crop's wilting threshold (+ margin) within the lookahead window.
+            # Environmental suppression is NOT applied here — it stays an
+            # inference-time safety gate in ml_predictor.py, so the model learns
+            # outcomes rather than a copy of the rule engine.
+            critical_limit = crop['wilting_point_threshold']
+            df_crop['needs_watering_soon'] = (
+                df_crop['future_min_moisture'] < critical_limit + LABEL_MARGIN
+            ).astype(int)
+
+            df_expanded_list.append(df_crop)
+
         df_multi_crop = pd.concat(df_expanded_list, ignore_index=True)
-        logger.info(f"Replicated local telemetry into {len(df_multi_crop)} crop-region-weather-aware samples")
+        logger.info(f"Replicated local telemetry into {len(df_multi_crop)} crop-aware samples")
         
         # 5. Ingest and merge Mendeley Tomato & Zenodo Maize sensor data
         df_tomato = load_mendeley_tomato_data()
@@ -378,7 +380,12 @@ def extract_and_label_data(output_path=None):
             'needs_watering_soon'
         ]
         df_final = df_final[required_cols].dropna()
-        
+
+        # Normalize timestamps to one format: mixed formats (DB microseconds vs.
+        # dataset-native strings) make pd.to_datetime silently coerce most rows
+        # to NaT downstream in train_model.py.
+        df_final['timestamp'] = pd.to_datetime(df_final['timestamp']).dt.strftime('%Y-%m-%d %H:%M:%S')
+
         logger.info(f"Final combined dataset shape: {df_final.shape}")
         
         if output_path:

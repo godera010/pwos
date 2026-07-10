@@ -137,8 +137,15 @@ class TestModelStress:
 
     @staticmethod
     def _predict(predictor, scenario, history_df=None):
-        """Run prediction with datetime patched to scenario's mock time."""
-        with patch("models.ml_predictor.datetime") as dt_mock:
+        """Run prediction with datetime patched to scenario's mock time and the
+        active crop pinned to the scenario's crop. Without the crop patch the
+        predictor reads active_crop from the shared DB, so a concurrently running
+        frontend/simulator changes test behavior mid-run."""
+        if hasattr(predictor, '_crop_cache_time'):
+            del predictor._crop_cache_time  # force re-fetch of the (patched) crop
+        with patch("models.ml_predictor.datetime") as dt_mock, \
+             patch("models.ml_predictor.PWOSDatabase.get_active_crop",
+                   return_value=scenario["crop_info"]):
             dt_mock.now.return_value = scenario["mock_datetime"]
             dt_mock.side_effect = lambda *a, **kw: datetime(*a, **kw)
             return predictor.predict_next_watering(
